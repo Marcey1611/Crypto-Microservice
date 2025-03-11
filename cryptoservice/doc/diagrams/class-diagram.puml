@@ -1,0 +1,95 @@
+@startuml
+
+interface EncryptAPI {
+    encryptPost(encryptRequest : EncryptRequest) : ResponseEntity<EncryptResponse200>
+}
+
+interface DecryptAPI {
+    decryptPost(decryptRequest : DecryptRequest) : ResponseEntity<DecryptResponse200>
+}
+
+interface SignAPI {
+    signPost(signRequest : SignRequest) : ResponseEntity<SignResponse200>
+}
+
+interface VerifyAPI {
+    verifyPost(verifyRequest : VerifyRequest) : ResponseEntity<VerifyResponse200>
+}
+
+class Controller {
+    encryptPost(encryptRequest : EncryptRequest) : ResponseEntity<EncryptResponse200>
+    decryptPost(decryptRequest : DecryptRequest) : ResponseEntity<DecryptResponse200>
+    signPost(signRequest : SignRequest) : ResponseEntity<SignResponse200>
+    verifyPost(verifyRequest : VerifyRequest) : ResponseEntity<VerifyResponse200>
+}
+
+class ModelsFactory {
+    buildEncryptModel(encryptRequest : EncryptRequest) : EncryptModel
+    buildDecryptModel(decryptRequest : DecryptRequest) : DecryptModel
+    buildSignModel(signRequest : SignRequest) : SignModel
+    buildVerifyModel(verifyRequest : VerifyRequest) : VerifyModel
+}
+
+class ResponseFactory {
+    buildEncryptResponse200() : ResponseEntity<EncryptResponse200>
+    buildDecryptResponse200() : ResponseEntity<DecryptResponse200>
+    buildSignResponse200() : ResponseEntity<SignResponse200>
+    buildVerifyResponse200() : ResponseEntity<VerifyResponse200>
+}
+
+class Validator {
+    validateEncryptRequest(encryptRequest : EncryptRequest)
+    validateDecryptRequest(decryptRequest : DecryptRequest)
+    validateSignRequest(signRequest : SignRequest)
+    validateVerifyRequest(verifyRequest : VerifyRequest)
+}
+
+class EncryptRequest {
+
+}
+
+class EncryptModel {
+
+}
+
+class EncryptResponse { 
+
+}
+
+class DecryptRequest {
+
+}
+
+class DecryptModel {
+
+}
+
+class DecryptResponse {
+
+}
+
+class SignRequest { 
+
+}
+
+class SignModel {
+
+}
+
+class SignResponse {
+
+}
+
+class VerifyRequest {
+
+}
+
+class VerifyModel {
+
+}
+
+class VerifyResponse { 
+
+}
+
+@enduml
