@@ -1,0 +1,215 @@
+@startuml
+
+package boundary {
+    +interface EncryptAPI {
+        encryptPost(encryptRequest : EncryptRequest) : ResponseEntity<EncryptResponse>
+    }
+
+    +interface DecryptAPI {
+        decryptPost(decryptRequest : DecryptRequest) : ResponseEntity<DecryptResponse>
+    }
+
+    +interface SignAPI {
+        signPost(signRequest : SignRequest) : ResponseEntity<SignResponse>
+    }
+
+    +interface VerifyAPI {
+        verifyPost(verifyRequest : VerifyRequest) : ResponseEntity<VerifyResponse>
+    }
+
+    +class Controller {
+        encryptPost(encryptRequest : EncryptRequest) : ResponseEntity<EncryptResponse>
+        decryptPost(decryptRequest : DecryptRequest) : ResponseEntity<DecryptResponse>
+        signPost(signRequest : SignRequest) : ResponseEntity<SignResponse>
+        verifyPost(verifyRequest : VerifyRequest) : ResponseEntity<VerifyResponse>
+    }
+
+    +class ModelsFactory {
+        buildEncryptModel(encryptRequest : EncryptRequest) : EncryptModel
+        buildDecryptModel(decryptRequest : DecryptRequest) : DecryptModel
+        buildSignModel(signRequest : SignRequest) : SignModel
+        buildVerifyModel(verifyRequest : VerifyRequest) : VerifyModel
+    }
+
+    +class ResponseFactory {
+        buildEncryptResponse(encryptResultModel : EncryptResultModel) : ResponseEntity<EncryptResponse>
+        buildDecryptResponse(decryptResultModel : DecryptResultModel) : ResponseEntity<DecryptResponse>
+        buildSignResponse(signResultModel : SignResultModel) : ResponseEntity<SignResponse>
+        buildVerifyResponse(verifyResultModel : VerififedModel) : ResponseEntity<VerifyResponse>
+    }
+
+    +class Validator {
+        validateEncryptRequest(encryptRequest : EncryptRequest)
+        validateDecryptRequest(decryptRequest : DecryptRequest)
+        validateSignRequest(signRequest : SignRequest)
+        validateVerifyRequest(verifyRequest : VerifyRequest)
+    } 
+}
+
+package business-facade {
+    +class EncryptFacade {
+        processEncryption(encryptModel : EncryptModel) : EncryptResultModel
+    }
+
+    +class DecryptFacade {
+        processDecryption(decryptModel : DecryptModel) : DecryptResultModel
+    }
+
+    +class SignFacade {
+        processSigning(signModel : SignModel) : SignResultModel
+    }
+
+    +class VerifyFacade {
+        processVerification(verifyModel : VerifyModel) : VerifyResultModel
+    }
+}
+
+package business-logic {
+    +class EncryptService {
+        encrypt(encryptModel : EncryptModel) : EncryptResultModel
+    }
+
+    +class DecryptService {
+        decrypt(decryptModel : DecryptModel) : DecryptResultModel
+    }
+
+    +class SignService {
+        sign(signModel : SignModel) : SignResultModel
+    }
+
+    +class VerifyService {
+        verify(verifyModel : VerifyModel) : VerifyResultModel
+    }
+
+    +class ResultModelsFactory {
+        buildEncryptResultModel() : EncryptResultModel
+        buildDecryptResultModel() : DecryptResultModel
+        buildSignResultModel() : SignResultModel
+        buildVerifyResultModel() : VerifyResultModel
+    } 
+}
+
+package entity {
+    +class EncryptRequest {
+        - plainText : byte[]
+        - key : byte[]
+
+        + getPlainText() : byte[]
+        + setPlainText(plainText : byte[])
+        + getKey() : byte[]
+        + setKey(key : byte[])
+    }
+
+    +class EncryptModel {
+        - plainText : byte[]
+        - key : byte[]
+
+        + getPlainText() : byte[]
+        + setPlainText(plainText : byte[])
+        + getKey() : byte[]
+        + setKey(key : byte[])
+    }
+
+    +class EncryptResultModel {
+        - cipherText : byte[]
+
+        + getCipherText() : byte[]
+        + setCipherText(cipherText : byte[])
+    }
+
+    +class EncryptResponse { 
+        - cipherText : byte[]
+        + getCipherText() : byte[]
+        + setCipherText(cipherText : byte[])
+    }
+
+    +class DecryptRequest {
+        - cipherText : byte[]
+        - key : byte[]
+
+        + getCipherText() : byte[]
+        + setCipherText(cipherText : byte[])
+        + getKey() : byte[]
+        + setKey(key : byte[])
+    }
+
+    +class DecryptModel {
+        - cipherText : byte[]
+        - key : byte[]
+
+        + getCipherText() : byte[]
+        + setCipherText(cipherText : byte[])
+        + getKey() : byte[]
+        + setKey(key : byte[])
+    }
+
+    +class DecryptResultModel {
+        - plainText : byte[]
+
+        + getPlainText() : byte[]
+        + setPlainText(plainText : byte[])
+    }
+
+    +class DecryptResponse {
+        - plainText : byte[]
+        + getPlainText() : byte[]
+        + setPlainText(plainText : byte[])
+    }
+
+    +class SignRequest { 
+        // will be added soon
+    }
+
+    +class SignModel {
+        // will be added soon
+    }
+
+    +class SignResultModell { 
+        // will be added soon
+    }
+
+    +class SignResponse {
+        // will be added soon   
+    }
+
+    +class VerifyRequest {
+        // will be added soon
+    }
+
+    +class VerifyModel {
+        // will be added soon
+    }
+
+    +class VerifyResultModel {
+        // will be added soon
+    }
+
+    +class VerifyResponse { 
+        // will be added soon
+    }
+}
+
+EncryptAPI <|-down- Controller
+DecryptAPI <|-down- Controller
+SignAPI <|-down- Controller
+VerifyAPI <|-down- Controller
+
+Controller -down-> Validator
+Controller -down-> ModelsFactory
+Controller -down-> ResponseFactory
+Controller -down-> EncryptFacade
+Controller -down-> DecryptFacade
+Controller -down-> SignFacade
+Controller -down-> VerifyFacade
+
+EncryptFacade -down-> EncryptService
+DecryptFacade -down-> DecryptService
+SignFacade -down-> SignService
+VerifyFacade -down-> VerifyService
+
+EncryptService -down-> ResultModelsFactory
+DecryptService -down-> ResultModelsFactory
+SignService -down-> ResultModelsFactory
+VerifyService -down-> ResultModelsFactory
+
+@enduml
