@@ -1,0 +1,144 @@
+openapi: 3.0.3
+
+info:
+  title: Crypto-Microservice API
+  description: This is the API-Specification for the Crypto-Microservice
+  version: 1.0.0
+
+paths:
+  /encrypt:
+    post:
+      summary: Interface for encrypting a plaintext
+      description: Interface for encrypting a plaintext
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EncryptRequest'
+      responses:
+        '2XX':
+          description: Response of encrypting a plaintext
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EncryptResponse'
+  /decrypt:
+    post:
+      summary: Interface for decrypting a ciphertext
+      description: Interface for decrypting a ciphertext
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DecryptRequest'
+      responses:
+        '2XX':
+          description: Response of decrypting a ciphertext
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EncryptResponse'
+  /sign:
+    post:
+      summary: Interface for signing a message
+      description: Interface for signing a message
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignRequest'
+      responses:
+        '2XX':
+          description: Response of signing a message
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SignResponse'
+  /verify:
+    post:
+      summary: Interface for verification of a message with signature
+      description: Interface for verification of a message with signature
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerifyRequest'
+      responses:
+        '2XX':
+          description: Response of the verification of a message with signature
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerifyResponse'
+
+components:
+  schemas:
+    EncryptRequest:
+      type: object
+      required:
+        - plainText
+        - key
+      properties:
+        plainText:
+          type: array
+        key:
+          type: array
+    DecryptRequest:
+      type: object
+      required:
+        - cipherText
+        - key
+      properties:
+        cipherText:
+          type: string
+        key:
+          type: array
+    SignRequest:
+      type: object
+      required:
+        - message
+        - key
+      properties:
+        message:
+          type: array
+        key:
+          type: array
+    VerifyRequest:
+      type: object
+      required:
+        - message
+        - signature
+        - key
+      properties:
+        message:
+          type: array
+        signature:
+          type: array
+        key:
+          type: array
+
+    EncryptResponse:
+      type: object
+      properties:
+        cipherText:
+          type: array
+    DecryptResponse:
+      type: object
+      properties:
+        plainText:
+          type: array
+    SignResponse:
+      type: object
+      properties:
+        signature:
+          type: array
+    VerifyResponse:
+      type: object
+      properties:
+        valid:
+          type: boolean
+    
