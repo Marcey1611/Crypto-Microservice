@@ -1,6 +1,7 @@
 package com.projectwork.cryptoservice.businessfacade;
 
-import com.projectwork.cryptoservice.entity.*;
+import com.projectwork.cryptoservice.entity.encrypt.EncryptModel;
+import com.projectwork.cryptoservice.entity.encrypt.EncryptResultModel;
 import com.projectwork.cryptoservice.businesslogic.EncryptService;
 import org.springframework.stereotype.Service;
 

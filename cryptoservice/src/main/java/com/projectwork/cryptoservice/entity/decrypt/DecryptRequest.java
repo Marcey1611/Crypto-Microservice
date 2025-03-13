@@ -1,10 +1,10 @@
-package com.projectwork.cryptoservice.entity;
+package com.projectwork.cryptoservice.entity.decrypt;
 
-public class DecryptModel {
+public class DecryptRequest {
     private byte[] cipherText;
     private byte[] key;
 
-    public DecryptModel(byte[] cipherText, byte[] key) {
+    public DecryptRequest(byte[] cipherText, byte[] key) {
         this.cipherText = cipherText;
         this.key = key;
     }

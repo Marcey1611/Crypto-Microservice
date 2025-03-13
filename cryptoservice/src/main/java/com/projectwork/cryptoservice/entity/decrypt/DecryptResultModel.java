@@ -1,4 +1,4 @@
-package com.projectwork.cryptoservice.entity;
+package com.projectwork.cryptoservice.entity.decrypt;
 
 public class DecryptResultModel {
     private byte[] plainText;

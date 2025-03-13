@@ -1,7 +1,8 @@
 package com.projectwork.cryptoservice.boundary;
 
-import com.projectwork.cryptoservice.entity.EncryptRequest;
-import com.projectwork.cryptoservice.entity.EncryptResponse;
+import com.projectwork.cryptoservice.entity.encrypt.EncryptRequest;
+import com.projectwork.cryptoservice.entity.encrypt.EncryptResponse;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
