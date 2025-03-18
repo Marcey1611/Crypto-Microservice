@@ -1,4 +1,4 @@
-package com.projectwork.cryptoservice.businesslogic;
+package com.projectwork.cryptoservice.businesslogic.keymanagement;
 
 import org.springframework.stereotype.Component;
 
@@ -9,6 +9,13 @@ import javax.crypto.SecretKey;
 import java.security.KeyStore;
 import java.security.SecureRandom;
 
+/**
+ * 
+ * SecureCodingPractices
+ * - OWASP [101] Crypto operations (key gen) on trusted server
+ * - OWASP [104] Secure Random for all key generations
+ * - OWASP [106] Key management initialization (ensures master and signing keys)
+ */
 @Component
 public class KeyStoreInitializer {
     private final KeyStoreHelper keyStoreHelper;
@@ -17,12 +24,11 @@ public class KeyStoreInitializer {
         this.keyStoreHelper = keyStoreHelper;
     }
 
+    // OWASP [102] Ensuring master secrets (master-key & jwt-signing-key) are protected and initialized
     @PostConstruct
     public void initKeyStore() {
         try {
             KeyStore keystore = keyStoreHelper.loadKeyStore();
-
-            //keyStoreHelper.cleanupExpiredKeys();
 
             if (!keystore.containsAlias("jwt-signing-key")) {
                 System.out.println("Keystore enthält keinen JWT-Signing-Key. Neuer Key wird generiert...");
@@ -55,7 +61,7 @@ public class KeyStoreInitializer {
     private void initJwtSigningKey(final KeyStore keystore) throws Exception {
         final SecureRandom secureRandom = SecureRandom.getInstanceStrong(); 
         final KeyGenerator keyGen = KeyGenerator.getInstance("HmacSHA256");
-        keyGen.init(256, secureRandom); // OWASP 104 Secure Random Number Generation
+        keyGen.init(256, secureRandom); // [104] SecureRandom for signing key
         final SecretKey signingKey = keyGen.generateKey();
         keyStoreHelper.storeKey("jwt-signing-key", signingKey);
     }
@@ -71,7 +77,7 @@ public class KeyStoreInitializer {
     private void initMasterKey(final KeyStore keyStore) throws Exception {
         final SecureRandom secureRandom = SecureRandom.getInstanceStrong(); 
         final KeyGenerator keyGen = KeyGenerator.getInstance("AES");
-        keyGen.init(256, secureRandom); // OWASP 104 Secure Random Number Generation
+        keyGen.init(256, secureRandom); // [104] SecureRandom for master key
         final SecretKey masterKey = keyGen.generateKey();
         keyStoreHelper.storeKey("master-key", masterKey);
     }

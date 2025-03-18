@@ -3,13 +3,11 @@ package com.projectwork.cryptoservice.businesslogic;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.io.Decoders;
-import io.jsonwebtoken.security.Keys;
 import org.springframework.stereotype.Component;
 
-import java.nio.charset.StandardCharsets;
+import com.projectwork.cryptoservice.businesslogic.keymanagement.KeyStoreHelper;
+
 import java.security.Key;
-import java.security.KeyStore;
 import java.util.Date;
 
 import javax.crypto.SecretKey;

@@ -1,4 +1,4 @@
-package com.projectwork.cryptoservice.businesslogic;
+package com.projectwork.cryptoservice.businesslogic.keymanagement;
 
 import java.security.KeyStore;
 import java.security.KeyStore.PasswordProtection;
@@ -11,6 +11,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+/**
+ * SecureCodingPractices:
+ * - OWASP [106] Implements part of the key lifecycle management (expiration/cleanup).
+ * - OWASP [102] Protect secrets by cleaning up expired client keys.
+ * - OWASP [199] Resource handling (KeyStore and PasswordProtection destroyed properly).
+ */
 @Component
 public class KeyCleanupTask {
     

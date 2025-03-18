@@ -4,7 +4,7 @@ import javax.crypto.SecretKey;
 
 import org.springframework.stereotype.Service;
 
-import com.projectwork.cryptoservice.businesslogic.*;
+import com.projectwork.cryptoservice.businesslogic.keymanagement.KeyManagementService;
 import com.projectwork.cryptoservice.entity.keymanagement.GenerateKeyResultModel;
 
 @Service
