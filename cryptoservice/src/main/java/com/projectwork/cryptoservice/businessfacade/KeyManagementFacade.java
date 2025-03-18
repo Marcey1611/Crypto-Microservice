@@ -16,6 +16,7 @@ public class KeyManagementFacade {
     }
 
     public GenerateKeyResultModel generateKey() throws Exception {
+        
         return keyManagementService.generateKey();
     }
 

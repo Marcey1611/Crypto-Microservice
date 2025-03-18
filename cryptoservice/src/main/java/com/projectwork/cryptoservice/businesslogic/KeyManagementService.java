@@ -8,8 +8,17 @@ import org.springframework.stereotype.Service;
 import com.projectwork.cryptoservice.entity.keymanagement.GenerateKeyResultModel;
 import com.projectwork.cryptoservice.factory.ResultModelsFactory;
 
+import java.security.SecureRandom;
+import java.util.Base64;
 import java.util.UUID;
 
+/**
+ * Key Management Service implementation: handles the key management of the service.
+ * 
+ * @author Marcel Eichelberger
+ * 
+ * TODO: MAster key rotation
+ */
 @Service
 public class KeyManagementService {
 
@@ -23,17 +32,28 @@ public class KeyManagementService {
         this.resultModelsFactory = resultModelsFactory;
     }
 
+    /**
+     * Generates a secure client key, 
+     * 
+     * @return An object of GenerateKeyResultModel
+     * @throws Exception
+     * 
+     * SecureCodingPractices:
+     * - OWASP 104 Secure Random Number Generation: Key generation uses SecureRandom.getInstanceStrong() as cryptographical secure random source 
+     */
     public GenerateKeyResultModel generateKey() throws Exception {
-        System.out.println("Generating key");
-        KeyGenerator keyGen = KeyGenerator.getInstance("AES");
-        keyGen.init(256);
-        SecretKey aesKey = keyGen.generateKey();
+        final SecureRandom secureRandom = SecureRandom.getInstanceStrong(); 
+        
+        final KeyGenerator keyGen = KeyGenerator.getInstance("AES");
+        keyGen.init(256, secureRandom); // OWASP 104 Secure Random Number Generation
+        final SecretKey aesKey = keyGen.generateKey();
 
-        String keyAlias = UUID.randomUUID().toString();
+        final byte[] randomBytes = new byte[16];
+        secureRandom.nextBytes(randomBytes);
+        final String keyAlias = Base64.getUrlEncoder().withoutPadding().encodeToString(randomBytes); // OWASP 104 Secure Random Number Generation
 
         keyStoreHelper.storeKey(keyAlias, aesKey);
-        String jwtString = jwtService.generateJwt(keyAlias);
-        
+        final String jwtString = jwtService.generateJwt(keyAlias);
         return resultModelsFactory.buildGenerateKeyResultModel(jwtString);
     }
 

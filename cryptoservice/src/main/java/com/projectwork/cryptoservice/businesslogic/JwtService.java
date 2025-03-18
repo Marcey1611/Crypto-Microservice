@@ -6,16 +6,28 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.stereotype.Component;
+
+import java.nio.charset.StandardCharsets;
 import java.security.Key;
+import java.security.KeyStore;
 import java.util.Date;
+
+import javax.crypto.SecretKey;
 
 @Component
 public class JwtService {
-    private static final String SECRET_KEY = "CryptoMicroservice2025!CryptoMicroservice2025!";
+    public KeyStoreHelper keyStoreHelper;
+
+    public JwtService (KeyStoreHelper keyStoreHelper) {
+        this.keyStoreHelper = keyStoreHelper;
+    }
 
     private Key getSigningKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(SECRET_KEY);
-        return Keys.hmacShaKeyFor(keyBytes);
+        try {
+            return (SecretKey) keyStoreHelper.getKey("jwt-signing-key");
+        } catch (Exception e) {
+            throw new RuntimeException("JWT Signing Key konnte nicht aus dem Keystore geladen werden!", e);
+        }
     }
 
     public String generateJwt(String keyAlias) {

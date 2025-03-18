@@ -1,54 +1,85 @@
 package com.projectwork.cryptoservice.businesslogic;
 
-import org.springframework.core.io.ClassPathResource;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.InputStream;
 import java.security.KeyStore;
+import java.security.KeyStore.ProtectionParameter;
+import java.security.KeyStore.PasswordProtection;
+import java.security.KeyStore.SecretKeyEntry;
+import java.util.Arrays;
+import java.util.Enumeration;
+import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 
 @Component
 public class KeyStoreHelper {
-    private static final String KEYSTORE_PATH = "keystores/keystore.jks";
-    private static final String KEYSTORE_PASSWORD = "CryptoMicroservice2025!"; // Sicher speichern!
+    private static final String KEYSTORE_PATH = "/keystores/keystore.jks";
 
-    // Lädt den Keystore
-    private KeyStore loadKeyStore() throws Exception {
+    @Value("${keystore.password}")
+    private String keystorePassword;
 
-        KeyStore keystore = KeyStore.getInstance("JCEKS");        
-
-        try (InputStream is = new ClassPathResource(KEYSTORE_PATH).getInputStream()) { 
-            System.out.println("Lade Keystore: " + new ClassPathResource(KEYSTORE_PATH).exists());
-       
-            keystore.load(is, KEYSTORE_PASSWORD.toCharArray());
-
+    public KeyStore loadKeyStore() throws Exception {
+        final KeyStore keystore = KeyStore.getInstance("PKCS12"); 
+        final File keystoreFile = new File(getClass().getResource(KEYSTORE_PATH).getFile());
+        final char[] passwordChars = keystorePassword.toCharArray();
+        try (final FileInputStream fis = new FileInputStream(keystoreFile.getAbsolutePath())) { 
+            keystore.load(fis, passwordChars);
+        } finally {
+            Arrays.fill(passwordChars, '\0'); //Passwort aus speicher löschen ist nur solange drin wie nötig
         }
         return keystore;
     }
 
-    // Speichert den Keystore
-    private void saveKeyStore(KeyStore keystore) throws Exception {
-        try (FileOutputStream fos = new FileOutputStream(KEYSTORE_PATH)) {
-            keystore.store(fos, KEYSTORE_PASSWORD.toCharArray());
+    public void saveKeyStore(KeyStore keystore) throws Exception {
+        final File keystoreFile = new File(getClass().getResource(KEYSTORE_PATH).getFile());
+        final char[] passwordChars = keystorePassword.toCharArray();
+        try (FileOutputStream fos = new FileOutputStream(keystoreFile.getAbsolutePath())) {
+            keystore.store(fos, passwordChars);
+        } finally {
+            Arrays.fill(passwordChars, '\0'); //Passwort aus speicher löschen ist nur solange drin wie nötig
         }
     }
 
-    // Speichert einen neuen Schlüssel im Keystore
     public void storeKey(String alias, SecretKey key) throws Exception {
+        try {
+            final KeyStore keystore = loadKeyStore();
 
-        KeyStore keystore = loadKeyStore();
+            String keystorePassword = System.getenv("KEYSTORE_PASSWORD");
+            final char[] passwordChars = keystorePassword.toCharArray();
+            keystorePassword = null;
+            
+            final SecretKey masterKey = (SecretKey) keystore.getKey("master-key", passwordChars);
+            if (masterKey == null) {
+                throw new RuntimeException("Master Key nicht gefunden!");
+            }
+            
+            final Cipher cipher = Cipher.getInstance("AES");
+            cipher.init(Cipher.WRAP_MODE, masterKey);
+            final byte[] encryptedKey = cipher.wrap(key);
+            final SecretKeySpec encryptedKeySpec = new SecretKeySpec(encryptedKey, "AES");
+            
+            final SecretKeyEntry keyEntry = new SecretKeyEntry(encryptedKeySpec);
+            final ProtectionParameter protection = new PasswordProtection(passwordChars);
+            keystore.setEntry(alias, keyEntry, protection);
+            saveKeyStore(keystore);
+            Arrays.fill(passwordChars, '\0');
 
-        KeyStore.SecretKeyEntry keyEntry = new KeyStore.SecretKeyEntry(key);
-        KeyStore.ProtectionParameter protection = new KeyStore.PasswordProtection(KEYSTORE_PASSWORD.toCharArray());
-        keystore.setEntry(alias, keyEntry, protection);
-
-        saveKeyStore(keystore);
+            final Enumeration<String> aliases = keystore.aliases();
+            while (aliases.hasMoreElements()) {
+                System.out.println(aliases.nextElement());
+            }
+        } catch (Exception e) {
+            System.out.println("Fehler beim speichern des Keys: " + e);
+        }
     }
 
-    // Holt einen Schlüssel aus dem Keystore
     public SecretKey getKey(String alias) throws Exception {
-        KeyStore keystore = loadKeyStore();
-        return (SecretKey) keystore.getKey(alias, KEYSTORE_PASSWORD.toCharArray());
+        final KeyStore keystore = loadKeyStore();
+        return (SecretKey) keystore.getKey(alias, keystorePassword.toCharArray());
     }
 }
