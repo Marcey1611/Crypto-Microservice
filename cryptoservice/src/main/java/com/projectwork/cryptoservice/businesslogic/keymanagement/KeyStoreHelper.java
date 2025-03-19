@@ -26,7 +26,7 @@ import javax.crypto.spec.SecretKeySpec;
  */
 @Component
 public class KeyStoreHelper {
-    private static final String KEYSTORE_PATH = "/keystores/keystore.jks";
+    private static final String KEYSTORE_PATH = System.getenv("KEYSTORE_PATH");
 
     /**
      * 
@@ -40,7 +40,7 @@ public class KeyStoreHelper {
      */
     public KeyStore loadKeyStore() throws Exception {
         final KeyStore keystore = KeyStore.getInstance("PKCS12"); 
-        final File keystoreFile = new File(getClass().getResource(KEYSTORE_PATH).getFile());
+        final File keystoreFile = new File(KEYSTORE_PATH);
         
         String keystorePassword = System.getenv("KEYSTORE_PASSWORD");
         final char[] passwordChars = keystorePassword.toCharArray();
@@ -64,7 +64,7 @@ public class KeyStoreHelper {
      * - OWASP [199]
      */
     public void saveKeyStore(KeyStore keystore) throws Exception {
-        final File keystoreFile = new File(getClass().getResource(KEYSTORE_PATH).getFile());
+        final File keystoreFile = new File(KEYSTORE_PATH);
 
         String keystorePassword = System.getenv("KEYSTORE_PASSWORD");
         final char[] passwordChars = keystorePassword.toCharArray();

@@ -18,6 +18,7 @@ import java.util.Base64;
  * @author Marcel Eichelberger
  * 
  * TODO: MAster key rotation
+ * TODO: Hashicorp Vault für Keystore Password, 
  */
 @Service
 public class KeyManagementService {
@@ -45,7 +46,6 @@ public class KeyManagementService {
      */
     public GenerateKeyResultModel generateKey() throws Exception {
         final SecureRandom secureRandom = SecureRandom.getInstanceStrong(); 
-        
         final KeyGenerator keyGen = KeyGenerator.getInstance("AES");
         keyGen.init(256, secureRandom); // OWASP [104] SecureRandom for cryptographic key generation
         final SecretKey aesKey = keyGen.generateKey();

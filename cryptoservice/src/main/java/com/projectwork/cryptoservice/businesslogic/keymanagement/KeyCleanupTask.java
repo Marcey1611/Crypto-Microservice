@@ -3,11 +3,11 @@ package com.projectwork.cryptoservice.businesslogic.keymanagement;
 import java.security.KeyStore;
 import java.security.KeyStore.PasswordProtection;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -22,14 +22,11 @@ public class KeyCleanupTask {
     
     private final KeyStoreHelper keyStoreHelper;
 
-    @Value("${keystore.password}")
-    private String keystorePassword;
-
     public KeyCleanupTask(KeyStoreHelper keyStoreHelper) {
         this.keyStoreHelper = keyStoreHelper;
     }
 
-    @Scheduled(fixedRate = 60000)
+    @Scheduled(fixedRate = 3600000)
     public void cleanupKeysPeriodically() {
         try {
             System.out.println("Starte periodischen Key Cleanup...");
@@ -54,7 +51,11 @@ public class KeyCleanupTask {
         while (aliases.hasMoreElements()) {
             final String alias = aliases.nextElement();
             if ("master-key".equals(alias) || "jwt-signing-key".equals(alias)) continue;
-            final PasswordProtection passwordProtection = new PasswordProtection(keystorePassword.toCharArray());
+            String keystorePassword = System.getenv("KEYSTORE_PASSWORD");
+            final char[] passwordChars = keystorePassword.toCharArray();
+            keystorePassword = null;
+            final PasswordProtection passwordProtection = new PasswordProtection(passwordChars);
+            Arrays.fill(passwordChars, '\0');
             try {
                 final KeyStore.Entry entry = keystore.getEntry(alias, passwordProtection);
                 if (entry instanceof KeyStore.SecretKeyEntry) {
