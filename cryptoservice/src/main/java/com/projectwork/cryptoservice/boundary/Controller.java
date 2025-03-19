@@ -1,15 +1,34 @@
 package com.projectwork.cryptoservice.boundary;
 
-import com.projectwork.cryptoservice.entity.*;
+import com.projectwork.cryptoservice.entity.decrypt.DecryptModel;
+import com.projectwork.cryptoservice.entity.decrypt.DecryptRequest;
+import com.projectwork.cryptoservice.entity.decrypt.DecryptResponse;
+import com.projectwork.cryptoservice.entity.decrypt.DecryptResultModel;
+import com.projectwork.cryptoservice.entity.encrypt.EncryptModel;
+import com.projectwork.cryptoservice.entity.encrypt.EncryptRequest;
+import com.projectwork.cryptoservice.entity.encrypt.EncryptResponse;
+import com.projectwork.cryptoservice.entity.encrypt.EncryptResultModel;
+import com.projectwork.cryptoservice.entity.keymanagement.GenerateKeyResponse;
+import com.projectwork.cryptoservice.entity.keymanagement.GenerateKeyResultModel;
+import com.projectwork.cryptoservice.entity.sign.SignModel;
+import com.projectwork.cryptoservice.entity.sign.SignRequest;
+import com.projectwork.cryptoservice.entity.sign.SignResponse;
+import com.projectwork.cryptoservice.entity.sign.SignResultModel;
+import com.projectwork.cryptoservice.entity.verify.VerifyModel;
+import com.projectwork.cryptoservice.entity.verify.VerifyRequest;
+import com.projectwork.cryptoservice.entity.verify.VerifyResponse;
+import com.projectwork.cryptoservice.entity.verify.VerifyResultModel;
 import com.projectwork.cryptoservice.factory.ModelsFactory;
 import com.projectwork.cryptoservice.factory.ResponseFactory;
 import com.projectwork.cryptoservice.validator.Validator;
 import com.projectwork.cryptoservice.businessfacade.*;
+
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-public class Controller implements EncryptAPI, DecryptAPI, SignAPI, VerifyAPI {
+public class Controller implements EncryptAPI, DecryptAPI, SignAPI, VerifyAPI, GenerateKeyAPI {
 
     private final Validator validator;
     private final ModelsFactory modelsFactory;
@@ -18,10 +37,11 @@ public class Controller implements EncryptAPI, DecryptAPI, SignAPI, VerifyAPI {
     private final DecryptFacade decryptFacade;
     private final SignFacade signFacade;
     private final VerifyFacade verifyFacade;
+    private final KeyManagementFacade keyManagementFacade;
 
     public Controller(Validator validator, ModelsFactory modelsFactory, ResponseFactory responseFactory,
                             EncryptFacade encryptFacade, DecryptFacade decryptFacade,
-                            SignFacade signFacade, VerifyFacade verifyFacade) {
+                            SignFacade signFacade, VerifyFacade verifyFacade, KeyManagementFacade keyManagementFacade) {
         this.validator = validator;
         this.modelsFactory = modelsFactory;
         this.responseFactory = responseFactory;
@@ -29,6 +49,7 @@ public class Controller implements EncryptAPI, DecryptAPI, SignAPI, VerifyAPI {
         this.decryptFacade = decryptFacade;
         this.signFacade = signFacade;
         this.verifyFacade = verifyFacade;
+        this.keyManagementFacade = keyManagementFacade;
     }
 
     @Override
@@ -62,4 +83,18 @@ public class Controller implements EncryptAPI, DecryptAPI, SignAPI, VerifyAPI {
         VerifyResultModel verifyResultModel = verifyFacade.processVerification(verifyModel);
         return responseFactory.buildVerifyResponse(verifyResultModel);
     }
+
+    @Override
+    public ResponseEntity<GenerateKeyResponse> generateKeyPost() {
+        System.out.println("API `/keys/generate` wurde aufgerufen!");
+        try {
+            GenerateKeyResultModel generateKeyResultModel = keyManagementFacade.generateKey();
+            System.out.println(generateKeyResultModel.getJwtString());
+            return responseFactory.buildGenerateKeyResponse(generateKeyResultModel);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    
 }

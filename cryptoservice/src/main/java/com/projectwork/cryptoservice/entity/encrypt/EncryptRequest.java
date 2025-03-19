@@ -1,10 +1,10 @@
-package com.projectwork.cryptoservice.entity;
+package com.projectwork.cryptoservice.entity.encrypt;
 
-public class EncryptModel {
+public class EncryptRequest {
     private byte[] plainText;
     private byte[] key;
 
-    public EncryptModel(byte[] plainText, byte[] key) {
+    public EncryptRequest(byte[] plainText, byte[] key) {
         this.plainText = plainText;
         this.key = key;
     }

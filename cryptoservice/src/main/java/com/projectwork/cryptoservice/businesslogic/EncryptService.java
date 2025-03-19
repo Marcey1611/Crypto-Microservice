@@ -1,6 +1,8 @@
 package com.projectwork.cryptoservice.businesslogic;
 
-import com.projectwork.cryptoservice.entity.*;
+import com.projectwork.cryptoservice.entity.encrypt.EncryptModel;
+import com.projectwork.cryptoservice.entity.encrypt.EncryptResultModel;
+
 import org.springframework.stereotype.Service;
 
 @Service

@@ -1,4 +1,4 @@
-package com.projectwork.cryptoservice.entity;
+package com.projectwork.cryptoservice.entity.sign;
 
 public class SignResultModel {
     private byte[] signature;

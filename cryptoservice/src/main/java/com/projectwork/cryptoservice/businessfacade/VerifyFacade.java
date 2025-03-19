@@ -1,6 +1,7 @@
 package com.projectwork.cryptoservice.businessfacade;
 
-import com.projectwork.cryptoservice.entity.*;
+import com.projectwork.cryptoservice.entity.verify.VerifyModel;
+import com.projectwork.cryptoservice.entity.verify.VerifyResultModel;
 import com.projectwork.cryptoservice.businesslogic.VerifyService;
 import org.springframework.stereotype.Service;
 

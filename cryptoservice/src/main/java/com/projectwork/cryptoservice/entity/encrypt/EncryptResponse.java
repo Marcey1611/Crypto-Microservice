@@ -1,4 +1,4 @@
-package com.projectwork.cryptoservice.entity;
+package com.projectwork.cryptoservice.entity.encrypt;
 
 public class EncryptResponse {
     private byte[] cipherText;

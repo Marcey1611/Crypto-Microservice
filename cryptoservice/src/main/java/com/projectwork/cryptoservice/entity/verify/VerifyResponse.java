@@ -1,4 +1,4 @@
-package com.projectwork.cryptoservice.entity;
+package com.projectwork.cryptoservice.entity.verify;
 
 public class VerifyResponse {
     private boolean verified;

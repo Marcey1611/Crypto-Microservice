@@ -1,7 +1,8 @@
 package com.projectwork.cryptoservice.boundary;
 
-import com.projectwork.cryptoservice.entity.VerifyRequest;
-import com.projectwork.cryptoservice.entity.VerifyResponse;
+import com.projectwork.cryptoservice.entity.verify.VerifyRequest;
+import com.projectwork.cryptoservice.entity.verify.VerifyResponse;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

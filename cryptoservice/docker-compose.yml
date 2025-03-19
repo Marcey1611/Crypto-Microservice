@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  cryptoservice:
+    build: .
+    container_name: cryptoservice
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./keystore:/app/keystore
+    environment:
+      - SERVER_PORT=8080
+      - KEYSTORE_PASSWORD=CryptoMicroservice2025!
+      - KEYSTORE_PATH=/app/keystore/keystore.jks

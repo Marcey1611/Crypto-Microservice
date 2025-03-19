@@ -1,6 +1,8 @@
 package com.projectwork.cryptoservice.businesslogic;
 
-import com.projectwork.cryptoservice.entity.*;
+import com.projectwork.cryptoservice.entity.sign.SignModel;
+import com.projectwork.cryptoservice.entity.sign.SignResultModel;
+
 import org.springframework.stereotype.Service;
 
 @Service
