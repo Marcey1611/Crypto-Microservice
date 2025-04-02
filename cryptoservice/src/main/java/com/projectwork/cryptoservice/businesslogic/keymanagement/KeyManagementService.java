@@ -55,8 +55,7 @@ public class KeyManagementService {
         final String keyAlias = Base64.getUrlEncoder().withoutPadding().encodeToString(randomBytes); // OWASP [104] SecureRandom for unguessable alias
 
         keyStoreHelper.storeKey(keyAlias, aesKey);
-        final String jwtString = jwtService.generateJwt(keyAlias); // OWASP [101] JWT generation and signing (done on server-side)
-        return resultModelsFactory.buildGenerateKeyResultModel(jwtString);
+        return resultModelsFactory.buildGenerateKeyResultModel();
     }
 
     /**

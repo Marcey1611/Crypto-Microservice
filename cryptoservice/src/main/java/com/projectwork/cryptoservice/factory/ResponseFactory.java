@@ -34,7 +34,7 @@ public class ResponseFactory {
     }
 
     public ResponseEntity<GenerateKeyResponse> buildGenerateKeyResponse(GenerateKeyResultModel generateKeyResultModel) {
-        return ResponseEntity.ok(new GenerateKeyResponse(generateKeyResultModel.getJwtString()));
+        return ResponseEntity.ok(new GenerateKeyResponse(generateKeyResultModel.getMessage()));
     }
 
 }

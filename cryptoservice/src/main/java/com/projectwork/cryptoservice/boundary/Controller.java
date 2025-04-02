@@ -21,7 +21,13 @@ import com.projectwork.cryptoservice.entity.verify.VerifyResultModel;
 import com.projectwork.cryptoservice.factory.ModelsFactory;
 import com.projectwork.cryptoservice.factory.ResponseFactory;
 import com.projectwork.cryptoservice.validator.Validator;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import com.projectwork.cryptoservice.businessfacade.*;
+
+import java.security.Principal;
+import java.security.cert.X509Certificate;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -85,15 +91,35 @@ public class Controller implements EncryptAPI, DecryptAPI, SignAPI, VerifyAPI, G
     }
 
     @Override
-    public ResponseEntity<GenerateKeyResponse> generateKeyPost() {
+    public ResponseEntity<String> generateKeyPost(Principal principal) {
         System.out.println("API `/keys/generate` wurde aufgerufen!");
-        try {
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Principal ist null");
+        }
+        return ResponseEntity.ok("Authenticated as: " + principal.getName());
+
+        /*X509Certificate[] certs = (X509Certificate[]) request.getAttribute("javax.servlet.request.X509Certificate");
+
+        if (certs == null) {
+            System.out.println("🚨 request.getAttribute(\"javax.servlet.request.X509Certificate\") == null");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        if (certs.length == 0) {
+            System.out.println("🚨 Zertifikat-Array ist leer");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        System.out.println("✅ Zertifikat erkannt: " + certs[0].getSubjectX500Principal().getName());
+        // ...*/
+
+        /*try {
             GenerateKeyResultModel generateKeyResultModel = keyManagementFacade.generateKey();
-            System.out.println(generateKeyResultModel.getJwtString());
+            System.out.println(generateKeyResultModel.getMessage());
             return responseFactory.buildGenerateKeyResponse(generateKeyResultModel);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+        }*/
     }
 
     

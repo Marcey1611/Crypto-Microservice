@@ -1,10 +1,10 @@
 package com.projectwork.cryptoservice.entity.keymanagement;
 
 public class GenerateKeyResultModel {
-    private String jwtString;
+    private String message = "Client key generated.";
 
-    public GenerateKeyResultModel(String jwtToken) { this.jwtString = jwtToken; }
+    public GenerateKeyResultModel() {}
 
-    public String getJwtString() { return jwtString; }
-    public void setJwtString(String jwtToken) { this.jwtString = jwtToken; }
+    public String getMessage() { return message; }
+    public void setMessage(String message) { this.message = message; }
 }

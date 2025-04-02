@@ -1,0 +1,13 @@
+server:
+  port: 8443
+  ssl:
+    enabled: true
+    key-store: file:/app/tls/server-keystore.p12
+    key-store-password: CryptoMicroservice2025!
+    key-store-type: PKCS12
+
+    trust-store: file:/app/tls/server-truststore.p12
+    trust-store-password: CryptoMicroservice2025!
+    trust-store-type: PKCS12
+
+    client-auth: need

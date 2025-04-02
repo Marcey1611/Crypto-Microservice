@@ -7,6 +7,9 @@ FROM openjdk:21-jdk-slim
 WORKDIR /app
 COPY --from=build /app/target/*.jar cryptoservice.jar
 
+# TLS und Keystore Verzeichnis
+VOLUME /app/tls
 VOLUME /app/keystore
-EXPOSE 8080
+
+EXPOSE 8443
 ENTRYPOINT ["java", "-jar", "cryptoservice.jar"]
