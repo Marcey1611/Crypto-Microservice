@@ -16,11 +16,10 @@ public class KeyManagementFacade {
     }
 
     public GenerateKeyResultModel generateKey() throws Exception {
-        
         return keyManagementService.generateKey();
     }
 
-    public SecretKey getKeyFromJwt(String jwtToken) throws Exception {
+    /*public SecretKey getKeyFromJwt(String jwtToken) throws Exception {
         return keyManagementService.getKeyFromJwt(jwtToken);
-    }
+    }*/
 }

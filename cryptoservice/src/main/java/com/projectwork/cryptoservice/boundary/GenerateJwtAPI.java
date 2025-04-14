@@ -5,12 +5,10 @@ import java.security.Principal;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import com.projectwork.cryptoservice.entity.keymanagement.GenerateKeyResponse;
-
 import jakarta.servlet.http.HttpServletRequest;
 
 @RequestMapping("/crypto")
-public interface GenerateKeyAPI {
-    @RequestMapping("/keys/generate")
-    ResponseEntity<GenerateKeyResponse> generateKeyPost(HttpServletRequest request, Principal principal);
+public interface GenerateJwtAPI {
+    @RequestMapping("/jwt/generate")
+    ResponseEntity<String> generateJwtPost(HttpServletRequest request, Principal principal);
 }

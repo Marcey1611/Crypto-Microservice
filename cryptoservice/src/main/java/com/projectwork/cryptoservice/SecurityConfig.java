@@ -4,6 +4,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -17,36 +18,25 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        System.out.println("1---------------------------------------------------------------");
         http
             .authorizeHttpRequests(auth -> auth
-                .anyRequest().authenticated()
-            )
+            .requestMatchers("/crypto/keys/generate").authenticated()
+            .anyRequest().authenticated())
             .x509(x509 -> x509
-                .subjectPrincipalRegex("CN\\s*=\\s*([^,]+)")
-                .userDetailsService(userDetailsService()) // wichtig!
-            );
-        System.out.println("2----------------------------------------------------------------");
+                .subjectPrincipalRegex("CN=(.*?)(?:,|$)")
+                .userDetailsService(userDetailsService())
+            )
+            .csrf(csrf -> csrf.disable());
         return http.build();
     }
 
     @Bean
     public UserDetailsService userDetailsService() {
         return username -> {
-            // Zum Testen: Erlaube den CN "client"
-            System.out.println("SecConfig ---------------------------------------------------------------------------------------------------------------------------------------");
-            if ("client1".equalsIgnoreCase(username)) {
-                return User.withUsername("client1")
-                    .password("pass:CryptoMicroservice2025!") // X.509 braucht kein Passwort
-                    .authorities("ROLE_USER")
-                    .accountExpired(false)
-                    .accountLocked(false)
-                    .credentialsExpired(false)
-                    .disabled(false)
-                    .build();
+            if ("Client1".equals(username)) {
+                return new User("Client1", "", AuthorityUtils.createAuthorityList("ROLE_USER"));
             }
-            System.out.println("Oho------------------------------------------------------------------------------------------------------------------------------------------------");
-            throw new UsernameNotFoundException("Client nicht erlaubt: " + username);
+            throw new UsernameNotFoundException("User not found: " + username);
         };
     }
 }

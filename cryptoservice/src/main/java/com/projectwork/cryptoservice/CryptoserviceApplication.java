@@ -35,3 +35,4 @@ public class CryptoserviceApplication {
  * - OWASP [143] Später TLS -> Communication Security sicherstellen
  */
 
+// Vllt interessant bzgl mtls: https://github.com/making/demo-mtls/tree/main/src/main/resources/self-signed

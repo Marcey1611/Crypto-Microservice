@@ -30,6 +30,52 @@ public class KeyStoreHelper {
 
     /**
      * 
+     * @param alias
+     * @param key
+     * @throws Exception
+     * 
+     * - OWASP [102] Protect master secrets (Master Key retrieved securely).
+     * - OWASP [103] Cryptographic modules fail securely (exception handling during cipher init/wrap).
+     * - OWASP [106] Key management - proper wrapping of client keys with master key.
+     * - OWASP [194] Passwords cleared from memory after use (Arrays.fill).
+     */
+    public void storeKey(String alias, SecretKey key) throws Exception {
+        try {
+            final KeyStore keystore = loadKeyStore();
+
+            String keystorePassword = System.getenv("KEYSTORE_PASSWORD");
+            final char[] passwordChars = keystorePassword.toCharArray();
+            keystorePassword = null;
+
+            final SecretKey masterKey = (SecretKey) keystore.getKey("master-key", passwordChars);
+            if (masterKey == null) {
+                throw new RuntimeException("Master Key nicht gefunden!"); // OWASP [103] Fail securely if master key is missing
+            }
+            
+            // OWASP [104] Using strong AES wrapping for client key protection
+            // OWASP [133] Stored keys are encrypted (with master key wrapping)
+            final Cipher cipher = Cipher.getInstance("AES");
+            cipher.init(Cipher.WRAP_MODE, masterKey);
+            final byte[] encryptedKey = cipher.wrap(key);
+            final SecretKeySpec encryptedKeySpec = new SecretKeySpec(encryptedKey, "AES");
+            
+            final SecretKeyEntry keyEntry = new SecretKeyEntry(encryptedKeySpec);
+            final ProtectionParameter protection = new PasswordProtection(passwordChars);
+            keystore.setEntry(alias, keyEntry, protection);
+            saveKeyStore(keystore);
+            Arrays.fill(passwordChars, '\0'); // OWASP [199]
+
+            final Enumeration<String> aliases = keystore.aliases();
+            while (aliases.hasMoreElements()) {
+                System.out.println(aliases.nextElement());
+            }
+        } catch (Exception e) {
+            System.out.println("Fehler beim speichern des Keys: " + e);
+        }
+    }
+
+    /**
+     * 
      * @return
      * @throws Exception
      * 
@@ -74,52 +120,6 @@ public class KeyStoreHelper {
             keystore.store(fos, passwordChars);
         } finally {
             Arrays.fill(passwordChars, '\0'); // OWASP [199]
-        }
-    }
-
-    /**
-     * 
-     * @param alias
-     * @param key
-     * @throws Exception
-     * 
-     * - OWASP [102] Protect master secrets (Master Key retrieved securely).
-     * - OWASP [103] Cryptographic modules fail securely (exception handling during cipher init/wrap).
-     * - OWASP [106] Key management - proper wrapping of client keys with master key.
-     * - OWASP [194] Passwords cleared from memory after use (Arrays.fill).
-     */
-    public void storeKey(String alias, SecretKey key) throws Exception {
-        try {
-            final KeyStore keystore = loadKeyStore();
-
-            String keystorePassword = System.getenv("KEYSTORE_PASSWORD");
-            final char[] passwordChars = keystorePassword.toCharArray();
-            keystorePassword = null;
-
-            final SecretKey masterKey = (SecretKey) keystore.getKey("master-key", passwordChars);
-            if (masterKey == null) {
-                throw new RuntimeException("Master Key nicht gefunden!"); // OWASP [103] Fail securely if master key is missing
-            }
-            
-            // OWASP [104] Using strong AES wrapping for client key protection
-            // OWASP [133] Stored keys are encrypted (with master key wrapping)
-            final Cipher cipher = Cipher.getInstance("AES");
-            cipher.init(Cipher.WRAP_MODE, masterKey);
-            final byte[] encryptedKey = cipher.wrap(key);
-            final SecretKeySpec encryptedKeySpec = new SecretKeySpec(encryptedKey, "AES");
-            
-            final SecretKeyEntry keyEntry = new SecretKeyEntry(encryptedKeySpec);
-            final ProtectionParameter protection = new PasswordProtection(passwordChars);
-            keystore.setEntry(alias, keyEntry, protection);
-            saveKeyStore(keystore);
-            Arrays.fill(passwordChars, '\0'); // OWASP [199]
-
-            final Enumeration<String> aliases = keystore.aliases();
-            while (aliases.hasMoreElements()) {
-                System.out.println(aliases.nextElement());
-            }
-        } catch (Exception e) {
-            System.out.println("Fehler beim speichern des Keys: " + e);
         }
     }
 

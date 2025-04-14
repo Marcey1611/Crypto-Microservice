@@ -67,8 +67,8 @@ public class KeyManagementService {
      * SecureCodingPractices
      * - OWASP [101] All cryptographic operations on the server
      */
-    public SecretKey getKeyFromJwt(String jwtToken) throws Exception {
+    /*public SecretKey getKeyFromJwt(String jwtToken) throws Exception {
         String keyAlias = jwtService.getKeyAliasFromJwt(jwtToken);
         return keyStoreHelper.getKey(keyAlias); // OWASP [101] All cryptographic operations on the server
-    }
+    }*/
 }

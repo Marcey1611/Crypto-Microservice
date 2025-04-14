@@ -33,8 +33,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
-@RestController
-public class Controller implements EncryptAPI, DecryptAPI, SignAPI, VerifyAPI, GenerateKeyAPI {
+@org.springframework.stereotype.Controller
+public class Controller implements EncryptAPI, DecryptAPI, SignAPI, VerifyAPI, GenerateKeyAPI, GenerateJwtAPI {
 
     private final Validator validator;
     private final ModelsFactory modelsFactory;
@@ -91,35 +91,23 @@ public class Controller implements EncryptAPI, DecryptAPI, SignAPI, VerifyAPI, G
     }
 
     @Override
-    public ResponseEntity<String> generateKeyPost(Principal principal) {
+    public ResponseEntity<GenerateKeyResponse> generateKeyPost(HttpServletRequest request, Principal principal) {
         System.out.println("API `/keys/generate` wurde aufgerufen!");
-        if (principal == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Principal ist null");
-        }
-        return ResponseEntity.ok("Authenticated as: " + principal.getName());
+        final String clientName = principal.getName();
+        System.out.println("Client Name: " + clientName);
 
-        /*X509Certificate[] certs = (X509Certificate[]) request.getAttribute("javax.servlet.request.X509Certificate");
-
-        if (certs == null) {
-            System.out.println("🚨 request.getAttribute(\"javax.servlet.request.X509Certificate\") == null");
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-
-        if (certs.length == 0) {
-            System.out.println("🚨 Zertifikat-Array ist leer");
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-
-        System.out.println("✅ Zertifikat erkannt: " + certs[0].getSubjectX500Principal().getName());
-        // ...*/
-
-        /*try {
+        try {
             GenerateKeyResultModel generateKeyResultModel = keyManagementFacade.generateKey();
-            System.out.println(generateKeyResultModel.getMessage());
-            return responseFactory.buildGenerateKeyResponse(generateKeyResultModel);
+            ResponseEntity<GenerateKeyResponse> generateKeyResponse = responseFactory.buildGenerateKeyResponse(generateKeyResultModel);
+            return generateKeyResponse;
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }*/
+        }
+    }
+
+    @Override
+    public ResponseEntity<String> generateJwtPost(HttpServletRequest request, Principal principal) {
+        throw new UnsupportedOperationException("Unimplemented method 'generateJwtPost'");
     }
 
     
