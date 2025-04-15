@@ -186,3 +186,8 @@ curl -v -k \
   --key client1.key \
   https://localhost:8443/crypto/keys/generate
 ```
+
+
+
+# für Doku:
+„Der Crypto-Service verarbeitet alle Krypto-Operationen serverseitig, um eine zentrale Kontrolle und sichere Schlüsselverwaltung zu garantieren. Dies ist in vielen realen Anwendungen effizient genug, z. B. in Webservices, Banken oder Cloud-Systemen. In Performance-kritischen Szenarien könnten dezentrale Schlüssel und lokale Ver- und Entschlüsselung in Betracht gezogen werden – auf Kosten der zentralen Kontrolle und Sicherheit.“

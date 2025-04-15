@@ -6,31 +6,32 @@ import javax.crypto.SecretKey;
 import org.springframework.stereotype.Service;
 
 import com.projectwork.cryptoservice.businesslogic.JwtService;
+import com.projectwork.cryptoservice.entity.keymanagement.GenerateKeyModel;
 import com.projectwork.cryptoservice.entity.keymanagement.GenerateKeyResultModel;
 import com.projectwork.cryptoservice.factory.ResultModelsFactory;
 
 import java.security.SecureRandom;
 import java.util.Base64;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Key Management Service implementation: handles the key management of the service.
  * 
  * @author Marcel Eichelberger
  * 
- * TODO: MAster key rotation
- * TODO: Hashicorp Vault für Keystore Password, 
  */
 @Service
 public class KeyManagementService {
 
     // OWASP [106] Key Management Policy & Process
     private final KeyStoreHelper keyStoreHelper;
-    private final JwtService jwtService;
     private final ResultModelsFactory resultModelsFactory;
+    private final ClientKeyAliasMap clientKeyAliasMap;
 
-    public KeyManagementService(KeyStoreHelper keyStoreHelper, JwtService jwtService, ResultModelsFactory resultModelsFactory) {
+    public KeyManagementService(KeyStoreHelper keyStoreHelper, ResultModelsFactory resultModelsFactory, ClientKeyAliasMap clientKeyAliasMap) {
+        this.clientKeyAliasMap = clientKeyAliasMap;
         this.keyStoreHelper = keyStoreHelper;
-        this.jwtService = jwtService;
         this.resultModelsFactory = resultModelsFactory;
     }
 
@@ -44,31 +45,30 @@ public class KeyManagementService {
      * - OWASP [104] Secure Random Number Generation for Key and Alias
      * - OWASP [101] JWT generation and signing (done on server-side)
      */
-    public GenerateKeyResultModel generateKey() throws Exception {
-        final SecureRandom secureRandom = SecureRandom.getInstanceStrong(); 
-        final KeyGenerator keyGen = KeyGenerator.getInstance("AES");
-        keyGen.init(256, secureRandom); // OWASP [104] SecureRandom for cryptographic key generation
-        final SecretKey aesKey = keyGen.generateKey();
+    public GenerateKeyResultModel generateKey(final GenerateKeyModel generateKeyModel) throws Exception {
+        final boolean clientNameExist = clientKeyAliasMap.containsClient(generateKeyModel.getClientName());
+        if (clientNameExist) {
+            return resultModelsFactory.buildGenerateKeyResultModel("Key already exists for client: " + generateKeyModel.getClientName());
+        }
 
-        final byte[] randomBytes = new byte[16];
-        secureRandom.nextBytes(randomBytes);
-        final String keyAlias = Base64.getUrlEncoder().withoutPadding().encodeToString(randomBytes); // OWASP [104] SecureRandom for unguessable alias
-
+        final SecretKey aesKey = generateRandomKey();
+        final String keyAlias = generateRandomKeyAlias(); // OWASP [104] SecureRandom for unguessable alias
         keyStoreHelper.storeKey(keyAlias, aesKey);
-        return resultModelsFactory.buildGenerateKeyResultModel();
+        clientKeyAliasMap.addClientKeyAlias(generateKeyModel.getClientName(), keyAlias);
+        return resultModelsFactory.buildGenerateKeyResultModel("Key generated for client: " + generateKeyModel.getClientName());
     }
 
-    /**
-     * 
-     * @param jwtToken
-     * @return
-     * @throws Exception
-     * 
-     * SecureCodingPractices
-     * - OWASP [101] All cryptographic operations on the server
-     */
-    /*public SecretKey getKeyFromJwt(String jwtToken) throws Exception {
-        String keyAlias = jwtService.getKeyAliasFromJwt(jwtToken);
-        return keyStoreHelper.getKey(keyAlias); // OWASP [101] All cryptographic operations on the server
-    }*/
+    private SecretKey generateRandomKey() throws Exception {
+        final SecureRandom secureRandom = SecureRandom.getInstanceStrong();
+        final KeyGenerator keyGen = KeyGenerator.getInstance("AES");
+        keyGen.init(256, secureRandom); // OWASP [104] SecureRandom for cryptographic key generation
+        return keyGen.generateKey();
+    }
+
+    private String generateRandomKeyAlias() throws Exception {
+        final SecureRandom secureRandom = SecureRandom.getInstanceStrong();
+        final byte[] randomBytes = new byte[16];
+        secureRandom.nextBytes(randomBytes);
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(randomBytes).toLowerCase(); // OWASP [104] SecureRandom for unguessable alias
+    }
 }

@@ -8,6 +8,11 @@ import com.projectwork.cryptoservice.entity.encrypt.EncryptModel;
 import com.projectwork.cryptoservice.entity.encrypt.EncryptRequest;
 import com.projectwork.cryptoservice.entity.encrypt.EncryptResponse;
 import com.projectwork.cryptoservice.entity.encrypt.EncryptResultModel;
+import com.projectwork.cryptoservice.entity.jwtmanagement.GenerateJwtModel;
+import com.projectwork.cryptoservice.entity.jwtmanagement.GenerateJwtRequest;
+import com.projectwork.cryptoservice.entity.jwtmanagement.GenerateJwtResponse;
+import com.projectwork.cryptoservice.entity.jwtmanagement.GenerateJwtResultModel;
+import com.projectwork.cryptoservice.entity.keymanagement.GenerateKeyModel;
 import com.projectwork.cryptoservice.entity.keymanagement.GenerateKeyResponse;
 import com.projectwork.cryptoservice.entity.keymanagement.GenerateKeyResultModel;
 import com.projectwork.cryptoservice.entity.sign.SignModel;
@@ -22,6 +27,7 @@ import com.projectwork.cryptoservice.factory.ModelsFactory;
 import com.projectwork.cryptoservice.factory.ResponseFactory;
 import com.projectwork.cryptoservice.validator.Validator;
 
+import io.jsonwebtoken.Jwt;
 import jakarta.servlet.http.HttpServletRequest;
 
 import com.projectwork.cryptoservice.businessfacade.*;
@@ -44,10 +50,12 @@ public class Controller implements EncryptAPI, DecryptAPI, SignAPI, VerifyAPI, G
     private final SignFacade signFacade;
     private final VerifyFacade verifyFacade;
     private final KeyManagementFacade keyManagementFacade;
+    private final JwtManagementFacade jwtManagementFacade;
 
     public Controller(Validator validator, ModelsFactory modelsFactory, ResponseFactory responseFactory,
                             EncryptFacade encryptFacade, DecryptFacade decryptFacade,
-                            SignFacade signFacade, VerifyFacade verifyFacade, KeyManagementFacade keyManagementFacade) {
+                            SignFacade signFacade, VerifyFacade verifyFacade, KeyManagementFacade keyManagementFacade, JwtManagementFacade jwtManagementFacade) {
+        this.jwtManagementFacade = jwtManagementFacade;
         this.validator = validator;
         this.modelsFactory = modelsFactory;
         this.responseFactory = responseFactory;
@@ -91,13 +99,13 @@ public class Controller implements EncryptAPI, DecryptAPI, SignAPI, VerifyAPI, G
     }
 
     @Override
-    public ResponseEntity<GenerateKeyResponse> generateKeyPost(HttpServletRequest request, Principal principal) {
+    public ResponseEntity<GenerateKeyResponse> generateKeyPost(Principal principal) {
         System.out.println("API `/keys/generate` wurde aufgerufen!");
-        final String clientName = principal.getName();
-        System.out.println("Client Name: " + clientName);
+        final GenerateKeyModel generateKeyModel = modelsFactory.buildGenerateKeyModel(principal.getName());
+        System.out.println("Client Name: " + generateKeyModel.getClientName());
 
         try {
-            GenerateKeyResultModel generateKeyResultModel = keyManagementFacade.generateKey();
+            GenerateKeyResultModel generateKeyResultModel = keyManagementFacade.generateKey(generateKeyModel);
             ResponseEntity<GenerateKeyResponse> generateKeyResponse = responseFactory.buildGenerateKeyResponse(generateKeyResultModel);
             return generateKeyResponse;
         } catch (Exception e) {
@@ -106,8 +114,10 @@ public class Controller implements EncryptAPI, DecryptAPI, SignAPI, VerifyAPI, G
     }
 
     @Override
-    public ResponseEntity<String> generateJwtPost(HttpServletRequest request, Principal principal) {
-        throw new UnsupportedOperationException("Unimplemented method 'generateJwtPost'");
+    public ResponseEntity<String> generateJwtPost(GenerateJwtRequest generateJwtRequest, Principal principal) {
+        validator.validateGenerateJwtRequest(generateJwtRequest);
+        ResponseEntity<GenerateJwtResponse> generateJwtResponse = jwtManagementFacade.generateJwt(generateJwtRequest, principal.getName());
+        return ResponseEntity.ok(generateJwtResponse.getBody().getJwt());
     }
 
     

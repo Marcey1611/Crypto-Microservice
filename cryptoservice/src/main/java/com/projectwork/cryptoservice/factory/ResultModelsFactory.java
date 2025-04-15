@@ -7,7 +7,7 @@ import com.projectwork.cryptoservice.entity.keymanagement.GenerateKeyResultModel
 @Component
 public class ResultModelsFactory {
     
-    public GenerateKeyResultModel buildGenerateKeyResultModel() {
-        return new GenerateKeyResultModel();
+    public GenerateKeyResultModel buildGenerateKeyResultModel(final String message) {
+        return new GenerateKeyResultModel(message);
     }
 }
