@@ -21,6 +21,7 @@ public class SecurityConfig {
         http
             .authorizeHttpRequests(auth -> auth
             .requestMatchers("/crypto/keys/generate").authenticated()
+            .requestMatchers("/crypto/jwt/generate").authenticated()
             .anyRequest().authenticated())
             .x509(x509 -> x509
                 .subjectPrincipalRegex("CN=(.*?)(?:,|$)")

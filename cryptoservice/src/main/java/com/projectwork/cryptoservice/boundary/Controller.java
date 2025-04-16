@@ -8,10 +8,8 @@ import com.projectwork.cryptoservice.entity.encrypt.EncryptModel;
 import com.projectwork.cryptoservice.entity.encrypt.EncryptRequest;
 import com.projectwork.cryptoservice.entity.encrypt.EncryptResponse;
 import com.projectwork.cryptoservice.entity.encrypt.EncryptResultModel;
-import com.projectwork.cryptoservice.entity.jwtmanagement.GenerateJwtModel;
 import com.projectwork.cryptoservice.entity.jwtmanagement.GenerateJwtRequest;
 import com.projectwork.cryptoservice.entity.jwtmanagement.GenerateJwtResponse;
-import com.projectwork.cryptoservice.entity.jwtmanagement.GenerateJwtResultModel;
 import com.projectwork.cryptoservice.entity.keymanagement.GenerateKeyModel;
 import com.projectwork.cryptoservice.entity.keymanagement.GenerateKeyResponse;
 import com.projectwork.cryptoservice.entity.keymanagement.GenerateKeyResultModel;
@@ -27,17 +25,12 @@ import com.projectwork.cryptoservice.factory.ModelsFactory;
 import com.projectwork.cryptoservice.factory.ResponseFactory;
 import com.projectwork.cryptoservice.validator.Validator;
 
-import io.jsonwebtoken.Jwt;
-import jakarta.servlet.http.HttpServletRequest;
-
 import com.projectwork.cryptoservice.businessfacade.*;
 
 import java.security.Principal;
-import java.security.cert.X509Certificate;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.RestController;
 
 @org.springframework.stereotype.Controller
 public class Controller implements EncryptAPI, DecryptAPI, SignAPI, VerifyAPI, GenerateKeyAPI, GenerateJwtAPI {
@@ -114,10 +107,10 @@ public class Controller implements EncryptAPI, DecryptAPI, SignAPI, VerifyAPI, G
     }
 
     @Override
-    public ResponseEntity<String> generateJwtPost(GenerateJwtRequest generateJwtRequest, Principal principal) {
+    public ResponseEntity<GenerateJwtResponse> generateJwtPost(GenerateJwtRequest generateJwtRequest, Principal principal) {
         validator.validateGenerateJwtRequest(generateJwtRequest);
         ResponseEntity<GenerateJwtResponse> generateJwtResponse = jwtManagementFacade.generateJwt(generateJwtRequest, principal.getName());
-        return ResponseEntity.ok(generateJwtResponse.getBody().getJwt());
+        return generateJwtResponse;
     }
 
     

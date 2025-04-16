@@ -22,6 +22,10 @@ public class ClientKeyAliasMap {
         clientKeyAliasMap.entrySet().removeIf(entry -> entry.getValue().equals(keyAlias.toLowerCase()));
     }
 
+    public String getKeyAlias(final String clientName) {
+        return clientKeyAliasMap.get(clientName);
+    }
+
     public void print() {
         if (clientKeyAliasMap.isEmpty()) {
             System.out.println("Keine Client-Key-Mappings vorhanden.");

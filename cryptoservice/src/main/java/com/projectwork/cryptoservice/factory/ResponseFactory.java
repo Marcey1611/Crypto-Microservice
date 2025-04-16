@@ -13,6 +13,8 @@ import com.projectwork.cryptoservice.entity.sign.SignResultModel;
 import com.projectwork.cryptoservice.entity.verify.VerifyResponse;
 import com.projectwork.cryptoservice.entity.verify.VerifyResultModel;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 

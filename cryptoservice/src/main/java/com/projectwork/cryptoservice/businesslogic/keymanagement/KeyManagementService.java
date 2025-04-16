@@ -48,6 +48,7 @@ public class KeyManagementService {
     public GenerateKeyResultModel generateKey(final GenerateKeyModel generateKeyModel) throws Exception {
         final boolean clientNameExist = clientKeyAliasMap.containsClient(generateKeyModel.getClientName());
         if (clientNameExist) {
+            System.out.println("Key already exists for client: " + generateKeyModel.getClientName());
             return resultModelsFactory.buildGenerateKeyResultModel("Key already exists for client: " + generateKeyModel.getClientName());
         }
 
