@@ -21,9 +21,9 @@ import org.springframework.stereotype.Component;
 public class KeyCleanupTask {
     
     private final KeyStoreHelper keyStoreHelper;
-    private final ClientKeyAliasMap clientKeyAliasMap;
+    private final ClientKeyDataMap clientKeyAliasMap;
 
-    public KeyCleanupTask(KeyStoreHelper keyStoreHelper, ClientKeyAliasMap clientKeyAliasMap) {
+    public KeyCleanupTask(KeyStoreHelper keyStoreHelper, ClientKeyDataMap clientKeyAliasMap) {
         this.keyStoreHelper = keyStoreHelper;
         this.clientKeyAliasMap = clientKeyAliasMap;
     }

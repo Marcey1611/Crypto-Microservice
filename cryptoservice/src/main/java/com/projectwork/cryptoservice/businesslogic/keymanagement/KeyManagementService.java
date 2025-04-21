@@ -5,15 +5,12 @@ import javax.crypto.SecretKey;
 
 import org.springframework.stereotype.Service;
 
-import com.projectwork.cryptoservice.businesslogic.JwtService;
 import com.projectwork.cryptoservice.entity.keymanagement.GenerateKeyModel;
 import com.projectwork.cryptoservice.entity.keymanagement.GenerateKeyResultModel;
 import com.projectwork.cryptoservice.factory.ResultModelsFactory;
 
 import java.security.SecureRandom;
 import java.util.Base64;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Key Management Service implementation: handles the key management of the service.
@@ -27,9 +24,9 @@ public class KeyManagementService {
     // OWASP [106] Key Management Policy & Process
     private final KeyStoreHelper keyStoreHelper;
     private final ResultModelsFactory resultModelsFactory;
-    private final ClientKeyAliasMap clientKeyAliasMap;
+    private final ClientKeyDataMap clientKeyAliasMap;
 
-    public KeyManagementService(KeyStoreHelper keyStoreHelper, ResultModelsFactory resultModelsFactory, ClientKeyAliasMap clientKeyAliasMap) {
+    public KeyManagementService(KeyStoreHelper keyStoreHelper, ResultModelsFactory resultModelsFactory, ClientKeyDataMap clientKeyAliasMap) {
         this.clientKeyAliasMap = clientKeyAliasMap;
         this.keyStoreHelper = keyStoreHelper;
         this.resultModelsFactory = resultModelsFactory;

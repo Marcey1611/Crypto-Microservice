@@ -29,19 +29,20 @@ import com.projectwork.cryptoservice.businessfacade.*;
 
 import java.security.Principal;
 
+import org.apache.catalina.connector.Response;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 @org.springframework.stereotype.Controller
-public class Controller implements EncryptAPI, DecryptAPI, SignAPI, VerifyAPI, GenerateKeyAPI, GenerateJwtAPI {
+public class Controller implements EncryptAPI, DecryptAPI, /**SignAPI, VerifyAPI,**/ GenerateKeyAPI, GenerateJwtAPI {
 
     private final Validator validator;
     private final ModelsFactory modelsFactory;
     private final ResponseFactory responseFactory;
     private final EncryptFacade encryptFacade;
     private final DecryptFacade decryptFacade;
-    private final SignFacade signFacade;
-    private final VerifyFacade verifyFacade;
+    //private final SignFacade signFacade;
+    //private final VerifyFacade verifyFacade;
     private final KeyManagementFacade keyManagementFacade;
     private final JwtManagementFacade jwtManagementFacade;
 
@@ -54,17 +55,16 @@ public class Controller implements EncryptAPI, DecryptAPI, SignAPI, VerifyAPI, G
         this.responseFactory = responseFactory;
         this.encryptFacade = encryptFacade;
         this.decryptFacade = decryptFacade;
-        this.signFacade = signFacade;
-        this.verifyFacade = verifyFacade;
+        //this.signFacade = signFacade;
+        //this.verifyFacade = verifyFacade;
         this.keyManagementFacade = keyManagementFacade;
     }
 
     @Override
-    public ResponseEntity<EncryptResponse> encryptPost(EncryptRequest encryptRequest) {
+    public ResponseEntity<EncryptResponse> encryptPost(final EncryptRequest encryptRequest, final Principal principal) {
         validator.validateEncryptRequest(encryptRequest);
-        EncryptModel encryptModel = modelsFactory.buildEncryptModel(encryptRequest);
-        EncryptResultModel encryptResultModel = encryptFacade.processEncryption(encryptModel);
-        return responseFactory.buildEncryptResponse(encryptResultModel);
+        ResponseEntity<EncryptResponse> encryptResponse = encryptFacade.processEncryption(encryptRequest, principal.getName());
+        return encryptResponse;
     }
 
     @Override
@@ -75,7 +75,7 @@ public class Controller implements EncryptAPI, DecryptAPI, SignAPI, VerifyAPI, G
         return responseFactory.buildDecryptResponse(decryptResultModel);
     }
 
-    @Override
+    /**@Override
     public ResponseEntity<SignResponse> signPost(SignRequest signRequest) {
         validator.validateSignRequest(signRequest);
         SignModel signModel = modelsFactory.buildSignModel(signRequest);
@@ -89,7 +89,7 @@ public class Controller implements EncryptAPI, DecryptAPI, SignAPI, VerifyAPI, G
         VerifyModel verifyModel = modelsFactory.buildVerifyModel(verifyRequest);
         VerifyResultModel verifyResultModel = verifyFacade.processVerification(verifyModel);
         return responseFactory.buildVerifyResponse(verifyResultModel);
-    }
+    }**/
 
     @Override
     public ResponseEntity<GenerateKeyResponse> generateKeyPost(Principal principal) {

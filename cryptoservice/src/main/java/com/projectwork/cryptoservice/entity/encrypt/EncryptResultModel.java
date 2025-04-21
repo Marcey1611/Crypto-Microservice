@@ -1,9 +1,9 @@
 package com.projectwork.cryptoservice.entity.encrypt;
 
 public class EncryptResultModel {
-    private byte[] cipherText;
+    private String cipherText;
 
-    public EncryptResultModel(byte[] cipherText) { this.cipherText = cipherText; }
+    public EncryptResultModel(String cipherText) { this.cipherText = cipherText; }
     
-    public byte[] getCipherText() { return cipherText; }
+    public String getCipherText() { return cipherText; }
 }

@@ -17,8 +17,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class ModelsFactory {
 
-    public EncryptModel buildEncryptModel(EncryptRequest encryptRequest) {
-        return new EncryptModel(encryptRequest.getPlainText(), encryptRequest.getKey());
+    public EncryptModel buildEncryptModel(final EncryptRequest encryptRequest, final String clientName) {
+        return new EncryptModel(encryptRequest.getPlainText(), encryptRequest.getJwt(), clientName);
     }
 
     public DecryptModel buildDecryptModel(DecryptRequest decryptRequest) {
