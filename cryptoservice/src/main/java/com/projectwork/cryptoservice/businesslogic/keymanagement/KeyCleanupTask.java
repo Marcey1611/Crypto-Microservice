@@ -21,9 +21,11 @@ import org.springframework.stereotype.Component;
 public class KeyCleanupTask {
     
     private final KeyStoreHelper keyStoreHelper;
+    private final ClientKeyDataMap clientKeyAliasMap;
 
-    public KeyCleanupTask(KeyStoreHelper keyStoreHelper) {
+    public KeyCleanupTask(KeyStoreHelper keyStoreHelper, ClientKeyDataMap clientKeyAliasMap) {
         this.keyStoreHelper = keyStoreHelper;
+        this.clientKeyAliasMap = clientKeyAliasMap;
     }
 
     @Scheduled(fixedRate = 3600000)
@@ -39,7 +41,7 @@ public class KeyCleanupTask {
 
     public void cleanupExpiredKeys() throws Exception {
         final KeyStore keystore = keyStoreHelper.loadKeyStore();
-        final long expirationTimeMillis = TimeUnit.MINUTES.toMillis(10);
+        final long expirationTimeMillis = TimeUnit.HOURS.toMillis(1);
         final long now = System.currentTimeMillis();
         final List<String> toDelete = new ArrayList<>();
         if (!keystore.aliases().hasMoreElements()) {
@@ -71,6 +73,7 @@ public class KeyCleanupTask {
 
         for (String alias : toDelete) {
             keystore.deleteEntry(alias);
+            clientKeyAliasMap.removeKeyAliasFromMap(alias);
             System.out.println("Client Key gelöscht: " + alias);
         }
         keyStoreHelper.saveKeyStore(keystore);

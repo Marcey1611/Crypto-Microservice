@@ -4,6 +4,8 @@ import com.projectwork.cryptoservice.entity.decrypt.DecryptResponse;
 import com.projectwork.cryptoservice.entity.decrypt.DecryptResultModel;
 import com.projectwork.cryptoservice.entity.encrypt.EncryptResponse;
 import com.projectwork.cryptoservice.entity.encrypt.EncryptResultModel;
+import com.projectwork.cryptoservice.entity.jwtmanagement.GenerateJwtResponse;
+import com.projectwork.cryptoservice.entity.jwtmanagement.GenerateJwtResultModel;
 import com.projectwork.cryptoservice.entity.keymanagement.GenerateKeyResponse;
 import com.projectwork.cryptoservice.entity.keymanagement.GenerateKeyResultModel;
 import com.projectwork.cryptoservice.entity.sign.SignResponse;
@@ -11,6 +13,8 @@ import com.projectwork.cryptoservice.entity.sign.SignResultModel;
 import com.projectwork.cryptoservice.entity.verify.VerifyResponse;
 import com.projectwork.cryptoservice.entity.verify.VerifyResultModel;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
@@ -34,7 +38,11 @@ public class ResponseFactory {
     }
 
     public ResponseEntity<GenerateKeyResponse> buildGenerateKeyResponse(GenerateKeyResultModel generateKeyResultModel) {
-        return ResponseEntity.ok(new GenerateKeyResponse(generateKeyResultModel.getJwtString()));
+        return ResponseEntity.ok(new GenerateKeyResponse(generateKeyResultModel.getMessage()));
+    }
+
+    public ResponseEntity<GenerateJwtResponse> buildGenerateJwtResponse(GenerateJwtResultModel generateJwtResultModel) {
+        return ResponseEntity.ok(new GenerateJwtResponse(generateJwtResultModel.getJwt()));
     }
 
 }

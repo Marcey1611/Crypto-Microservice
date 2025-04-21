@@ -5,10 +5,11 @@ services:
     build: .
     container_name: cryptoservice
     ports:
-      - "8080:8080"
+      - "8443:8443"
     volumes:
-      - ./keystore:/app/keystore
+      - ./src/main/resources/keystore:/app/keystore
+      - ./src/main/resources/tls:/app/tls
     environment:
-      - SERVER_PORT=8080
+      - SERVER_PORT=8443
       - KEYSTORE_PASSWORD=CryptoMicroservice2025!
       - KEYSTORE_PATH=/app/keystore/keystore.jks

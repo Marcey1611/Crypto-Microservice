@@ -1,10 +1,10 @@
 package com.projectwork.cryptoservice.entity.keymanagement;
 
 public class GenerateKeyResponse {
-    private String jwString;
+    private String message;
 
-    public GenerateKeyResponse(String jwtString) { this.jwString = jwtString; }
+    public GenerateKeyResponse(final String message) {this.message = message;}
 
-    public String getJwString() { return jwString; }
-    public void setJwString(String jwtToken) { this.jwString = jwtToken; }
+    public String getJwString() { return message; }
+    public void setJwString(String message) { this.message = message; }
 }

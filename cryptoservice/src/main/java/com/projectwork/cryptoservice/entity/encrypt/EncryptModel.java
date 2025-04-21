@@ -1,16 +1,20 @@
 package com.projectwork.cryptoservice.entity.encrypt;
 
 public class EncryptModel {
-    private byte[] plainText;
-    private byte[] key;
+    private String plainText;
+    private String jwt;
+    private String clientName;
 
-    public EncryptModel(byte[] plainText, byte[] key) {
+    public EncryptModel(final String plainText, final String jwt, final String clientName) {
         this.plainText = plainText;
-        this.key = key;
+        this.jwt = jwt;
+        this.clientName = clientName;
     }
     
-    public byte[] getPlainText() { return plainText; }
-    public void setPlainText(byte[] plainText) { this.plainText = plainText; }
-    public byte[] getKey() { return key; }
-    public void setKey(byte[] key) { this.key = key; }
+    public String getPlainText() { return plainText; }
+    public void setPlainText(String plainText) { this.plainText = plainText; }
+    public String getJwt() { return jwt; }
+    public void setJwt(String jwt) { this.jwt = jwt; }
+    public String getClientName() { return clientName; }
+    public void setClientName(String clientName) { this.clientName = clientName;}
 }
