@@ -68,11 +68,10 @@ public class Controller implements EncryptAPI, DecryptAPI, /**SignAPI, VerifyAPI
     }
 
     @Override
-    public ResponseEntity<DecryptResponse> decryptPost(DecryptRequest decryptRequest) {
+    public ResponseEntity<DecryptResponse> decryptPost(final DecryptRequest decryptRequest, final Principal principal) {
         validator.validateDecryptRequest(decryptRequest);
-        DecryptModel decryptModel = modelsFactory.buildDecryptModel(decryptRequest);
-        DecryptResultModel decryptResultModel = decryptFacade.processDecryption(decryptModel);
-        return responseFactory.buildDecryptResponse(decryptResultModel);
+        ResponseEntity<DecryptResponse> decryptResponse = decryptFacade.processDecryption(decryptRequest, principal.getName());
+        return decryptResponse;
     }
 
     /**@Override

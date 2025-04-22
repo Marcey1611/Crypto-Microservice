@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class DecryptService {
 
-    public DecryptResultModel decrypt(DecryptModel decryptModel) {
+    public DecryptResultModel decrypt(final DecryptModel decryptModel, final String clientName) {
         return null;
     }
 }

@@ -6,10 +6,8 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
@@ -22,7 +20,9 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
             .requestMatchers("/crypto/keys/generate").authenticated()
             .requestMatchers("/crypto/jwt/generate").authenticated()
-            .anyRequest().authenticated())
+            .requestMatchers("/crypto/encrypt").authenticated()
+            .requestMatchers("/crypto/decrypt").authenticated()
+            .anyRequest().denyAll())
             .x509(x509 -> x509
                 .subjectPrincipalRegex("CN=(.*?)(?:,|$)")
                 .userDetailsService(userDetailsService())

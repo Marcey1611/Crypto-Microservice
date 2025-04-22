@@ -34,6 +34,9 @@ public class ClientKeyDataMap {
 
     public void putIv(final byte[] iv, final String clientName) {
         final ClientKeyData data = clientKeyDataMap.get(clientName);
+        if (data == null) {
+            throw new IllegalArgumentException("Client not found: " + clientName);
+        }
         data.setIv(iv);
         clientKeyDataMap.put(clientName, data);
     }

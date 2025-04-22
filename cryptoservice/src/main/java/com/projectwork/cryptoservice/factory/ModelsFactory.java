@@ -21,8 +21,8 @@ public class ModelsFactory {
         return new EncryptModel(encryptRequest.getPlainText(), encryptRequest.getJwt(), clientName);
     }
 
-    public DecryptModel buildDecryptModel(DecryptRequest decryptRequest) {
-        return new DecryptModel(decryptRequest.getCipherText(), decryptRequest.getKey());
+    public DecryptModel buildDecryptModel(final DecryptRequest decryptRequest, final String clientName) {
+        return new DecryptModel(decryptRequest.getCipherText(), decryptRequest.getJwt(), clientName);
     }
 
     public SignModel buildSignModel(SignRequest signRequest) {

@@ -156,9 +156,9 @@ public class KeyStoreHelper {
             final SecretKey masterKey = (SecretKey) keystore.getKey("master-key", passwordChars);
             final Cipher cipher = Cipher.getInstance("AES");
             cipher.init(Cipher.UNWRAP_MODE, masterKey);
-            decryptedKey = new SecretKeySpec(cipher.wrap(encryptedKey), "AES");
+            decryptedKey = (SecretKey) cipher.unwrap(encryptedKey.getEncoded(), "AES", Cipher.SECRET_KEY);
         } catch (UnrecoverableKeyException | KeyStoreException | NoSuchAlgorithmException | 
-                NoSuchPaddingException | InvalidKeyException | IllegalBlockSizeException e) {
+                NoSuchPaddingException | InvalidKeyException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
