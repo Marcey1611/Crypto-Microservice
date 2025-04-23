@@ -46,8 +46,9 @@ public class EncryptService {
         }
         final SecretKey clientKey = keyStoreHelper.getClientKey(keyAlias);
         final byte[] iv = generateIV();
+        System.out.println("IV: " + Base64.getEncoder().encodeToString(iv));
         clientKeyAliasMap.putIv(iv, clientName);
-        final String cipherText = processEncryption(iv, clientKey, keyAlias);
+        final String cipherText = processEncryption(iv, clientKey, encryptModel.getPlainText());
         return resultModelsFactory.buildEncryptResultModel(cipherText);
     }
 
@@ -69,7 +70,7 @@ public class EncryptService {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-        
+        //TODO: return byte[] not String
         return Base64.getEncoder().encodeToString(encryptedData);
     }
 }
