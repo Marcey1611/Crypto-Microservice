@@ -1,12 +1,5 @@
 package com.projectwork.cryptoservice.businesslogic;
 
-import com.projectwork.cryptoservice.businesslogic.jwtmanagement.JwtManagementService;
-import com.projectwork.cryptoservice.businesslogic.keymanagement.ClientKeyDataMap;
-import com.projectwork.cryptoservice.businesslogic.keymanagement.KeyStoreHelper;
-import com.projectwork.cryptoservice.entity.encrypt.EncryptModel;
-import com.projectwork.cryptoservice.entity.encrypt.EncryptResultModel;
-import com.projectwork.cryptoservice.factory.ResultModelsFactory;
-
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -21,6 +14,13 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.GCMParameterSpec;
 
 import org.springframework.stereotype.Service;
+
+import com.projectwork.cryptoservice.businesslogic.jwtmanagement.JwtManagementService;
+import com.projectwork.cryptoservice.businesslogic.keymanagement.ClientKeyDataMap;
+import com.projectwork.cryptoservice.businesslogic.keymanagement.KeyStoreHelper;
+import com.projectwork.cryptoservice.entity.encrypt.EncryptModel;
+import com.projectwork.cryptoservice.entity.encrypt.EncryptResultModel;
+import com.projectwork.cryptoservice.factory.ResultModelsFactory;
 
 @Service
 public class EncryptService {
@@ -46,7 +46,6 @@ public class EncryptService {
         }
         final SecretKey clientKey = keyStoreHelper.getClientKey(keyAlias);
         final byte[] iv = generateIV();
-        System.out.println("IV: " + Base64.getEncoder().encodeToString(iv));
         clientKeyAliasMap.putIv(iv, clientName);
         final String cipherText = processEncryption(iv, clientKey, encryptModel.getPlainText());
         return resultModelsFactory.buildEncryptResultModel(cipherText);
@@ -66,9 +65,9 @@ public class EncryptService {
             final GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(GCM_TAG_LENGTH, iv);
             cipher.init(Cipher.ENCRYPT_MODE, clientKey, gcmParameterSpec);
             encryptedData = cipher.doFinal(plainText.getBytes());
-        } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | InvalidAlgorithmParameterException | IllegalBlockSizeException | BadPaddingException e) {
+        } catch (final NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | InvalidAlgorithmParameterException | IllegalBlockSizeException | BadPaddingException exception) {
             // TODO Auto-generated catch block
-            e.printStackTrace();
+            exception.printStackTrace();
         }
         //TODO: return byte[] not String
         return Base64.getEncoder().encodeToString(encryptedData);

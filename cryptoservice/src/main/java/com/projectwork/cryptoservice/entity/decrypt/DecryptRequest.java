@@ -1,8 +1,8 @@
 package com.projectwork.cryptoservice.entity.decrypt;
 
 public class DecryptRequest {
-    private String cipherText;
-    private String jwt;
+    private final String cipherText;
+    private final String jwt;
 
     public DecryptRequest(final String cipherText, final String jwt) {
         this.cipherText = cipherText;

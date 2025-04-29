@@ -1,14 +1,6 @@
 package com.projectwork.cryptoservice.businesslogic;
 
-import com.projectwork.cryptoservice.businesslogic.jwtmanagement.JwtManagementService;
-import com.projectwork.cryptoservice.businesslogic.keymanagement.ClientKeyDataMap;
-import com.projectwork.cryptoservice.businesslogic.keymanagement.KeyStoreHelper;
-import com.projectwork.cryptoservice.entity.decrypt.DecryptModel;
-import com.projectwork.cryptoservice.entity.decrypt.DecryptResultModel;
-import com.projectwork.cryptoservice.factory.ResultModelsFactory;
-
 import java.nio.charset.StandardCharsets;
-import java.security.KeyStore.SecretKeyEntry;
 import java.util.Base64;
 
 import javax.crypto.Cipher;
@@ -16,6 +8,13 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.GCMParameterSpec;
 
 import org.springframework.stereotype.Service;
+
+import com.projectwork.cryptoservice.businesslogic.jwtmanagement.JwtManagementService;
+import com.projectwork.cryptoservice.businesslogic.keymanagement.ClientKeyDataMap;
+import com.projectwork.cryptoservice.businesslogic.keymanagement.KeyStoreHelper;
+import com.projectwork.cryptoservice.entity.decrypt.DecryptModel;
+import com.projectwork.cryptoservice.entity.decrypt.DecryptResultModel;
+import com.projectwork.cryptoservice.factory.ResultModelsFactory;
 
 @Service
 public class DecryptService {
@@ -56,7 +55,6 @@ public class DecryptService {
         }
 
         final byte[] iv = clientKeyAliasMap.getIv(clientNameFromKeyAlias);
-        System.out.println("IV: " + Base64.getEncoder().encodeToString(iv));
         if(iv == null) {
             throw new RuntimeException("IV not found for key alias: " + keyAlias);
         }
@@ -77,8 +75,8 @@ public class DecryptService {
             final byte[] decryptedBytes = cipher.doFinal(cipherTextBytes);
             //TODO: return byte[] not String
             return new String(decryptedBytes, StandardCharsets.UTF_8);
-        } catch (Exception e) {
-            throw new RuntimeException("Decryption failed", e);
+        } catch (final Exception exception) {
+            throw new RuntimeException("Decryption failed", exception);
         }
     }
 }

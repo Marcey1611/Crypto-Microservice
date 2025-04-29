@@ -1,9 +1,9 @@
 package com.projectwork.cryptoservice.entity.jwtmanagement;
 
 public class GenerateJwtResponse {
-    private String jwt;
+    private final String jwt;
 
-    public GenerateJwtResponse(String jwt) {
+    public GenerateJwtResponse(final String jwt) {
         this.jwt = jwt;
     }
 
@@ -11,7 +11,4 @@ public class GenerateJwtResponse {
         return jwt;
     }
 
-    public void setJwt(String jwt) {
-        this.jwt = jwt;
-    }
 }

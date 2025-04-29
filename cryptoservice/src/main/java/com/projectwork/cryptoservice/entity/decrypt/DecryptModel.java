@@ -1,9 +1,9 @@
 package com.projectwork.cryptoservice.entity.decrypt;
 
 public class DecryptModel {
-    private String cipherText;
-    private String jwt;
-    private String clientName;
+    private final String cipherText;
+    private final String jwt;
+    private final String clientName;
 
     public DecryptModel(final String cipherText, final String jwt, final String clientName) {
         this.cipherText = cipherText;

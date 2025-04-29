@@ -1,5 +1,8 @@
 package com.projectwork.cryptoservice.businesslogic.keymanagement;
 
+import java.security.SecureRandom;
+import java.util.Base64;
+
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 
@@ -8,9 +11,6 @@ import org.springframework.stereotype.Service;
 import com.projectwork.cryptoservice.entity.keymanagement.GenerateKeyModel;
 import com.projectwork.cryptoservice.entity.keymanagement.GenerateKeyResultModel;
 import com.projectwork.cryptoservice.factory.ResultModelsFactory;
-
-import java.security.SecureRandom;
-import java.util.Base64;
 
 /**
  * Key Management Service implementation: handles the key management of the service.
@@ -26,7 +26,7 @@ public class KeyManagementService {
     private final ResultModelsFactory resultModelsFactory;
     private final ClientKeyDataMap clientKeyAliasMap;
 
-    public KeyManagementService(KeyStoreHelper keyStoreHelper, ResultModelsFactory resultModelsFactory, ClientKeyDataMap clientKeyAliasMap) {
+    public KeyManagementService(final KeyStoreHelper keyStoreHelper, final ResultModelsFactory resultModelsFactory, final ClientKeyDataMap clientKeyAliasMap) {
         this.clientKeyAliasMap = clientKeyAliasMap;
         this.keyStoreHelper = keyStoreHelper;
         this.resultModelsFactory = resultModelsFactory;
@@ -42,17 +42,23 @@ public class KeyManagementService {
      * - OWASP [104] Secure Random Number Generation for Key and Alias
      * - OWASP [101] JWT generation and signing (done on server-side)
      */
-    public GenerateKeyResultModel generateKey(final GenerateKeyModel generateKeyModel) throws Exception {
+    public GenerateKeyResultModel generateKey(final GenerateKeyModel generateKeyModel) {
         final boolean clientNameExist = clientKeyAliasMap.containsClient(generateKeyModel.getClientName());
         if (clientNameExist) {
             System.out.println("Key already exists for client: " + generateKeyModel.getClientName());
             return resultModelsFactory.buildGenerateKeyResultModel("Key already exists for client: " + generateKeyModel.getClientName());
         }
 
-        final SecretKey aesKey = generateRandomKey();
-        final String keyAlias = generateRandomKeyAlias(); // OWASP [104] SecureRandom for unguessable alias
-        keyStoreHelper.storeKey(keyAlias, aesKey);
-        clientKeyAliasMap.addClientKeyAlias(generateKeyModel.getClientName(), keyAlias);
+        try {
+            final SecretKey aesKey = generateRandomKey();
+            final String keyAlias = generateRandomKeyAlias(); // OWASP [104] SecureRandom for unguessable alias
+            keyStoreHelper.storeKey(keyAlias, aesKey);
+            clientKeyAliasMap.addClientKeyAlias(generateKeyModel.getClientName(), keyAlias);
+        } catch (Exception exception) {
+            // TODO Auto-generated catch block
+            exception.printStackTrace();
+        }
+        
         return resultModelsFactory.buildGenerateKeyResultModel("Key generated for client: " + generateKeyModel.getClientName());
     }
 
