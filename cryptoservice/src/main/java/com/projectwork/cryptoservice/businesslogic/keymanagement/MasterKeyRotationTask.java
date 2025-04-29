@@ -22,7 +22,7 @@ public class MasterKeyRotationTask {
 
     private final KeyStoreHelper keyStoreHelper;
 
-    public MasterKeyRotationTask(KeyStoreHelper keyStoreHelper) {
+    public MasterKeyRotationTask(final KeyStoreHelper keyStoreHelper) {
         this.keyStoreHelper = keyStoreHelper;
     }
 
@@ -75,8 +75,8 @@ public class MasterKeyRotationTask {
             keyStoreHelper.saveKeyStore(keystore);
             Arrays.fill(passwordChars, '\0');
             System.out.println("Master-Key Rotation abgeschlossen und alle Client-Keys re-wrapped.");
-        } catch (Exception e) {
-            System.err.println("Fehler bei der Master-Key Rotation: " + e.getMessage());
+        } catch (final Exception exception) {
+            System.err.println("Fehler bei der Master-Key Rotation: " + exception.getMessage());
         }
     }
 }
