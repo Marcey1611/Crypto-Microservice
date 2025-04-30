@@ -33,9 +33,12 @@ public class SecurityConfig {
 
     @Bean
     public UserDetailsService userDetailsService() {
+        // TODO: Make dynamic, for example add issuedTo data ...... so that it is no longe necessary to add users statically
         return username -> {
             if ("Client1".equals(username)) {
                 return new User("Client1", "", AuthorityUtils.createAuthorityList("ROLE_USER"));
+            } else if("Client2".equals(username)) {
+                return new User("Client2", "", AuthorityUtils.createAuthorityList("ROLE_USER"));
             }
             throw new UsernameNotFoundException("User not found: " + username);
         };

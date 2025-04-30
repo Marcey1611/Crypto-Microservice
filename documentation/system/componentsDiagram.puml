@@ -1,0 +1,16 @@
+@startuml
+
+generateKey -down- [CryptoService]
+generateJwt -down- [CryptoService]
+encrypt -down- [CryptoService]
+decrypt -left- [CryptoService]
+[CryptoClient1] --> generateKey
+[CryptoClient1] --> generateJwt
+[CryptoClient1] --> encrypt
+[CryptoClient2] --> decrypt
+
+receiveMessage -down- [CryptoClient2]
+
+[CryptoClient1] -right-> receiveMessage : Send encrypted data + jwt
+
+@enduml

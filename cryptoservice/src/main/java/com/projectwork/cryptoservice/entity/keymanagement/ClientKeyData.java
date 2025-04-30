@@ -2,7 +2,7 @@ package com.projectwork.cryptoservice.entity.keymanagement;
 
 public class ClientKeyData {
     private final String keyAlias;
-    private final byte[] iv;
+    private byte[] iv;
 
     public ClientKeyData(final String keyAlias, final byte[] iv) {
         this.keyAlias = keyAlias;
@@ -14,5 +14,8 @@ public class ClientKeyData {
     }
     public byte[] getIv() {
         return iv;
+    }
+    public void setIv(final byte[] iv) {
+        this.iv = iv;
     }
 }
