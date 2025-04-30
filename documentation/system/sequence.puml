@@ -1,0 +1,21 @@
+@startuml
+
+actor CryptoClient1
+actor CryptoClient2
+participant CryptoService
+
+CryptoClient1 -> CryptoService : generateKey()
+CryptoService --> CryptoClient1 : status
+
+CryptoClient1 -> CryptoService : generateJwt(issuedTo)
+CryptoService --> CryptoClient1 : jwt
+
+CryptoClient1 -> CryptoService : encrypt(plainText, jwt)
+CryptoService --> CryptoClient1 : cipherText
+
+CryptoClient1 -> CryptoClient2 : Send(cipherText, jwt)
+
+CryptoClient2 -> CryptoService : decrypt(cipherText, jwt)
+CryptoService --> CryptoClient2 : plainText
+
+@enduml

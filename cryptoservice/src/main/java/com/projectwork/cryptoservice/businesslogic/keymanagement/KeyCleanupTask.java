@@ -23,7 +23,7 @@ public class KeyCleanupTask {
     private final KeyStoreHelper keyStoreHelper;
     private final ClientKeyDataMap clientKeyAliasMap;
 
-    public KeyCleanupTask(KeyStoreHelper keyStoreHelper, ClientKeyDataMap clientKeyAliasMap) {
+    public KeyCleanupTask(final KeyStoreHelper keyStoreHelper, final ClientKeyDataMap clientKeyAliasMap) {
         this.keyStoreHelper = keyStoreHelper;
         this.clientKeyAliasMap = clientKeyAliasMap;
     }
@@ -34,8 +34,8 @@ public class KeyCleanupTask {
             System.out.println("Starte periodischen Key Cleanup...");
             cleanupExpiredKeys();
             System.out.println("Key Cleanup abgeschlossen.");
-        } catch (Exception e) {
-            System.err.println("Fehler beim Key Cleanup: " + e.getMessage());
+        } catch (final Exception exception) {
+            System.err.println("Fehler beim Key Cleanup: " + exception.getMessage());
         }
     }
 

@@ -28,7 +28,7 @@ public class JwtManagementService {
         this.resultModelsFactory = resultModelsFactory;
     }
 
-    public GenerateJwtResultModel generateJwt(GenerateJwtModel generateJwtModel) {
+    public GenerateJwtResultModel generateJwt(final GenerateJwtModel generateJwtModel) {
         SecretKey jwtSigningKey;
         try {
             jwtSigningKey = keyStoreHelper.getKey("jwt-signing-key");

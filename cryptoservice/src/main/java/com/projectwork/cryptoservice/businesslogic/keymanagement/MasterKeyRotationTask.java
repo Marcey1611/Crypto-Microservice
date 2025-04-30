@@ -1,23 +1,28 @@
 package com.projectwork.cryptoservice.businesslogic.keymanagement;
 
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
-
-import javax.crypto.*;
-import javax.crypto.spec.SecretKeySpec;
-
 import java.security.KeyStore;
-import java.security.SecureRandom;
 import java.security.KeyStore.PasswordProtection;
 import java.security.KeyStore.SecretKeyEntry;
-import java.util.*;
+import java.security.SecureRandom;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Enumeration;
+import java.util.List;
+
+import javax.crypto.Cipher;
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
+
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
 
 @Component
 public class MasterKeyRotationTask {
 
     private final KeyStoreHelper keyStoreHelper;
 
-    public MasterKeyRotationTask(KeyStoreHelper keyStoreHelper) {
+    public MasterKeyRotationTask(final KeyStoreHelper keyStoreHelper) {
         this.keyStoreHelper = keyStoreHelper;
     }
 
@@ -70,8 +75,8 @@ public class MasterKeyRotationTask {
             keyStoreHelper.saveKeyStore(keystore);
             Arrays.fill(passwordChars, '\0');
             System.out.println("Master-Key Rotation abgeschlossen und alle Client-Keys re-wrapped.");
-        } catch (Exception e) {
-            System.err.println("Fehler bei der Master-Key Rotation: " + e.getMessage());
+        } catch (final Exception exception) {
+            System.err.println("Fehler bei der Master-Key Rotation: " + exception.getMessage());
         }
     }
 }

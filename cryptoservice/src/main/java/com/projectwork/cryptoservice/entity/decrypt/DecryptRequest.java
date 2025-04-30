@@ -1,16 +1,14 @@
 package com.projectwork.cryptoservice.entity.decrypt;
 
 public class DecryptRequest {
-    private byte[] cipherText;
-    private byte[] key;
+    private final String cipherText;
+    private final String jwt;
 
-    public DecryptRequest(byte[] cipherText, byte[] key) {
+    public DecryptRequest(final String cipherText, final String jwt) {
         this.cipherText = cipherText;
-        this.key = key;
+        this.jwt = jwt;
     }
     
-    public byte[] getCipherText() { return cipherText; }
-    public void setCipherText(byte[] cipherText) { this.cipherText = cipherText; }
-    public byte[] getKey() { return key; }
-    public void setKey(byte[] key) { this.key = key; }
+    public String getCipherText() { return cipherText; }
+    public String getJwt() { return jwt; }
 }

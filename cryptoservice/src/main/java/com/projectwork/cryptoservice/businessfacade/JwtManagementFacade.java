@@ -17,14 +17,14 @@ public class JwtManagementFacade {
     private final ModelsFactory modelsFactory;
     private final ResponseFactory responseFactory;
 
-    public JwtManagementFacade(JwtManagementService jwtManagementService, ModelsFactory modelsFactory, ResponseFactory responseFactory) {
+    public JwtManagementFacade(final JwtManagementService jwtManagementService, final ModelsFactory modelsFactory, final ResponseFactory responseFactory) {
         this.responseFactory = responseFactory;
         this.modelsFactory = modelsFactory;
         this.jwtManagementService = jwtManagementService;
     }
 
     public ResponseEntity<GenerateJwtResponse> generateJwt(final GenerateJwtRequest generateJwtRequest, final String clientName) {
-        GenerateJwtModel generateJwtModel = modelsFactory.buildGenerateJwtModel(generateJwtRequest, clientName);
+        final GenerateJwtModel generateJwtModel = modelsFactory.buildGenerateJwtModel(generateJwtRequest, clientName);
         // TODO cn abfrage
         final GenerateJwtResultModel generateJwtResultModel = jwtManagementService.generateJwt(generateJwtModel);
         return responseFactory.buildGenerateJwtResponse(generateJwtResultModel);

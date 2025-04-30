@@ -1,13 +1,14 @@
 package com.projectwork.cryptoservice.businesslogic.keymanagement;
 
-import org.springframework.stereotype.Component;
-
-import jakarta.annotation.PostConstruct;
+import java.security.KeyStore;
+import java.security.SecureRandom;
 
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
-import java.security.KeyStore;
-import java.security.SecureRandom;
+
+import org.springframework.stereotype.Component;
+
+import jakarta.annotation.PostConstruct;
 
 /**
  * 
@@ -20,7 +21,7 @@ import java.security.SecureRandom;
 public class KeyStoreInitializer {
     private final KeyStoreHelper keyStoreHelper;
 
-    public KeyStoreInitializer(KeyStoreHelper keyStoreHelper) {
+    public KeyStoreInitializer(final KeyStoreHelper keyStoreHelper) {
         this.keyStoreHelper = keyStoreHelper;
     }
 
@@ -45,8 +46,8 @@ public class KeyStoreInitializer {
             } else {
                 System.out.println("Master-Key bereits im KeyStore vorhanden.");
             }
-        } catch (Exception e) {
-            throw new RuntimeException("Fehler beim Initialisieren des Keystores!", e);
+        } catch (final Exception exception) {
+            throw new RuntimeException("Fehler beim Initialisieren des Keystores!", exception);
         }
     }
 
@@ -81,5 +82,4 @@ public class KeyStoreInitializer {
         final SecretKey masterKey = keyGen.generateKey();
         keyStoreHelper.storeKey("master-key", masterKey);
     }
-
 }

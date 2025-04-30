@@ -1,15 +1,13 @@
 package com.projectwork.cryptoservice.businesslogic.keymanagement;
 
-import org.springframework.stereotype.Component;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.KeyStore;
-import java.security.KeyStore.ProtectionParameter;
 import java.security.KeyStore.PasswordProtection;
+import java.security.KeyStore.ProtectionParameter;
 import java.security.KeyStore.SecretKeyEntry;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -17,11 +15,13 @@ import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.util.Arrays;
 import java.util.Enumeration;
+
 import javax.crypto.Cipher;
-import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
+
+import org.springframework.stereotype.Component;
 
 /**
  * 
@@ -47,7 +47,7 @@ public class KeyStoreHelper {
      * - OWASP [106] Key management - proper wrapping of client keys with master key.
      * - OWASP [194] Passwords cleared from memory after use (Arrays.fill).
      */
-    public void storeKey(String alias, SecretKey key) {
+    public void storeKey(final String alias, final SecretKey key) {
         try {
             final KeyStore keystore = loadKeyStore();
 
@@ -77,8 +77,8 @@ public class KeyStoreHelper {
             while (aliases.hasMoreElements()) {
                 System.out.println(aliases.nextElement());
             }
-        } catch (Exception e) {
-            System.out.println("Fehler beim speichern des Keys: " + e);
+        } catch (final Exception exception) {
+            System.out.println("Fehler beim speichern des Keys: " + exception);
         }
     }
 
@@ -96,9 +96,9 @@ public class KeyStoreHelper {
         KeyStore keystore = null;
         try {
             keystore = KeyStore.getInstance("PKCS12");
-        } catch (KeyStoreException e) {
+        } catch (final KeyStoreException exception) {
             // TODO Auto-generated catch block
-            e.printStackTrace();
+            exception.printStackTrace();
         } 
         final File keystoreFile = new File(KEYSTORE_PATH);
         
@@ -108,9 +108,9 @@ public class KeyStoreHelper {
         
         try (final FileInputStream fis = new FileInputStream(keystoreFile.getAbsolutePath())) { 
             keystore.load(fis, passwordChars); // OWASP [102] Use password protection for keystore access
-        } catch (NoSuchAlgorithmException | CertificateException | IOException e) {
+        } catch (final NoSuchAlgorithmException | CertificateException | IOException exception) {
             // TODO Auto-generated catch block
-            e.printStackTrace();
+            exception.printStackTrace();
         } finally {
             Arrays.fill(passwordChars, '\0'); // OWASP [199] Clear sensitive data from memory after use
         }
@@ -126,24 +126,24 @@ public class KeyStoreHelper {
      * - OWASP [102] Ensure keystore is always stored securely
      * - OWASP [199]
      */
-    public void saveKeyStore(KeyStore keystore) {
+    public void saveKeyStore(final KeyStore keystore) {
         final File keystoreFile = new File(KEYSTORE_PATH);
 
         String keystorePassword = System.getenv("KEYSTORE_PASSWORD");
         final char[] passwordChars = keystorePassword.toCharArray();
         keystorePassword = null;
 
-        try (FileOutputStream fos = new FileOutputStream(keystoreFile.getAbsolutePath())) {
+        try (final FileOutputStream fos = new FileOutputStream(keystoreFile.getAbsolutePath())) {
             keystore.store(fos, passwordChars);
-        } catch (KeyStoreException | NoSuchAlgorithmException | CertificateException | IOException e) {
+        } catch (final KeyStoreException | NoSuchAlgorithmException | CertificateException | IOException exception) {
             // TODO Auto-generated catch block
-            e.printStackTrace();
+            exception.printStackTrace();
         } finally {
             Arrays.fill(passwordChars, '\0'); // OWASP [199]
         }
     }
 
-    public SecretKey getClientKey(String alias) {
+    public SecretKey getClientKey(final String alias) {
         final KeyStore keystore = loadKeyStore();
 
         String keystorePassword = System.getenv("KEYSTORE_PASSWORD");
@@ -156,20 +156,18 @@ public class KeyStoreHelper {
             final SecretKey masterKey = (SecretKey) keystore.getKey("master-key", passwordChars);
             final Cipher cipher = Cipher.getInstance("AES");
             cipher.init(Cipher.UNWRAP_MODE, masterKey);
-            decryptedKey = new SecretKeySpec(cipher.wrap(encryptedKey), "AES");
-        } catch (UnrecoverableKeyException | KeyStoreException | NoSuchAlgorithmException | 
-                NoSuchPaddingException | InvalidKeyException | IllegalBlockSizeException e) {
+            decryptedKey = (SecretKey) cipher.unwrap(encryptedKey.getEncoded(), "AES", Cipher.SECRET_KEY);
+        } catch (final UnrecoverableKeyException | KeyStoreException | NoSuchAlgorithmException | 
+                NoSuchPaddingException | InvalidKeyException exception) {
             // TODO Auto-generated catch block
-            e.printStackTrace();
+            exception.printStackTrace();
         }
         
-
-
         Arrays.fill(passwordChars, '\0'); // OWASP [199]
         return decryptedKey;
     }
 
-    public SecretKey getKey(String alias) {
+    public SecretKey getKey(final String alias) {
         final KeyStore keystore = loadKeyStore();
 
         String keystorePassword = System.getenv("KEYSTORE_PASSWORD");
@@ -179,9 +177,9 @@ public class KeyStoreHelper {
         SecretKey key = null;
         try {
             key = (SecretKey) keystore.getKey(alias, passwordChars);
-        } catch (UnrecoverableKeyException | KeyStoreException | NoSuchAlgorithmException e) {
+        } catch (final UnrecoverableKeyException | KeyStoreException | NoSuchAlgorithmException exception) {
             // TODO Auto-generated catch block
-            e.printStackTrace();
+            exception.printStackTrace();
         }
         Arrays.fill(passwordChars, '\0'); // OWASP [199]
         return key;

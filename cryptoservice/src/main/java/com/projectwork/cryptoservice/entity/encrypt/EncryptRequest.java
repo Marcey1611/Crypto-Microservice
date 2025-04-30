@@ -1,16 +1,14 @@
 package com.projectwork.cryptoservice.entity.encrypt;
 
 public class EncryptRequest {
-    private String plainText;
-    private String jwt;
+    private final String plainText;
+    private final String jwt;
 
-    public EncryptRequest(String plainText, String jwt) {
+    public EncryptRequest(final String plainText, final String jwt) {
         this.plainText = plainText;
         this.jwt = jwt;
     }
     
     public String getPlainText() { return plainText; }
-    public void setPlainText(String plainText) { this.plainText = plainText; }
     public String getJwt() { return jwt; }
-    public void setJwt(String jwt) { this.jwt = jwt; }
 }

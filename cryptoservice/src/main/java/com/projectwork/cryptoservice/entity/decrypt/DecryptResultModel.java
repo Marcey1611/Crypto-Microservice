@@ -1,9 +1,9 @@
 package com.projectwork.cryptoservice.entity.decrypt;
 
 public class DecryptResultModel {
-    private byte[] plainText;
+    private final String plainText;
 
-    public DecryptResultModel(byte[] plainText) { this.plainText = plainText; }
+    public DecryptResultModel(final String plainText) { this.plainText = plainText; }
     
-    public byte[] getPlainText() { return plainText; }
+    public String getPlainText() { return plainText; }
 }

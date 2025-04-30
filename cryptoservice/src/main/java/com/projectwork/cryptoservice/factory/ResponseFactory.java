@@ -1,5 +1,8 @@
 package com.projectwork.cryptoservice.factory;
 
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Component;
+
 import com.projectwork.cryptoservice.entity.decrypt.DecryptResponse;
 import com.projectwork.cryptoservice.entity.decrypt.DecryptResultModel;
 import com.projectwork.cryptoservice.entity.encrypt.EncryptResponse;
@@ -8,15 +11,6 @@ import com.projectwork.cryptoservice.entity.jwtmanagement.GenerateJwtResponse;
 import com.projectwork.cryptoservice.entity.jwtmanagement.GenerateJwtResultModel;
 import com.projectwork.cryptoservice.entity.keymanagement.GenerateKeyResponse;
 import com.projectwork.cryptoservice.entity.keymanagement.GenerateKeyResultModel;
-import com.projectwork.cryptoservice.entity.sign.SignResponse;
-import com.projectwork.cryptoservice.entity.sign.SignResultModel;
-import com.projectwork.cryptoservice.entity.verify.VerifyResponse;
-import com.projectwork.cryptoservice.entity.verify.VerifyResultModel;
-
-import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Component;
 
 @Component
 public class ResponseFactory {
@@ -29,15 +23,7 @@ public class ResponseFactory {
         return ResponseEntity.ok(new DecryptResponse(decryptResultModel.getPlainText()));
     }
 
-    public ResponseEntity<SignResponse> buildSignResponse(SignResultModel signResultModel) {
-        return ResponseEntity.ok(new SignResponse(signResultModel.getSignature()));
-    }
-
-    public ResponseEntity<VerifyResponse> buildVerifyResponse(VerifyResultModel verifyResultModel) {
-        return ResponseEntity.ok(new VerifyResponse(verifyResultModel.getVerified()));
-    }
-
-    public ResponseEntity<GenerateKeyResponse> buildGenerateKeyResponse(GenerateKeyResultModel generateKeyResultModel) {
+    public ResponseEntity<GenerateKeyResponse> buildGenerateKeyResponse(final GenerateKeyResultModel generateKeyResultModel) {
         return ResponseEntity.ok(new GenerateKeyResponse(generateKeyResultModel.getMessage()));
     }
 

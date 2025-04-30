@@ -1,10 +1,14 @@
 curl -v -X POST https://localhost:8443/crypto/keys/generate   --cert client1.crt --key client1.key   --cacert rootCA.crt
 
+curl -X POST https://localhost:8443/crypto/jwt/generate   --cert client1.crt --key client1.key --cacert rootCA.crt   \-H "Content-Type: application/json"   \-d '{"issuedTo": "Client1"}'
+
+curl -X POST https://localhost:8443/crypto/encrypt   --cert client1.crt --key client1.key --cacert rootCA.crt   \-H "Content-Type: application/json"   \-d '{"plainText": "Hallo Welt!","jwt": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJDcnlwdG9NaWNyb3NlcnZpY2VBY2Nlc1Rva2VuIiwia2V5QWxpYXMiOiJocDRqenZ5b2MxdmZ6cnZtbnJianV3IiwiaXNzdWVkVG8iOiJDbGllbnQxIiwiaWF0IjoxNzQ1NDIzNDcyLCJleHAiOjE3NDU0MjcwNzJ9.-MVUlz5LuF5j09BH16CKt07VLEb5VC6oJkHgFFdtN10"}'
+
+curl -X POST https://localhost:8443/crypto/decrypt   --cert client1.crt --key client1.key --cacert rootCA.crt   \-H "Content-Type: application/json"   \-d '{"cipherText": "eAxGHodzwWlN2LyqDS0iblkihBkyPPGRCn0V","jwt": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJDcnlwdG9NaWNyb3NlcnZpY2VBY2Nlc1Rva2VuIiwia2V5QWxpYXMiOiJocDRqenZ5b2MxdmZ6cnZtbnJianV3IiwiaXNzdWVkVG8iOiJDbGllbnQxIiwiaWF0IjoxNzQ1NDIzNDcyLCJleHAiOjE3NDU0MjcwNzJ9.-MVUlz5LuF5j09BH16CKt07VLEb5VC6oJkHgFFdtN10"}'
+
 KEYSTORE_PASSWORD=CryptoMicroservice2025! KEYSTORE_PATH=src/main/resources/keystore/keystore.jks mvn spring-boot:run
 
-
 # Erstellung tls dateien:
-
 
 ## "openssl req -x509 -sha256 -days 3650 -newkey rsa:4096 -keyout rootCA.key -out rootCA.crt"
 ### Erklärung:

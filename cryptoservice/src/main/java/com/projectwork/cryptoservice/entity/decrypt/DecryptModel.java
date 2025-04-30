@@ -1,16 +1,17 @@
 package com.projectwork.cryptoservice.entity.decrypt;
 
 public class DecryptModel {
-    private byte[] cipherText;
-    private byte[] key;
+    private final String cipherText;
+    private final String jwt;
+    private final String clientName;
 
-    public DecryptModel(byte[] cipherText, byte[] key) {
+    public DecryptModel(final String cipherText, final String jwt, final String clientName) {
         this.cipherText = cipherText;
-        this.key = key;
+        this.jwt = jwt;
+        this.clientName = clientName;
     }
     
-    public byte[] getCipherText() { return cipherText; }
-    public void setCipherText(byte[] cipherText) { this.cipherText = cipherText; }
-    public byte[] getKey() { return key; }
-    public void setKey(byte[] key) { this.key = key; }
+    public String getCipherText() { return cipherText; }
+    public String getJwt() { return jwt; }
+    public String getClientName() { return clientName; }
 }

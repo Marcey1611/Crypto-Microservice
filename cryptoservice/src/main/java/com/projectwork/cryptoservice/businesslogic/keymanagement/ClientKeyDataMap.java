@@ -32,8 +32,24 @@ public class ClientKeyDataMap {
         return data != null ? data.getKeyAlias() : null;
     }
 
+    public String getClientName(final String keyAlias) {
+        return clientKeyDataMap.entrySet().stream()
+            .filter(entry -> entry.getValue().getKeyAlias().equalsIgnoreCase(keyAlias))
+            .map(Map.Entry::getKey)
+            .findFirst()
+            .orElse(null);
+    }
+    
+    public byte[] getIv(final String clientName) {
+        final ClientKeyData data = clientKeyDataMap.get(clientName);
+        return data != null ? data.getIv() : null;
+    }
+
     public void putIv(final byte[] iv, final String clientName) {
         final ClientKeyData data = clientKeyDataMap.get(clientName);
+        if (data == null) {
+            throw new IllegalArgumentException("Client not found: " + clientName);
+        }
         data.setIv(iv);
         clientKeyDataMap.put(clientName, data);
     }
