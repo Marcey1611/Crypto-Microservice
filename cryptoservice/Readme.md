@@ -6,6 +6,37 @@ curl -X POST https://localhost:8443/crypto/encrypt   --cert client1.crt --key cl
 
 curl -X POST https://localhost:8443/crypto/decrypt   --cert client1.crt --key client1.key --cacert rootCA.crt   \-H "Content-Type: application/json"   \-d '{"cipherText": "eAxGHodzwWlN2LyqDS0iblkihBkyPPGRCn0V","jwt": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJDcnlwdG9NaWNyb3NlcnZpY2VBY2Nlc1Rva2VuIiwia2V5QWxpYXMiOiJocDRqenZ5b2MxdmZ6cnZtbnJianV3IiwiaXNzdWVkVG8iOiJDbGllbnQxIiwiaWF0IjoxNzQ1NDIzNDcyLCJleHAiOjE3NDU0MjcwNzJ9.-MVUlz5LuF5j09BH16CKt07VLEb5VC6oJkHgFFdtN10"}'
 
+
+
+
+
+
+
+
+curl -X POST https://localhost:8443/crypto/tls/sign-csr \
+  -H "Content-Type: application/json" \
+  -d "{\"csrPem\": \"$(cat client42.csr | sed ':a;N;$!ba;s/\n/\\n/g')\", \"clientName\": \"Client42\"}" \
+  -k | jq -r '.pemSert' > client42.crt
+
+openssl pkcs12 -export \
+  -inkey client42.key \
+  -in client42.crt \
+  -certfile rootCA.crt \
+  -out client42.p12 \
+  -name "client42"
+
+curl -s -k https://localhost:8443/crypto/tls/root-ca \
+| jq -r '.rootCaCert' \
+> rootCA.crt
+
+keytool -importcert \
+  -file rootCA.crt \
+  -alias rootCA \
+  -keystore truststore.jks \
+  -storepass CryptoMicroservice2025! \
+  -noprompt
+
+
 KEYSTORE_PASSWORD=CryptoMicroservice2025! KEYSTORE_PATH=src/main/resources/keystore/keystore.jks mvn spring-boot:run
 
 # Erstellung tls dateien:
