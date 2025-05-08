@@ -9,6 +9,8 @@ import com.projectwork.cryptoservice.entity.encrypt.EncryptRequest;
 import com.projectwork.cryptoservice.entity.jwtmanagement.GenerateJwtModel;
 import com.projectwork.cryptoservice.entity.jwtmanagement.GenerateJwtRequest;
 import com.projectwork.cryptoservice.entity.keymanagement.GenerateKeyModel;
+import com.projectwork.cryptoservice.entity.tlsmanagement.SignCsrModel;
+import com.projectwork.cryptoservice.entity.tlsmanagement.SignCsrRequest;
 
 @Component
 public class ModelsFactory {
@@ -27,5 +29,9 @@ public class ModelsFactory {
 
     public GenerateJwtModel buildGenerateJwtModel(final GenerateJwtRequest generateJwtRequest, final String clientName) {
         return new GenerateJwtModel(generateJwtRequest.getIssuedTo(), clientName);
+    }
+
+    public SignCsrModel buildSignCsrModel(final SignCsrRequest signCsrRequest) {
+        return new SignCsrModel(signCsrRequest.getCsrPem(), signCsrRequest.getClientName());
     }
 }

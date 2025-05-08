@@ -11,6 +11,10 @@ import com.projectwork.cryptoservice.entity.jwtmanagement.GenerateJwtResponse;
 import com.projectwork.cryptoservice.entity.jwtmanagement.GenerateJwtResultModel;
 import com.projectwork.cryptoservice.entity.keymanagement.GenerateKeyResponse;
 import com.projectwork.cryptoservice.entity.keymanagement.GenerateKeyResultModel;
+import com.projectwork.cryptoservice.entity.tlsmanagement.GetRootCaCertResponse;
+import com.projectwork.cryptoservice.entity.tlsmanagement.GetRootCaCertResultModel;
+import com.projectwork.cryptoservice.entity.tlsmanagement.SignCsrResponse;
+import com.projectwork.cryptoservice.entity.tlsmanagement.SignCsrResultModel;
 
 @Component
 public class ResponseFactory {
@@ -29,6 +33,14 @@ public class ResponseFactory {
 
     public ResponseEntity<GenerateJwtResponse> buildGenerateJwtResponse(GenerateJwtResultModel generateJwtResultModel) {
         return ResponseEntity.ok(new GenerateJwtResponse(generateJwtResultModel.getJwt()));
+    }
+
+    public ResponseEntity<SignCsrResponse> buildSignCsrResponse(SignCsrResultModel signCsrResultModel) {
+        return ResponseEntity.ok(new SignCsrResponse(signCsrResultModel.getPemCert()));
+    }
+
+    public ResponseEntity<GetRootCaCertResponse> buildGetRootCaCertResponse(GetRootCaCertResultModel getRootCaCertResultModel) {
+        return ResponseEntity.ok(new GetRootCaCertResponse(getRootCaCertResultModel.getRootCaCert()));
     }
 
 }
