@@ -17,14 +17,12 @@ import javax.crypto.spec.SecretKeySpec;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import lombok.RequiredArgsConstructor;
+
+@RequiredArgsConstructor
 @Component
 public class MasterKeyRotationTask {
-
     private final KeyStoreHelper keyStoreHelper;
-
-    public MasterKeyRotationTask(final KeyStoreHelper keyStoreHelper) {
-        this.keyStoreHelper = keyStoreHelper;
-    }
 
     @Scheduled(fixedRate = 86400000)
     public void rotateMasterKey() {

@@ -3,15 +3,17 @@ package com.projectwork.cryptoservice.businesslogic.keymanagement;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.projectwork.cryptoservice.entity.keymanagement.ClientKeyData;
-import com.projectwork.cryptoservice.factory.ClientKeyDataFactory;
+import com.projectwork.cryptoservice.entity.factory.ClientKeyDataFactory;
+import com.projectwork.cryptoservice.entity.models.keymanagement.ClientKeyData;
 
+import lombok.RequiredArgsConstructor;
+
+@RequiredArgsConstructor
 @Component
 public class ClientKeyDataMap {
-    @Autowired private ClientKeyDataFactory clientKeyDataFactory;
+    private final ClientKeyDataFactory clientKeyDataFactory;
     private final Map<String, ClientKeyData> clientKeyDataMap = new ConcurrentHashMap<>();
 
     public boolean containsClient(final String clientName) {

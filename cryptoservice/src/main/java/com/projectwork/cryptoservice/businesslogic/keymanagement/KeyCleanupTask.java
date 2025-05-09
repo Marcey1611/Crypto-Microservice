@@ -11,22 +11,19 @@ import java.util.concurrent.TimeUnit;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import lombok.RequiredArgsConstructor;
+
 /**
  * SecureCodingPractices:
  * - OWASP [106] Implements part of the key lifecycle management (expiration/cleanup).
  * - OWASP [102] Protect secrets by cleaning up expired client keys.
  * - OWASP [199] Resource handling (KeyStore and PasswordProtection destroyed properly).
  */
+@RequiredArgsConstructor
 @Component
 public class KeyCleanupTask {
-    
     private final KeyStoreHelper keyStoreHelper;
     private final ClientKeyDataMap clientKeyAliasMap;
-
-    public KeyCleanupTask(final KeyStoreHelper keyStoreHelper, final ClientKeyDataMap clientKeyAliasMap) {
-        this.keyStoreHelper = keyStoreHelper;
-        this.clientKeyAliasMap = clientKeyAliasMap;
-    }
 
     @Scheduled(fixedRate = 3600000)
     public void cleanupKeysPeriodically() {

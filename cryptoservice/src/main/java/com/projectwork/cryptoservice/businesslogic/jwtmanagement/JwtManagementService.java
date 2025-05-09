@@ -9,24 +9,20 @@ import org.springframework.stereotype.Service;
 
 import com.projectwork.cryptoservice.businesslogic.keymanagement.ClientKeyDataMap;
 import com.projectwork.cryptoservice.businesslogic.keymanagement.KeyStoreHelper;
-import com.projectwork.cryptoservice.entity.jwtmanagement.GenerateJwtModel;
-import com.projectwork.cryptoservice.entity.jwtmanagement.GenerateJwtResultModel;
-import com.projectwork.cryptoservice.factory.ResultModelsFactory;
+import com.projectwork.cryptoservice.entity.factory.ResultModelsFactory;
+import com.projectwork.cryptoservice.entity.models.jwtmanagement.GenerateJwtModel;
+import com.projectwork.cryptoservice.entity.models.jwtmanagement.GenerateJwtResultModel;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 @Service
 public class JwtManagementService {
     private final ResultModelsFactory resultModelsFactory;
     private final KeyStoreHelper keyStoreHelper;
     private final ClientKeyDataMap clientKeyAliasMap;
-
-    public JwtManagementService(final ResultModelsFactory resultModelsFactory, final KeyStoreHelper keyStoreHelper, final ClientKeyDataMap clientKeyAliasMap) {
-        this.clientKeyAliasMap = clientKeyAliasMap;
-        this.keyStoreHelper = keyStoreHelper;
-        this.resultModelsFactory = resultModelsFactory;
-    }
 
     public GenerateJwtResultModel generateJwt(final GenerateJwtModel generateJwtModel) {
         SecretKey jwtSigningKey;

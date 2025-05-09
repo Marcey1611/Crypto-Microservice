@@ -18,10 +18,13 @@ import org.springframework.stereotype.Service;
 import com.projectwork.cryptoservice.businesslogic.jwtmanagement.JwtManagementService;
 import com.projectwork.cryptoservice.businesslogic.keymanagement.ClientKeyDataMap;
 import com.projectwork.cryptoservice.businesslogic.keymanagement.KeyStoreHelper;
-import com.projectwork.cryptoservice.entity.encrypt.EncryptModel;
-import com.projectwork.cryptoservice.entity.encrypt.EncryptResultModel;
-import com.projectwork.cryptoservice.factory.ResultModelsFactory;
+import com.projectwork.cryptoservice.entity.factory.ResultModelsFactory;
+import com.projectwork.cryptoservice.entity.models.encrypt.EncryptModel;
+import com.projectwork.cryptoservice.entity.models.encrypt.EncryptResultModel;
 
+import lombok.RequiredArgsConstructor;
+
+@RequiredArgsConstructor
 @Service
 public class EncryptService {
     private static final String ENCRYPTION_ALGORITHM = "AES/GCM/NoPadding";
@@ -31,13 +34,6 @@ public class EncryptService {
     private final JwtManagementService jwtManagementService;
     private final ClientKeyDataMap clientKeyAliasMap;
     private final ResultModelsFactory resultModelsFactory;
-
-    public EncryptService(final KeyStoreHelper keyStoreHelper, final JwtManagementService jwtManagementService, final ClientKeyDataMap clientKeyAliasMap, final ResultModelsFactory resultModelsFactory) {
-        this.resultModelsFactory = resultModelsFactory;
-        this.clientKeyAliasMap = clientKeyAliasMap;
-        this.keyStoreHelper = keyStoreHelper;
-        this.jwtManagementService = jwtManagementService;
-    }
 
     public EncryptResultModel encrypt(final EncryptModel encryptModel, final String clientName) {
         final String keyAlias = jwtManagementService.extractClientKeyAlias(encryptModel.getJwt());

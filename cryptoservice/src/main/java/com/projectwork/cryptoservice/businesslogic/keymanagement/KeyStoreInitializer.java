@@ -9,6 +9,7 @@ import javax.crypto.SecretKey;
 import org.springframework.stereotype.Component;
 
 import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
 
 /**
  * 
@@ -17,13 +18,10 @@ import jakarta.annotation.PostConstruct;
  * - OWASP [104] Secure Random for all key generations
  * - OWASP [106] Key management initialization (ensures master and signing keys)
  */
+@RequiredArgsConstructor
 @Component
 public class KeyStoreInitializer {
     private final KeyStoreHelper keyStoreHelper;
-
-    public KeyStoreInitializer(final KeyStoreHelper keyStoreHelper) {
-        this.keyStoreHelper = keyStoreHelper;
-    }
 
     // OWASP [102] Ensuring master secrets (master-key & jwt-signing-key) are protected and initialized
     @PostConstruct

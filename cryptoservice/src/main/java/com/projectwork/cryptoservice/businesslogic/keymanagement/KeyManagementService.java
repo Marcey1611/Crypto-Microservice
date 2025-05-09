@@ -8,9 +8,11 @@ import javax.crypto.SecretKey;
 
 import org.springframework.stereotype.Service;
 
-import com.projectwork.cryptoservice.entity.keymanagement.GenerateKeyModel;
-import com.projectwork.cryptoservice.entity.keymanagement.GenerateKeyResultModel;
-import com.projectwork.cryptoservice.factory.ResultModelsFactory;
+import com.projectwork.cryptoservice.entity.factory.ResultModelsFactory;
+import com.projectwork.cryptoservice.entity.models.keymanagement.GenerateKeyModel;
+import com.projectwork.cryptoservice.entity.models.keymanagement.GenerateKeyResultModel;
+
+import lombok.RequiredArgsConstructor;
 
 /**
  * Key Management Service implementation: handles the key management of the service.
@@ -18,19 +20,13 @@ import com.projectwork.cryptoservice.factory.ResultModelsFactory;
  * @author Marcel Eichelberger
  * 
  */
+@RequiredArgsConstructor
 @Service
 public class KeyManagementService {
-
     // OWASP [106] Key Management Policy & Process
     private final KeyStoreHelper keyStoreHelper;
     private final ResultModelsFactory resultModelsFactory;
     private final ClientKeyDataMap clientKeyAliasMap;
-
-    public KeyManagementService(final KeyStoreHelper keyStoreHelper, final ResultModelsFactory resultModelsFactory, final ClientKeyDataMap clientKeyAliasMap) {
-        this.clientKeyAliasMap = clientKeyAliasMap;
-        this.keyStoreHelper = keyStoreHelper;
-        this.resultModelsFactory = resultModelsFactory;
-    }
 
     /**
      * Generates a secure client key, 
