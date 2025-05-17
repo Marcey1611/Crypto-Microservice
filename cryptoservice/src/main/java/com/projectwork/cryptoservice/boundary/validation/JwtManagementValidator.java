@@ -8,7 +8,7 @@ import com.projectwork.cryptoservice.entity.models.jwtmanagement.GenerateJwtRequ
 public class JwtManagementValidator extends BaseValidator {
 
     public void validateGenerateJwtRequest(final GenerateJwtRequest request) {
-        String issuedTo = request.getIssuedTo();
+        final String issuedTo = request.getIssuedTo();
 
         checkNotBlank(issuedTo, "issuedTo");
         checkMaxLength(issuedTo, 64, "issuedTo");

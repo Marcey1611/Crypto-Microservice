@@ -1,6 +1,5 @@
 package com.projectwork.cryptoservice.boundary.security;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -9,14 +8,13 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
 
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 @Component
 public class DynamicUserDetailsService implements UserDetailsService {
 
-    @Autowired
     private KnownClientStore knownClientStore;
-
-    @Autowired
     private HttpServletRequest request;
 
     @Override

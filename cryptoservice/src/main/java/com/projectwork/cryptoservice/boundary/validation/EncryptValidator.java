@@ -2,17 +2,18 @@ package com.projectwork.cryptoservice.boundary.validation;
 
 import javax.crypto.SecretKey;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.projectwork.cryptoservice.businesslogic.keymanagement.KeyStoreHelper;
 import com.projectwork.cryptoservice.entity.models.encrypt.EncryptRequest;
 
+import lombok.RequiredArgsConstructor;
+
+@RequiredArgsConstructor
 @Component
 public class EncryptValidator extends BaseValidator {
 
-    @Autowired
-    private KeyStoreHelper keyStoreHelper;
+    private final KeyStoreHelper keyStoreHelper;
 
     public void validateEncryptRequest(final EncryptRequest encryptRequest) {
         final SecretKey jwtSigningKey = keyStoreHelper.getKey("jwt-signing-key");

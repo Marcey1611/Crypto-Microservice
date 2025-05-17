@@ -16,7 +16,7 @@ import javax.crypto.spec.GCMParameterSpec;
 import org.springframework.stereotype.Service;
 
 import com.projectwork.cryptoservice.businesslogic.jwtmanagement.JwtManagementService;
-import com.projectwork.cryptoservice.businesslogic.keymanagement.ClientKeyDataMap;
+import com.projectwork.cryptoservice.businesslogic.keymanagement.ClientKeyRegistry;
 import com.projectwork.cryptoservice.businesslogic.keymanagement.KeyStoreHelper;
 import com.projectwork.cryptoservice.entity.factory.ResultModelsFactory;
 import com.projectwork.cryptoservice.entity.models.encrypt.EncryptModel;
@@ -32,17 +32,18 @@ public class EncryptService {
 
     private final KeyStoreHelper keyStoreHelper;
     private final JwtManagementService jwtManagementService;
-    private final ClientKeyDataMap clientKeyAliasMap;
+    private final ClientKeyRegistry clientKeyRegistry;
     private final ResultModelsFactory resultModelsFactory;
 
     public EncryptResultModel encrypt(final EncryptModel encryptModel, final String clientName) {
         final String keyAlias = jwtManagementService.extractClientKeyAlias(encryptModel.getJwt());
-        if(keyAlias == clientKeyAliasMap.getKeyAlias(clientName)){
+        if(keyAlias == clientKeyRegistry.getKeyAliasForClient(clientName)){
+            // TODO error handling
             throw new RuntimeException("Client key alias does not match the client name");
         }
         final SecretKey clientKey = keyStoreHelper.getClientKey(keyAlias);
         final byte[] iv = generateIV();
-        clientKeyAliasMap.putIv(iv, clientName);
+        clientKeyRegistry.updateIvForClient(clientName, iv);
         final String cipherText = processEncryption(iv, clientKey, encryptModel.getPlainText());
         return resultModelsFactory.buildEncryptResultModel(cipherText);
     }

@@ -1,5 +1,6 @@
 package com.projectwork.cryptoservice.businesslogic.keymanagement;
 
+import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Base64;
 
@@ -26,7 +27,7 @@ public class KeyManagementService {
     // OWASP [106] Key Management Policy & Process
     private final KeyStoreHelper keyStoreHelper;
     private final ResultModelsFactory resultModelsFactory;
-    private final ClientKeyDataMap clientKeyAliasMap;
+    private final ClientKeyRegistry clientKeyRegistry;
 
     /**
      * Generates a secure client key, 
@@ -39,7 +40,7 @@ public class KeyManagementService {
      * - OWASP [101] JWT generation and signing (done on server-side)
      */
     public GenerateKeyResultModel generateKey(final GenerateKeyModel generateKeyModel) {
-        final boolean clientNameExist = clientKeyAliasMap.containsClient(generateKeyModel.getClientName());
+        final boolean clientNameExist = clientKeyRegistry.hasClient(generateKeyModel.getClientName());
         if (clientNameExist) {
             System.out.println("Key already exists for client: " + generateKeyModel.getClientName());
             return resultModelsFactory.buildGenerateKeyResultModel("Key already exists for client: " + generateKeyModel.getClientName());
@@ -49,23 +50,23 @@ public class KeyManagementService {
             final SecretKey aesKey = generateRandomKey();
             final String keyAlias = generateRandomKeyAlias(); // OWASP [104] SecureRandom for unguessable alias
             keyStoreHelper.storeKey(keyAlias, aesKey);
-            clientKeyAliasMap.addClientKeyAlias(generateKeyModel.getClientName(), keyAlias);
-        } catch (Exception exception) {
+            clientKeyRegistry.registerClientKey(generateKeyModel.getClientName(), keyAlias);
+        } catch (final NoSuchAlgorithmException exception) {
             // TODO Auto-generated catch block
-            exception.printStackTrace();
+            throw new RuntimeException("Error generating key: " + exception.getMessage());
         }
         
         return resultModelsFactory.buildGenerateKeyResultModel("Key generated for client: " + generateKeyModel.getClientName());
     }
 
-    private SecretKey generateRandomKey() throws Exception {
+    private SecretKey generateRandomKey() throws NoSuchAlgorithmException {
         final SecureRandom secureRandom = SecureRandom.getInstanceStrong();
         final KeyGenerator keyGen = KeyGenerator.getInstance("AES");
         keyGen.init(256, secureRandom); // OWASP [104] SecureRandom for cryptographic key generation
         return keyGen.generateKey();
     }
 
-    private String generateRandomKeyAlias() throws Exception {
+    private String generateRandomKeyAlias() throws NoSuchAlgorithmException {
         final SecureRandom secureRandom = SecureRandom.getInstanceStrong();
         final byte[] randomBytes = new byte[16];
         secureRandom.nextBytes(randomBytes);

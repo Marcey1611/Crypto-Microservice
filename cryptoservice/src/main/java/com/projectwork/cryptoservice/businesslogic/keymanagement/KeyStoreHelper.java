@@ -78,6 +78,7 @@ public class KeyStoreHelper {
                 System.out.println(aliases.nextElement());
             }
         } catch (final Exception exception) {
+            // TODO error handling
             System.out.println("Fehler beim speichern des Keys: " + exception);
         }
     }
@@ -98,7 +99,7 @@ public class KeyStoreHelper {
             keystore = KeyStore.getInstance("PKCS12");
         } catch (final KeyStoreException exception) {
             // TODO Auto-generated catch block
-            exception.printStackTrace();
+            throw new RuntimeException("Fehler beim Erstellen des Keystores: " + exception);
         } 
         final File keystoreFile = new File(KEYSTORE_PATH);
         
@@ -108,13 +109,13 @@ public class KeyStoreHelper {
         
         try (final FileInputStream fis = new FileInputStream(keystoreFile.getAbsolutePath())) { 
             keystore.load(fis, passwordChars); // OWASP [102] Use password protection for keystore access
+            return keystore;
         } catch (final NoSuchAlgorithmException | CertificateException | IOException exception) {
-            // TODO Auto-generated catch block
-            exception.printStackTrace();
+            // TODO error handling
+            throw new RuntimeException("Fehler beim Laden des Keystores: " + exception);
         } finally {
             Arrays.fill(passwordChars, '\0'); // OWASP [199] Clear sensitive data from memory after use
         }
-        return keystore;
     }
 
     /**
@@ -136,8 +137,8 @@ public class KeyStoreHelper {
         try (final FileOutputStream fos = new FileOutputStream(keystoreFile.getAbsolutePath())) {
             keystore.store(fos, passwordChars);
         } catch (final KeyStoreException | NoSuchAlgorithmException | CertificateException | IOException exception) {
-            // TODO Auto-generated catch block
-            exception.printStackTrace();
+            // TODO error handling
+            throw new RuntimeException("Fehler beim Speichern des Keystores: " + exception);
         } finally {
             Arrays.fill(passwordChars, '\0'); // OWASP [199]
         }
@@ -150,21 +151,20 @@ public class KeyStoreHelper {
         final char[] passwordChars = keystorePassword.toCharArray();
         keystorePassword = null;
 
-        SecretKey decryptedKey = null;
         try {
             final SecretKey encryptedKey = (SecretKey) keystore.getKey(alias, passwordChars);
             final SecretKey masterKey = (SecretKey) keystore.getKey("master-key", passwordChars);
             final Cipher cipher = Cipher.getInstance("AES");
             cipher.init(Cipher.UNWRAP_MODE, masterKey);
-            decryptedKey = (SecretKey) cipher.unwrap(encryptedKey.getEncoded(), "AES", Cipher.SECRET_KEY);
+            final SecretKey decryptedKey = (SecretKey) cipher.unwrap(encryptedKey.getEncoded(), "AES", Cipher.SECRET_KEY);
+            return decryptedKey;
         } catch (final UnrecoverableKeyException | KeyStoreException | NoSuchAlgorithmException | 
                 NoSuchPaddingException | InvalidKeyException exception) {
-            // TODO Auto-generated catch block
-            exception.printStackTrace();
+            // TODO error handling
+            throw new RuntimeException("Fehler beim Abrufen des Schlüssels: " + exception);
+        } finally {
+            Arrays.fill(passwordChars, '\0'); // OWASP [199]
         }
-        
-        Arrays.fill(passwordChars, '\0'); // OWASP [199]
-        return decryptedKey;
     }
 
     public SecretKey getKey(final String alias) {
@@ -174,14 +174,14 @@ public class KeyStoreHelper {
         final char[] passwordChars = keystorePassword.toCharArray();
         keystorePassword = null;
 
-        SecretKey key = null;
         try {
-            key = (SecretKey) keystore.getKey(alias, passwordChars);
+            final SecretKey key = (SecretKey) keystore.getKey(alias, passwordChars);
+            return key;
         } catch (final UnrecoverableKeyException | KeyStoreException | NoSuchAlgorithmException exception) {
-            // TODO Auto-generated catch block
-            exception.printStackTrace();
+            // TODO error handling
+            throw new RuntimeException("Fehler beim Abrufen des Schlüssels: " + exception);
+        } finally {
+            Arrays.fill(passwordChars, '\0'); // OWASP [199]
         }
-        Arrays.fill(passwordChars, '\0'); // OWASP [199]
-        return key;
     }
 }

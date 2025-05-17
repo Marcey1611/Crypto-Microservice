@@ -45,6 +45,7 @@ public class KeyStoreInitializer {
                 System.out.println("Master-Key bereits im KeyStore vorhanden.");
             }
         } catch (final Exception exception) {
+            // TODO error handling
             throw new RuntimeException("Fehler beim Initialisieren des Keystores!", exception);
         }
     }

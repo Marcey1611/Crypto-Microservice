@@ -10,7 +10,7 @@ import javax.crypto.spec.GCMParameterSpec;
 import org.springframework.stereotype.Service;
 
 import com.projectwork.cryptoservice.businesslogic.jwtmanagement.JwtManagementService;
-import com.projectwork.cryptoservice.businesslogic.keymanagement.ClientKeyDataMap;
+import com.projectwork.cryptoservice.businesslogic.keymanagement.ClientKeyRegistry;
 import com.projectwork.cryptoservice.businesslogic.keymanagement.KeyStoreHelper;
 import com.projectwork.cryptoservice.entity.factory.ResultModelsFactory;
 import com.projectwork.cryptoservice.entity.models.decrypt.DecryptModel;
@@ -26,37 +26,43 @@ public class DecryptService {
 
     private final JwtManagementService jwtManagementService;
     private final KeyStoreHelper keyStoreHelper;
-    private final ClientKeyDataMap clientKeyAliasMap;
+    private final ClientKeyRegistry clientKeyRegistry;
     private final ResultModelsFactory resultModelsFactory;
 
     public DecryptResultModel decrypt(final DecryptModel decryptModel, final String clientName) {
         final String issuedTo = jwtManagementService.extractIssuedTo(decryptModel.getJwt());
         if(!issuedTo.equals(clientName)) {
+            // TODO error handling
             throw new RuntimeException("Client name does not match the issuedTo in the JWT");
         }
 
         final String keyAlias = jwtManagementService.extractClientKeyAlias(decryptModel.getJwt());
         if(keyAlias == null) {
+            // TODO error handling
             throw new RuntimeException("Key alias not found in the JWT");
         }
 
         final SecretKey clientKey = keyStoreHelper.getClientKey(keyAlias);
         if(clientKey == null) {
+            // TODO error handling
             throw new RuntimeException("Client key not found for key alias: " + keyAlias);
         }
 
-        final String clientNameFromKeyAlias = clientKeyAliasMap.getClientName(keyAlias);
+        final String clientNameFromKeyAlias = clientKeyRegistry.getClientNameByKeyAlias(keyAlias);
         if(clientNameFromKeyAlias == null) {
+            // TODO error handling
             throw new RuntimeException("Client name not found for key alias: " + keyAlias);
         }
 
-        final byte[] iv = clientKeyAliasMap.getIv(clientNameFromKeyAlias);
+        final byte[] iv = clientKeyRegistry.getIvForClient(clientNameFromKeyAlias);
         if(iv == null) {
+            // TODO error handling
             throw new RuntimeException("IV not found for key alias: " + keyAlias);
         }
 
         final String plainText = processDecryption(iv, clientKey, decryptModel.getCipherText());
         if(plainText == null) {
+            // TODO error handling
             throw new RuntimeException("Decryption failed");
         }
         return resultModelsFactory.buildDecryptResultModel(plainText);
@@ -72,6 +78,7 @@ public class DecryptService {
             //TODO: return byte[] not String
             return new String(decryptedBytes, StandardCharsets.UTF_8);
         } catch (final Exception exception) {
+            // TODO error handling
             throw new RuntimeException("Decryption failed", exception);
         }
     }

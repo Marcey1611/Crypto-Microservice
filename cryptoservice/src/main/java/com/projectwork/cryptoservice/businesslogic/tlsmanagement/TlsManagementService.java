@@ -65,7 +65,7 @@ public class TlsManagementService {
         try {
             signedCert = PemUtils.signCsrWithCa(csr, caKey, caCert);
         } catch (Exception e) {
-            // TODO Auto-generated catch block
+            // TODO error handling
             e.printStackTrace();
         }
 
@@ -74,7 +74,7 @@ public class TlsManagementService {
         try {
             signedPem = PemUtils.toPem(signedCert);
         } catch (IOException e) {
-            // TODO Auto-generated catch block
+            // TODO error handling
             e.printStackTrace();
         }
 
@@ -87,7 +87,7 @@ public class TlsManagementService {
         try {
             pem = Files.readString(caCertPath);
         } catch (IOException e) {
-            // TODO Auto-generated catch block
+            // TODO error handling
             e.printStackTrace();
         }
         return resultModelsFactory.buildGetRootCaCertResultModel(pem);

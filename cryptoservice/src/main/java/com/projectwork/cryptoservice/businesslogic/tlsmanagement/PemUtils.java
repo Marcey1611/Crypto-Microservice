@@ -57,7 +57,7 @@ public class PemUtils {
 
             PrivateKeyInfo decryptedKeyInfo = encInfo.decryptPrivateKeyInfo(decryptor);
             return new JcaPEMKeyConverter().getPrivateKey(decryptedKeyInfo);
-        }
+        } // TODO error handling
     }
 
     public static X509Certificate readCertificate(String pem) throws CertificateException {
@@ -68,14 +68,14 @@ public class PemUtils {
     public static PKCS10CertificationRequest parseCsr(String pem) throws IOException {
         try (PEMParser parser = new PEMParser(new StringReader(pem))) {
             return (PKCS10CertificationRequest) parser.readObject();
-        }
+        } // TODO error handling
     }
 
     public static String toPem(X509Certificate cert) throws IOException {
         StringWriter sw = new StringWriter();
         try (JcaPEMWriter writer = new JcaPEMWriter(sw)) {
             writer.writeObject(cert);
-        }
+        } // TODO error handling
         return sw.toString();
     }
 

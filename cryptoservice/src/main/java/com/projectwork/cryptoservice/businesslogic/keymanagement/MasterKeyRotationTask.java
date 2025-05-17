@@ -74,6 +74,7 @@ public class MasterKeyRotationTask {
             Arrays.fill(passwordChars, '\0');
             System.out.println("Master-Key Rotation abgeschlossen und alle Client-Keys re-wrapped.");
         } catch (final Exception exception) {
+            // TODO error handling
             System.err.println("Fehler bei der Master-Key Rotation: " + exception.getMessage());
         }
     }
