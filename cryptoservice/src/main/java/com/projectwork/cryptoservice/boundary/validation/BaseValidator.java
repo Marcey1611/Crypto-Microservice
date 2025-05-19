@@ -5,6 +5,9 @@ import java.util.regex.Pattern;
 
 import javax.crypto.SecretKey;
 
+import com.projectwork.cryptoservice.errorhandling.exceptions.BadRequestException;
+import com.projectwork.cryptoservice.errorhandling.util.ErrorCode;
+
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.JwtException;
@@ -18,43 +21,37 @@ public abstract class BaseValidator {
 
     protected void checkNotBlank(final String field, final String fieldName) {
         if (field == null || field.isBlank()) {
-            // TODO error handling
-            throw new IllegalArgumentException(fieldName + " must not be blank");
+            throw new BadRequestException(ErrorCode.FIELD_BLANK.formatMessage(fieldName));
         }
     }
 
     protected void checkMaxLength(final String field, final int maxLength, final String fieldName) {
         if (field.length() > maxLength) {
-            // TODO error handling
-            throw new IllegalArgumentException(fieldName + " is too long (max " + maxLength + " chars)");
+            throw new BadRequestException(ErrorCode.FIELD_TOO_LONG.formatMessage(fieldName));
         }
     }
 
     protected void checkNoUnicodeEscapes(final String field, final String fieldName) {
         if (field.contains("\\u")) {
-            // TODO error handling
-            throw new IllegalArgumentException(fieldName + " contains forbidden unicode escape sequences");
+            throw new BadRequestException(ErrorCode.INVALID_ENCODING.formatMessage(fieldName));
         }
     }
 
     protected void checkExtendedWhitelist(final String field, final String fieldName) {
         if (!EXTENDED_WHITELIST.matcher(field).matches()) {
-            // TODO error handling
-            throw new IllegalArgumentException(fieldName + " contains illegal characters");
+            throw new BadRequestException(ErrorCode.ILLEGAL_CHARS.formatMessage(fieldName));
         }
     }
 
     protected void checkWhitelist(final String field, final String fieldName) {
         if (!WHITELIST.matcher(field).matches()) {
-            // TODO error handling
-            throw new IllegalArgumentException(fieldName + " contains illegal characters");
+            throw new BadRequestException(ErrorCode.ILLEGAL_CHARS.formatMessage(fieldName));
         }
     }
 
     protected void checkJwt(final String jwt, final SecretKey jwtSigningKey) {
         if (!JWT_PATTERN.matcher(jwt).matches()) {
-            // TODO error handling
-            throw new IllegalArgumentException("JWT structure is invalid");
+            throw new BadRequestException(ErrorCode.INVALID_JWT.defaultMessage());
         }
 
         try {
@@ -67,8 +64,7 @@ public abstract class BaseValidator {
 
             final Date exp = claims.getExpiration();
             if (exp == null || exp.before(new Date())) {
-                // TODO error handling
-                throw new IllegalArgumentException("JWT expired");
+                throw new BadRequestException(ErrorCode.EXPIRED_JWT.defaultMessage());
             }
 
             final String keyAlias = claims.get("keyAlias", String.class);
@@ -83,13 +79,11 @@ public abstract class BaseValidator {
             checkNoUnicodeEscapes(algorithm, "algorithm in jwt");
             checkWhitelist(algorithm, "algorithm in jwt");
             if ("none".equalsIgnoreCase(algorithm)) {
-                // TODO error handling
-                throw new IllegalArgumentException("Insecure JWT algorithm 'none' is not allowed");
+                throw new BadRequestException(ErrorCode.INSECURE_JWT_ALGO.defaultMessage());
             }
 
         } catch (final JwtException exception) {
-            // TODO error handling
-            throw new IllegalArgumentException("Invalid JWT: " + exception.getMessage(), exception);
+            throw new BadRequestException(ErrorCode.INVALID_JWT.defaultMessage());
         }
     }
 }
