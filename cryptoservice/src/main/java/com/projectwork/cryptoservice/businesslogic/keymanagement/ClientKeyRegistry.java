@@ -7,6 +7,8 @@ import org.springframework.stereotype.Component;
 
 import com.projectwork.cryptoservice.entity.factory.ClientKeyDataFactory;
 import com.projectwork.cryptoservice.entity.models.keymanagement.ClientKeyData;
+import com.projectwork.cryptoservice.errorhandling.exceptions.BadRequestException;
+import com.projectwork.cryptoservice.errorhandling.util.ErrorCode;
 
 import lombok.RequiredArgsConstructor;
 
@@ -52,7 +54,10 @@ public class ClientKeyRegistry {
     public void updateIvForClient(final String clientName, final byte[] iv) {
         final ClientKeyData data = clientKeyDataMap.get(clientName);
         if (data == null) {
-            throw new IllegalArgumentException("Client nicht gefunden: " + clientName);
+            throw new BadRequestException(ErrorCode.CLIENT_NOT_FOUND.builder()
+                .withLogMsgFormatted(clientName)
+                .build()
+            );
         }
         data.setIv(iv);
         clientKeyDataMap.put(clientName, data);

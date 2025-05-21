@@ -19,6 +19,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import com.projectwork.cryptoservice.errorhandling.exceptions.InternalServerErrorException;
+import com.projectwork.cryptoservice.errorhandling.util.ErrorCode;
+
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
@@ -37,22 +40,15 @@ public class KeyCleanupTask {
     @Scheduled(fixedRate = 3600000)
     public void cleanupKeysPeriodically() {
         logger.info("Starte periodischen Key Cleanup...");
-        try {
-            cleanupExpiredKeys();
-        } catch (Exception e) {
-            logger.error("Fehler beim Key Cleanup", e);
-        }
+        cleanupExpiredKeys();
         logger.info("Key Cleanup abgeschlossen.");
     }
 
     public void cleanupExpiredKeys() {
         final KeyStore keystore = keyStoreHelper.loadKeyStore();
-        try {
-            final List<String> expiredAliases = findExpiredAliases(keystore);
-            deleteExpiredKeys(keystore, expiredAliases);
-        } finally {
-            keyStoreHelper.saveKeyStore(keystore);
-        }
+        final List<String> expiredAliases = findExpiredAliases(keystore);
+        deleteExpiredKeys(keystore, expiredAliases);
+        keyStoreHelper.saveKeyStore(keystore);
     }
 
     private List<String> findExpiredAliases(final KeyStore keystore) {

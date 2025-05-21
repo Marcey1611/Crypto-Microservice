@@ -26,12 +26,7 @@ public class JwtManagementService {
 
     public GenerateJwtResultModel generateJwt(final GenerateJwtModel generateJwtModel) {
         SecretKey jwtSigningKey;
-        try {
-            jwtSigningKey = keyStoreHelper.getKey("jwt-signing-key");
-        } catch (final Exception exception) {
-            // TODO error handling
-            throw new RuntimeException(exception);
-        }
+        jwtSigningKey = keyStoreHelper.getKey("jwt-signing-key");
 
         final Instant now = Instant.now();
         final Instant expiration = now.plusSeconds(3600);

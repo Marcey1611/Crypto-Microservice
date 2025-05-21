@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.security.GeneralSecurityException;
 import java.security.InvalidKeyException;
 import java.security.KeyStore;
 import java.security.KeyStore.PasswordProtection;
@@ -14,7 +15,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.util.Arrays;
-import java.util.Enumeration;
 
 import javax.crypto.Cipher;
 import javax.crypto.NoSuchPaddingException;
@@ -22,6 +22,9 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
 import org.springframework.stereotype.Component;
+
+import com.projectwork.cryptoservice.errorhandling.exceptions.InternalServerErrorException;
+import com.projectwork.cryptoservice.errorhandling.util.ErrorCode;
 
 /**
  * 
@@ -48,38 +51,59 @@ public class KeyStoreHelper {
      * - OWASP [194] Passwords cleared from memory after use (Arrays.fill).
      */
     public void storeKey(final String alias, final SecretKey key) {
+        final KeyStore keystore = loadKeyStore();
+
+        String keystorePassword = System.getenv("KEYSTORE_PASSWORD");
+        final char[] passwordChars = keystorePassword.toCharArray();
+        keystorePassword = null;
+
+        final SecretKey masterKey;
         try {
-            final KeyStore keystore = loadKeyStore();
-
-            String keystorePassword = System.getenv("KEYSTORE_PASSWORD");
-            final char[] passwordChars = keystorePassword.toCharArray();
-            keystorePassword = null;
-
-            final SecretKey masterKey = (SecretKey) keystore.getKey("master-key", passwordChars);
+            masterKey = (SecretKey) keystore.getKey("master-key", passwordChars);
             if (masterKey == null) {
-                throw new RuntimeException("Master Key nicht gefunden!"); // OWASP [103] Fail securely if master key is missing
+                throw new InternalServerErrorException(
+                    ErrorCode.MASTER_KEY_MISSING.builder().build()
+                );
             }
-            
-            // OWASP [104] Using strong AES wrapping for client key protection
-            // OWASP [133] Stored keys are encrypted (with master key wrapping)
+        } catch (final KeyStoreException | NoSuchAlgorithmException | UnrecoverableKeyException exception) {
+            throw new InternalServerErrorException(
+                ErrorCode.KEYSTORE_ACCESS_FAILED.builder()
+                    .withLogMsgFormatted("master-key", exception.toString())
+                    .build()
+            );
+        }
+
+        final byte[] encryptedKey;
+        try {
             final Cipher cipher = Cipher.getInstance("AES");
             cipher.init(Cipher.WRAP_MODE, masterKey);
-            final byte[] encryptedKey = cipher.wrap(key);
+            encryptedKey = cipher.wrap(key);
+        } catch (final GeneralSecurityException exception) {
+            throw new InternalServerErrorException(
+                ErrorCode.CLIENT_KEY_ENCRYPTION_FAILED.builder()
+                    .withLogMsgFormatted(alias, exception.toString())
+                    .build()
+            );
+        }
+
+        try {
             final SecretKeySpec encryptedKeySpec = new SecretKeySpec(encryptedKey, "AES");
-            
             final SecretKeyEntry keyEntry = new SecretKeyEntry(encryptedKeySpec);
             final ProtectionParameter protection = new PasswordProtection(passwordChars);
-            keystore.setEntry(alias, keyEntry, protection);
-            saveKeyStore(keystore);
-            Arrays.fill(passwordChars, '\0'); // OWASP [199]
 
-            final Enumeration<String> aliases = keystore.aliases();
-            while (aliases.hasMoreElements()) {
-                System.out.println(aliases.nextElement());
+            try {
+                keystore.setEntry(alias, keyEntry, protection);
+            } catch (final KeyStoreException e) {
+                throw new InternalServerErrorException(
+                    ErrorCode.KEYSTORE_ENTRY_FAILED.builder()
+                        .withLogMsgFormatted(alias, e.toString())
+                        .build()
+                );
             }
-        } catch (final Exception exception) {
-            // TODO error handling
-            System.out.println("Fehler beim speichern des Keys: " + exception);
+
+            saveKeyStore(keystore); // eigene Methode mit eigenem ErrorCode
+        } finally {
+            Arrays.fill(passwordChars, '\0'); // OWASP [199]
         }
     }
 
@@ -94,27 +118,34 @@ public class KeyStoreHelper {
      * - OWASP [199] Resources (File streams) properly closed using try-with-resources
      */
     public KeyStore loadKeyStore() {
-        KeyStore keystore = null;
+        final KeyStore keystore;
         try {
             keystore = KeyStore.getInstance("PKCS12");
         } catch (final KeyStoreException exception) {
-            // TODO Auto-generated catch block
-            throw new RuntimeException("Fehler beim Erstellen des Keystores: " + exception);
-        } 
+            throw new InternalServerErrorException(
+                ErrorCode.KEYSTORE_INIT_FAILED.builder()
+                    .withLogMsgFormatted(exception.toString())
+                    .build()
+            );
+        }
+    
         final File keystoreFile = new File(KEYSTORE_PATH);
-        
         String keystorePassword = System.getenv("KEYSTORE_PASSWORD");
         final char[] passwordChars = keystorePassword.toCharArray();
         keystorePassword = null;
-        
-        try (final FileInputStream fis = new FileInputStream(keystoreFile.getAbsolutePath())) { 
-            keystore.load(fis, passwordChars); // OWASP [102] Use password protection for keystore access
+    
+        try (final FileInputStream fis = new FileInputStream(keystoreFile.getAbsolutePath())) {
+            keystore.load(fis, passwordChars);
             return keystore;
         } catch (final NoSuchAlgorithmException | CertificateException | IOException exception) {
-            // TODO error handling
-            throw new RuntimeException("Fehler beim Laden des Keystores: " + exception);
+            throw new InternalServerErrorException(
+                ErrorCode.KEYSTORE_LOAD_FAILED.builder()
+                    .withLogMsgFormatted(keystoreFile.getAbsolutePath(), exception.toString())
+                    .build()
+            );
+    
         } finally {
-            Arrays.fill(passwordChars, '\0'); // OWASP [199] Clear sensitive data from memory after use
+            Arrays.fill(passwordChars, '\0'); // sensible Daten nullen
         }
     }
 
@@ -129,57 +160,74 @@ public class KeyStoreHelper {
      */
     public void saveKeyStore(final KeyStore keystore) {
         final File keystoreFile = new File(KEYSTORE_PATH);
-
         String keystorePassword = System.getenv("KEYSTORE_PASSWORD");
         final char[] passwordChars = keystorePassword.toCharArray();
         keystorePassword = null;
-
+    
         try (final FileOutputStream fos = new FileOutputStream(keystoreFile.getAbsolutePath())) {
             keystore.store(fos, passwordChars);
         } catch (final KeyStoreException | NoSuchAlgorithmException | CertificateException | IOException exception) {
-            // TODO error handling
-            throw new RuntimeException("Fehler beim Speichern des Keystores: " + exception);
+            throw new InternalServerErrorException(
+                ErrorCode.KEYSTORE_SAVE_FAILED.builder()
+                    .withLogMsgFormatted(keystoreFile.getAbsolutePath(), exception.toString())
+                    .build()
+            );
+    
         } finally {
-            Arrays.fill(passwordChars, '\0'); // OWASP [199]
+            Arrays.fill(passwordChars, '\0'); // OWASP Empfehlung [199]
         }
     }
-
+    
     public SecretKey getClientKey(final String alias) {
         final KeyStore keystore = loadKeyStore();
-
         String keystorePassword = System.getenv("KEYSTORE_PASSWORD");
         final char[] passwordChars = keystorePassword.toCharArray();
         keystorePassword = null;
 
+        SecretKey encryptedKey;
+        SecretKey masterKey;
         try {
-            final SecretKey encryptedKey = (SecretKey) keystore.getKey(alias, passwordChars);
-            final SecretKey masterKey = (SecretKey) keystore.getKey("master-key", passwordChars);
+            encryptedKey = (SecretKey) keystore.getKey(alias, passwordChars);
+            masterKey = (SecretKey) keystore.getKey("master-key", passwordChars);
+        } catch (final UnrecoverableKeyException | KeyStoreException | NoSuchAlgorithmException exception) {
+            throw new InternalServerErrorException(
+                ErrorCode.KEYSTORE_ACCESS_FAILED.builder()
+                    .withLogMsgFormatted(alias, exception.toString())
+                    .build()
+            );
+        }
+
+        try {
             final Cipher cipher = Cipher.getInstance("AES");
             cipher.init(Cipher.UNWRAP_MODE, masterKey);
-            final SecretKey decryptedKey = (SecretKey) cipher.unwrap(encryptedKey.getEncoded(), "AES", Cipher.SECRET_KEY);
+            final SecretKey decryptedKey = (SecretKey) cipher.unwrap(
+                encryptedKey.getEncoded(), "AES", Cipher.SECRET_KEY
+            );
             return decryptedKey;
-        } catch (final UnrecoverableKeyException | KeyStoreException | NoSuchAlgorithmException | 
-                NoSuchPaddingException | InvalidKeyException exception) {
-            // TODO error handling
-            throw new RuntimeException("Fehler beim Abrufen des Schlüssels: " + exception);
+        } catch (final NoSuchPaddingException | NoSuchAlgorithmException | InvalidKeyException exception) {
+            throw new InternalServerErrorException(
+                ErrorCode.CLIENT_KEY_DECRYPTION_FAILED.builder()
+                    .withLogMsgFormatted(alias, exception.toString())
+                    .build()
+            );
         } finally {
-            Arrays.fill(passwordChars, '\0'); // OWASP [199]
+            Arrays.fill(passwordChars, '\0');
         }
     }
 
     public SecretKey getKey(final String alias) {
         final KeyStore keystore = loadKeyStore();
-
         String keystorePassword = System.getenv("KEYSTORE_PASSWORD");
         final char[] passwordChars = keystorePassword.toCharArray();
         keystorePassword = null;
 
         try {
-            final SecretKey key = (SecretKey) keystore.getKey(alias, passwordChars);
-            return key;
+            return (SecretKey) keystore.getKey(alias, passwordChars);
         } catch (final UnrecoverableKeyException | KeyStoreException | NoSuchAlgorithmException exception) {
-            // TODO error handling
-            throw new RuntimeException("Fehler beim Abrufen des Schlüssels: " + exception);
+            throw new InternalServerErrorException(ErrorCode.KEYSTORE_ACCESS_FAILED.builder()
+                .withLogMsgFormatted(alias, exception.toString())
+                .build()
+            );
         } finally {
             Arrays.fill(passwordChars, '\0'); // OWASP [199]
         }

@@ -8,7 +8,7 @@ public abstract class ApiException extends RuntimeException {
     private final ErrorDetail error;
 
     public ApiException(final ErrorDetail error) {
-        super(error.getMessage());
+        super(error.getUserMsg());
         this.error = error;
     }
 
