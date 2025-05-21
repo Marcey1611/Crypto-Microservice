@@ -67,7 +67,7 @@ public class KeyStoreHelper {
             }
         } catch (final KeyStoreException | NoSuchAlgorithmException | UnrecoverableKeyException exception) {
             throw new InternalServerErrorException(
-                ErrorCode.KEYSTORE_ACCESS_FAILED.builder()
+                ErrorCode.KEYSTORE_KEY_ACCESS_FAILED.builder()
                     .withLogMsgFormatted("master-key", exception.toString())
                     .build()
             );
@@ -95,7 +95,7 @@ public class KeyStoreHelper {
                 keystore.setEntry(alias, keyEntry, protection);
             } catch (final KeyStoreException e) {
                 throw new InternalServerErrorException(
-                    ErrorCode.KEYSTORE_ENTRY_FAILED.builder()
+                    ErrorCode.SETTING_KEYSTORE_ENTRY_FAILED.builder()
                         .withLogMsgFormatted(alias, e.toString())
                         .build()
                 );
@@ -191,7 +191,7 @@ public class KeyStoreHelper {
             masterKey = (SecretKey) keystore.getKey("master-key", passwordChars);
         } catch (final UnrecoverableKeyException | KeyStoreException | NoSuchAlgorithmException exception) {
             throw new InternalServerErrorException(
-                ErrorCode.KEYSTORE_ACCESS_FAILED.builder()
+                ErrorCode.KEYSTORE_KEY_ACCESS_FAILED.builder()
                     .withLogMsgFormatted(alias, exception.toString())
                     .build()
             );
@@ -224,7 +224,7 @@ public class KeyStoreHelper {
         try {
             return (SecretKey) keystore.getKey(alias, passwordChars);
         } catch (final UnrecoverableKeyException | KeyStoreException | NoSuchAlgorithmException exception) {
-            throw new InternalServerErrorException(ErrorCode.KEYSTORE_ACCESS_FAILED.builder()
+            throw new InternalServerErrorException(ErrorCode.KEYSTORE_KEY_ACCESS_FAILED.builder()
                 .withLogMsgFormatted(alias, exception.toString())
                 .build()
             );

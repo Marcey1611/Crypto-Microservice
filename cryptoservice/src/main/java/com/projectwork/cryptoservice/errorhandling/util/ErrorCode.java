@@ -17,14 +17,19 @@ public enum ErrorCode {
     
     //500
     UNEXPECTED_ERROR("500.001", "Internal server error", "Unexpected error", Level.ERROR),
-    KEYSTORE_ACCESS_FAILED("500.002", "Internal server error", "Keystore access failed for alias='%s': %s", Level.ERROR),
+    KEYSTORE_KEY_ACCESS_FAILED("500.002", "Internal server error", "Keystore key access failed for alias='%s': %s", Level.ERROR),
     CLIENT_KEY_DECRYPTION_FAILED("500.003", "Internal server error", "Client key decryption failed for alias='%s': %s", Level.ERROR),
     CLIENT_KEY_ENCRYPTION_FAILED("500.004", "Internal server error", "Client key encryption failed for alias='%s': %s", Level.ERROR),
-    KEYSTORE_SAVE_FAILED("500.004", "Internal server error", "Failed to save keystore to path='%s': %s", Level.ERROR),
-    KEYSTORE_INIT_FAILED("500.005", "Internal server error", "Failed to initialize keystore: %s", Level.ERROR),
-    KEYSTORE_LOAD_FAILED("500.006", "Internal server error", "Failed to load keystore from path='%s': %s", Level.ERROR),
-    MASTER_KEY_MISSING("500.007", "Internal server error", "Master key is missing in keystore", Level.ERROR),
-    KEYSTORE_ENTRY_FAILED("500.009", "Internal server error", "Failed to store entry in keystore for alias='%s': %s", Level.ERROR),
+    KEYSTORE_SAVE_FAILED("500.005", "Internal server error", "Failed to save keystore to path='%s': %s", Level.ERROR),
+    KEYSTORE_INIT_FAILED("500.006", "Internal server error", "Failed to initialize keystore: %s", Level.ERROR),
+    KEYSTORE_LOAD_FAILED("500.007", "Internal server error", "Failed to load keystore from path='%s': %s", Level.ERROR),
+    MASTER_KEY_MISSING("500.008", "Internal server error", "Master key is missing in keystore", Level.ERROR),
+    SETTING_KEYSTORE_ENTRY_FAILED("500.009", "Internal server error", "Failed to store entry in keystore for alias='%s': %s", Level.ERROR),
+    GETTING_KEYSTORE_ENTRY_FAILED("500.010", "Internal server error", "Failed to retrieve entry from keystore for alias='%s': %s", Level.ERROR),
+    DELETING_KEYSTORE_ENTRY_FAILED("500.011", "Internal server error", "Failed to delete key entry for alias='%s': %s", Level.ERROR),
+    KEY_EXPIRY_CHECK_FAILED("500.012", "Internal server error", "Failed to check key expiration for alias='%s': %s", Level.ERROR),
+    PASSWORD_DESTROY_FAILED("500.013", "Internal server error", "Failed to destroy PasswordProtection for alias='%s': %s", Level.ERROR),
+    KEYSTORE_ALIASES_LOAD_FAILED( "500.014", "Internal server error", "Failed to load aliases from keystore: %s", Level.ERROR),
 
     ;
 

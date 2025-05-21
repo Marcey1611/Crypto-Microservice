@@ -70,17 +70,20 @@ public class KeyCleanupTask {
     }
 
     private Optional<Enumeration<String>> loadAliases(final KeyStore keystore) {
+        Enumeration<String> aliases;
         try {
-            final Enumeration<String> aliases = keystore.aliases();
-            if (!aliases.hasMoreElements()) {
-                logger.info("Keine Client-Schlüssel gefunden. Key Cleanup nicht notwendig.");
-                return Optional.empty();
-            }
-            return Optional.of(aliases);
+            aliases = keystore.aliases();
         } catch (final KeyStoreException exception) {
-            logger.error("Fehler beim Laden der Aliase aus dem KeyStore", exception);
+            throw new InternalServerErrorException(ErrorCode.KEYSTORE_ALIASES_LOAD_FAILED.builder()
+                .withLogMsgFormatted(exception.toString())
+                .build()
+            );
+        }
+        if (!aliases.hasMoreElements()) {
+            logger.info("Keine Client-Schlüssel gefunden. Key Cleanup nicht notwendig.");
             return Optional.empty();
         }
+        return Optional.of(aliases);
     }
 
     private boolean isReservedAlias(final String alias) {
@@ -99,12 +102,20 @@ public class KeyCleanupTask {
                 return now - creationTime > EXPIRATION_TIME_MILLIS;
             }
         } catch (final NoSuchAlgorithmException | UnrecoverableEntryException | KeyStoreException exception) {
-            logger.warn("Fehler beim Prüfen der Schlüsselexpiration für Alias: {}", alias, exception);
+            throw new InternalServerErrorException(
+                ErrorCode.GETTING_KEYSTORE_ENTRY_FAILED.builder()
+                    .withLogMsgFormatted(alias, exception.toString())
+                    .build()
+            );
         } finally {
             try {
                 passwordProtection.destroy();
             } catch (final DestroyFailedException exception) {
-                logger.warn("Fehler beim Zerstören des PasswordProtection-Objekts", exception);
+                throw new InternalServerErrorException(
+                    ErrorCode.PASSWORD_DESTROY_FAILED.builder()
+                        .withLogMsgFormatted(alias, exception.toString())
+                        .build()
+                );
             }
         }
         return false;
@@ -114,11 +125,15 @@ public class KeyCleanupTask {
         for (final String alias : aliasesToDelete) {
             try {
                 keystore.deleteEntry(alias);
-                clientKeyRegistry.removeClientByKeyAlias(alias);
-                logger.info("Client Key gelöscht: {}", alias);
+                
             } catch (final KeyStoreException exception) {
-                logger.warn("Fehler beim Löschen des Eintrags für Alias: {}", alias, exception);
+                throw new InternalServerErrorException(ErrorCode.DELETING_KEYSTORE_ENTRY_FAILED.builder()
+                    .withLogMsgFormatted(alias, exception.toString())
+                    .build()
+                );
             }
+            clientKeyRegistry.removeClientByKeyAlias(alias);
+            logger.info("Client Key gelöscht: {}", alias);
         }
     }
 
