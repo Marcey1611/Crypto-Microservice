@@ -43,13 +43,7 @@ public class JwtManagementService {
     }
 
     public String extractClientKeyAlias(final String jwtToken) {
-        SecretKey jwtSigningKey;
-        try {
-            jwtSigningKey = keyStoreHelper.getKey("jwt-signing-key");
-        } catch (final Exception exception) {
-            // TODO error handling
-            throw new RuntimeException(exception);
-        }
+        final SecretKey jwtSigningKey = keyStoreHelper.getKey("jwt-signing-key");
         return Jwts.parserBuilder()
             .setSigningKey(jwtSigningKey)
             .build()
@@ -59,13 +53,7 @@ public class JwtManagementService {
     }
 
     public String extractIssuedTo(final String jwtToken){
-        SecretKey jwtSigningKey;
-        try {
-            jwtSigningKey = keyStoreHelper.getKey("jwt-signing-key");
-        } catch (final Exception exception) {
-            // TODO error handling
-            throw new RuntimeException(exception);
-        }
+        final SecretKey jwtSigningKey = keyStoreHelper.getKey("jwt-signing-key");
         return Jwts.parserBuilder()
             .setSigningKey(jwtSigningKey)
             .build()

@@ -74,13 +74,13 @@ public class KeyCleanupTask {
         try {
             aliases = keystore.aliases();
         } catch (final KeyStoreException exception) {
-            throw new InternalServerErrorException(ErrorCode.KEYSTORE_ALIASES_LOAD_FAILED.builder()
-                .withLogMsgFormatted(exception.toString())
+            throw new InternalServerErrorException(ErrorCode.KEYSTORE_NOT_INITIALIZED.builder()
+                .withContext("While trying to load the aliasses of the keystore in key cleanup." )
+                .withException(exception)
                 .build()
             );
         }
         if (!aliases.hasMoreElements()) {
-            logger.info("Keine Client-Schlüssel gefunden. Key Cleanup nicht notwendig.");
             return Optional.empty();
         }
         return Optional.of(aliases);
@@ -95,16 +95,14 @@ public class KeyCleanupTask {
         final PasswordProtection passwordProtection = new PasswordProtection(passwordChars);
         Arrays.fill(passwordChars, '\0');
 
+        KeyStore.Entry entry;
         try {
-            final KeyStore.Entry entry = keystore.getEntry(alias, passwordProtection);
-            if (entry instanceof KeyStore.SecretKeyEntry) {
-                final long creationTime = keystore.getCreationDate(alias).getTime();
-                return now - creationTime > EXPIRATION_TIME_MILLIS;
-            }
+            entry = keystore.getEntry(alias, passwordProtection);
         } catch (final NoSuchAlgorithmException | UnrecoverableEntryException | KeyStoreException exception) {
             throw new InternalServerErrorException(
                 ErrorCode.GETTING_KEYSTORE_ENTRY_FAILED.builder()
-                    .withLogMsgFormatted(alias, exception.toString())
+                    .withContext(String.format("While trying to retrieve key entry for alias '%s' from the keystore in expiration check.", alias))
+                    .withException(exception)
                     .build()
             );
         } finally {
@@ -113,10 +111,25 @@ public class KeyCleanupTask {
             } catch (final DestroyFailedException exception) {
                 throw new InternalServerErrorException(
                     ErrorCode.PASSWORD_DESTROY_FAILED.builder()
-                        .withLogMsgFormatted(alias, exception.toString())
+                        .withContext(String.format("While destroying PasswordProtection after key expiration check for alias '%s'.", alias))
+                        .withException(exception)
                         .build()
                 );
             }
+        }
+        
+        if (entry instanceof KeyStore.SecretKeyEntry) {
+            long creationTime;
+            try {
+                creationTime = keystore.getCreationDate(alias).getTime();
+            } catch (final KeyStoreException exception) {
+                throw new InternalServerErrorException(ErrorCode.KEYSTORE_NOT_INITIALIZED.builder()
+                    .withContext("While trying to get the creation date of a key in a keystore. While checking if the key is expired.")
+                    .withException(exception)
+                    .build()
+                );
+            }   
+            return now - creationTime > EXPIRATION_TIME_MILLIS;
         }
         return false;
     }
@@ -125,11 +138,12 @@ public class KeyCleanupTask {
         for (final String alias : aliasesToDelete) {
             try {
                 keystore.deleteEntry(alias);
-                
             } catch (final KeyStoreException exception) {
-                throw new InternalServerErrorException(ErrorCode.DELETING_KEYSTORE_ENTRY_FAILED.builder()
-                    .withLogMsgFormatted(alias, exception.toString())
-                    .build()
+                throw new InternalServerErrorException(
+                    ErrorCode.DELETING_KEYSTORE_ENTRY_FAILED.builder()
+                        .withContext(String.format("While trying to delete the key with alias '%s' from the keystore.", alias))
+                        .withException(exception)
+                        .build()
                 );
             }
             clientKeyRegistry.removeClientByKeyAlias(alias);

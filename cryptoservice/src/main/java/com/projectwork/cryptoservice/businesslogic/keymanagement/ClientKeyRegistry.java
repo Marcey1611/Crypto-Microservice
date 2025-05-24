@@ -55,7 +55,9 @@ public class ClientKeyRegistry {
         final ClientKeyData data = clientKeyDataMap.get(clientName);
         if (data == null) {
             throw new BadRequestException(ErrorCode.CLIENT_NOT_FOUND.builder()
-                .withLogMsgFormatted(clientName)
+                .withUserMsgFormatted(clientName)
+                .withContext("While trying to update IV for client.")
+                .withException(null)
                 .build()
             );
         }

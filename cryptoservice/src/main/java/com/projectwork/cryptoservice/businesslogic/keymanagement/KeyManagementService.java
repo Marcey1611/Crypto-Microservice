@@ -12,6 +12,8 @@ import org.springframework.stereotype.Service;
 import com.projectwork.cryptoservice.entity.factory.ResultModelsFactory;
 import com.projectwork.cryptoservice.entity.models.keymanagement.GenerateKeyModel;
 import com.projectwork.cryptoservice.entity.models.keymanagement.GenerateKeyResultModel;
+import com.projectwork.cryptoservice.errorhandling.exceptions.InternalServerErrorException;
+import com.projectwork.cryptoservice.errorhandling.util.ErrorCode;
 
 import lombok.RequiredArgsConstructor;
 
@@ -46,28 +48,55 @@ public class KeyManagementService {
             return resultModelsFactory.buildGenerateKeyResultModel("Key already exists for client: " + generateKeyModel.getClientName());
         }
 
-        try {
-            final SecretKey aesKey = generateRandomKey();
-            final String keyAlias = generateRandomKeyAlias(); // OWASP [104] SecureRandom for unguessable alias
-            keyStoreHelper.storeKey(keyAlias, aesKey);
-            clientKeyRegistry.registerClientKey(generateKeyModel.getClientName(), keyAlias);
-        } catch (final NoSuchAlgorithmException exception) {
-            // TODO Auto-generated catch block
-            throw new RuntimeException("Error generating key: " + exception.getMessage());
-        }
-        
+        final SecretKey aesKey = generateRandomKey();
+        final String keyAlias = generateRandomKeyAlias(); // OWASP [104] SecureRandom for unguessable alias
+        keyStoreHelper.storeKey(keyAlias, aesKey);
+        clientKeyRegistry.registerClientKey(generateKeyModel.getClientName(), keyAlias);
+    
         return resultModelsFactory.buildGenerateKeyResultModel("Key generated for client: " + generateKeyModel.getClientName());
     }
 
-    private SecretKey generateRandomKey() throws NoSuchAlgorithmException {
-        final SecureRandom secureRandom = SecureRandom.getInstanceStrong();
-        final KeyGenerator keyGen = KeyGenerator.getInstance("AES");
-        keyGen.init(256, secureRandom); // OWASP [104] SecureRandom for cryptographic key generation
+    private SecretKey generateRandomKey() {
+        final SecureRandom secureRandom;
+        try {
+            secureRandom = SecureRandom.getInstanceStrong();
+        } catch (final NoSuchAlgorithmException exception) {
+            throw new InternalServerErrorException(
+                ErrorCode.AES_KEYGEN_SECURE_RANDOM_FAILED.builder()
+                    .withContext("While generating a random client key.")
+                    .withException(exception)
+                    .build()
+            );
+        }
+    
+        final KeyGenerator keyGen;
+        try {
+            keyGen = KeyGenerator.getInstance("AES");
+        } catch (final NoSuchAlgorithmException exception) {
+            throw new InternalServerErrorException(
+                ErrorCode.AES_KEYGEN_INIT_FAILED.builder()
+                    .withContext("While preparing AES key generator for client key creation.")
+                    .withException(exception)
+                    .build()
+            );
+        }
+    
+        keyGen.init(256, secureRandom); // [OWASP 104]
         return keyGen.generateKey();
     }
 
-    private String generateRandomKeyAlias() throws NoSuchAlgorithmException {
-        final SecureRandom secureRandom = SecureRandom.getInstanceStrong();
+    private String generateRandomKeyAlias() {
+        SecureRandom secureRandom;
+        try {
+            secureRandom = SecureRandom.getInstanceStrong();
+        } catch (final NoSuchAlgorithmException exception) {
+            throw new InternalServerErrorException(
+                ErrorCode.AES_KEYGEN_SECURE_RANDOM_FAILED.builder()
+                    .withContext("While generating a random client key alias.")
+                    .withException(exception)
+                    .build()
+            );
+        }
         final byte[] randomBytes = new byte[16];
         secureRandom.nextBytes(randomBytes);
         return Base64.getUrlEncoder().withoutPadding().encodeToString(randomBytes).toLowerCase(); // OWASP [104] SecureRandom for unguessable alias

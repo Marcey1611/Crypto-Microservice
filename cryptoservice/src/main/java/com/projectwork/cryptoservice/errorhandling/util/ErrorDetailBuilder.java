@@ -5,13 +5,15 @@ import org.slf4j.event.Level;
 public class ErrorDetailBuilder {
     private final String code;
     private String userMsg;
-    private String logMsg;
+    private String logHeadline;
+    private String context;
+    private Throwable exception;
     private Level logLevel;
 
     public ErrorDetailBuilder(final ErrorCode errorCode) {
         this.code = errorCode.getCode();
         this.userMsg = errorCode.getUserMsg();
-        this.logMsg = errorCode.getLogMsg();
+        this.logHeadline = errorCode.getLogHeadline();
         this.logLevel = errorCode.getLogLevel();
     }
 
@@ -26,12 +28,22 @@ public class ErrorDetailBuilder {
     }
 
     public ErrorDetailBuilder withLogMsg(final String logMessage) {
-        this.logMsg = logMessage;
+        this.logHeadline = logMessage;
+        return this;
+    }
+
+    public ErrorDetailBuilder withContext(final String context) {
+        this.context = context;
+        return this;
+    }
+
+    public ErrorDetailBuilder withException(final Throwable exception) {
+        this.exception = exception;
         return this;
     }
 
     public ErrorDetailBuilder withLogMsgFormatted(final Object... args) {
-        this.logMsg = String.format(logMsg, args);
+        this.logHeadline = String.format(logHeadline, args);
         return this;
     }
 
@@ -41,6 +53,6 @@ public class ErrorDetailBuilder {
     }
 
     public ErrorDetail build() {
-        return new ErrorDetail(code, userMsg, logMsg, logLevel);
+        return new ErrorDetail(code, userMsg, logHeadline, context, exception, logLevel);
     }
 }
