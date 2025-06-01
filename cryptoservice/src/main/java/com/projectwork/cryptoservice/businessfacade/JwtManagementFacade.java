@@ -22,10 +22,8 @@ public class JwtManagementFacade {
 
     public ResponseEntity<GenerateJwtResponse> generateJwt(final GenerateJwtRequest generateJwtRequest, final String clientName) {
         final GenerateJwtModel generateJwtModel = modelsFactory.buildGenerateJwtModel(generateJwtRequest, clientName);
-        // TODO cn abfrage
         final GenerateJwtResultModel generateJwtResultModel = jwtManagementService.generateJwt(generateJwtModel);
         return responseFactory.buildGenerateJwtResponse(generateJwtResultModel);
-        //return jwtManagementService.generateJwt(generateJwtModel); TODO implement JwtManagementService
     }
     
 }

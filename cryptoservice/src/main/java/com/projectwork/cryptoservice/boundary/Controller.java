@@ -18,6 +18,7 @@ import com.projectwork.cryptoservice.businessfacade.EncryptFacade;
 import com.projectwork.cryptoservice.businessfacade.JwtManagementFacade;
 import com.projectwork.cryptoservice.businessfacade.KeyManagementFacade;
 import com.projectwork.cryptoservice.businessfacade.TlsManagementFacade;
+import com.projectwork.cryptoservice.businesslogic.keymanagement.ClientKeyRegistry;
 import com.projectwork.cryptoservice.entity.models.decrypt.DecryptRequest;
 import com.projectwork.cryptoservice.entity.models.decrypt.DecryptResponse;
 import com.projectwork.cryptoservice.entity.models.encrypt.EncryptRequest;
@@ -28,6 +29,8 @@ import com.projectwork.cryptoservice.entity.models.keymanagement.GenerateKeyResp
 import com.projectwork.cryptoservice.entity.models.tlsmanagement.GetRootCaCertResponse;
 import com.projectwork.cryptoservice.entity.models.tlsmanagement.SignCsrRequest;
 import com.projectwork.cryptoservice.entity.models.tlsmanagement.SignCsrResponse;
+import com.projectwork.cryptoservice.errorhandling.exceptions.BadRequestException;
+import com.projectwork.cryptoservice.errorhandling.util.ErrorCode;
 
 import lombok.RequiredArgsConstructor;
 
@@ -43,10 +46,12 @@ public class Controller implements EncryptAPI, DecryptAPI, KeyManagementAPI, Jwt
     private final EncryptValidator encryptValidator;
     private final JwtManagementValidator jwtManagementValidator;
     private final DecryptValidator decryptValidator;
+    private final ClientKeyRegistry clientKeyRegistry;
 
     @Override
     public ResponseEntity<EncryptResponse> encryptPost(final EncryptRequest encryptRequest, final Principal principal) {
         final String clientName = resolveClientName(principal);
+        checkClientNameExists(clientName);
         encryptValidator.validateEncryptRequest(encryptRequest);
         final ResponseEntity<EncryptResponse> encryptResponse = encryptFacade.processEncryption(encryptRequest, clientName);
         return encryptResponse;
@@ -55,6 +60,7 @@ public class Controller implements EncryptAPI, DecryptAPI, KeyManagementAPI, Jwt
     @Override
     public ResponseEntity<DecryptResponse> decryptPost(final DecryptRequest decryptRequest, final Principal principal) {
         final String clientName = resolveClientName(principal);
+        checkClientNameExists(clientName);
         decryptValidator.validateDecryptRequest(decryptRequest);
         final ResponseEntity<DecryptResponse> decryptResponse = decryptFacade.processDecryption(decryptRequest, clientName);
         return decryptResponse;
@@ -70,12 +76,23 @@ public class Controller implements EncryptAPI, DecryptAPI, KeyManagementAPI, Jwt
     @Override
     public ResponseEntity<GenerateJwtResponse> generateJwtPost(final GenerateJwtRequest generateJwtRequest, final Principal principal) {
         final String clientName = resolveClientName(principal);
+        checkClientNameExists(clientName);
         jwtManagementValidator.validateGenerateJwtRequest(generateJwtRequest);
         final ResponseEntity<GenerateJwtResponse> generateJwtResponse = jwtManagementFacade.generateJwt(generateJwtRequest, clientName);
         return generateJwtResponse;
     }
 
-    // TODO delete after new implementation of mtls
+    // TODO update after new implementation of mtls
+    private void checkClientNameExists(final String clientName) {
+        if (!clientKeyRegistry.hasClient(clientName)) {
+            throw new BadRequestException(ErrorCode.CLIENT_NOT_FOUND.builder()
+                .withUserMsgFormatted(clientName)
+                .build()
+            );
+        }
+    }
+
+    // TODO update after new implementation of mtls
     private String resolveClientName(final Principal principal) {
         if (principal != null) {
             return principal.getName();

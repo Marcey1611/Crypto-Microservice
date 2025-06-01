@@ -65,40 +65,51 @@ public abstract class BaseValidator {
     }
 
     protected void checkJwt(final String jwt, final SecretKey jwtSigningKey) {
+        checkJwtPattern(jwt);
+        final Jws<Claims> parsedJwt = checkJwtSignature(jwt, jwtSigningKey);
+        final Claims claims = parsedJwt.getBody();
+        checkJwtExpiration(claims.getExpiration());
+        checkJwtKeyAlias(claims.get("keyAlias", String.class));
+        checkJwtAlgorithm(parsedJwt.getHeader().getAlgorithm());
+    }
+
+    private void checkJwtPattern(final String jwt) {
         if (!JWT_PATTERN.matcher(jwt).matches()) {
             throw new BadRequestException(ErrorCode.INVALID_JWT.builder().build());
         }
+    }
 
+    private Jws<Claims> checkJwtSignature(final String jwt, final SecretKey jwtSigningKey) {
         try {
-            final Jws<Claims> parsedJwt = Jwts.parserBuilder()
-                    .setSigningKey(jwtSigningKey)
-                    .build()
-                    .parseClaimsJws(jwt);
-
-            final Claims claims = parsedJwt.getBody();
-
-            final Date exp = claims.getExpiration();
-            if (exp == null || exp.before(new Date())) {
-                throw new BadRequestException(ErrorCode.EXPIRED_JWT.builder().build());
-            }
-
-            final String keyAlias = claims.get("keyAlias", String.class);
-            checkNotBlank(keyAlias, "keyAlias in jwt");
-            checkMaxLength(keyAlias, 64, "keyAlias in jwt");
-            checkNoUnicodeEscapes(keyAlias, "keyAlias in jwt");
-            checkWhitelist(keyAlias, "keyAlias in jwt");
-
-            final String algorithm = parsedJwt.getHeader().getAlgorithm();
-            checkNotBlank(algorithm, "algorithm in jwt");
-            checkMaxLength(algorithm, 64, "algorithm in jwt");
-            checkNoUnicodeEscapes(algorithm, "algorithm in jwt");
-            checkWhitelist(algorithm, "algorithm in jwt");
-            if ("none".equalsIgnoreCase(algorithm)) {
-                throw new BadRequestException(ErrorCode.INSECURE_JWT_ALGO.builder().build());
-            }
-
-        } catch (final JwtException exception) {
+            return Jwts.parserBuilder()
+                .setSigningKey(jwtSigningKey)
+                .build()
+                .parseClaimsJws(jwt);
+        } catch (JwtException e) {
             throw new BadRequestException(ErrorCode.INVALID_JWT.builder().build());
+        }
+    }
+
+    private void checkJwtExpiration(final Date exp) {
+        if (exp == null || exp.before(new Date())) {
+            throw new BadRequestException(ErrorCode.EXPIRED_JWT.builder().build());
+        }
+    }
+
+    private void checkJwtKeyAlias(final String keyAlias) {
+        checkNotBlank(keyAlias, "keyAlias");
+        checkMaxLength(keyAlias, 64, "keyAlias");
+        checkNoUnicodeEscapes(keyAlias, "keyAlias");
+        checkWhitelist(keyAlias, "keyAlias");
+    }
+
+    private void checkJwtAlgorithm(final String algorithm) {
+        checkNotBlank(algorithm, "algorithm in jwt");
+        checkMaxLength(algorithm, 64, "algorithm in jwt");
+        checkNoUnicodeEscapes(algorithm, "algorithm in jwt");
+        checkWhitelist(algorithm, "algorithm in jwt");
+        if ("none".equalsIgnoreCase(algorithm)) {
+            throw new BadRequestException(ErrorCode.INSECURE_JWT_ALGO.builder().build());
         }
     }
 }

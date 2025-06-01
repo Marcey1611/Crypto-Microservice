@@ -25,9 +25,7 @@ public class JwtManagementService {
     private final ClientKeyRegistry clientKeyRegistry;
 
     public GenerateJwtResultModel generateJwt(final GenerateJwtModel generateJwtModel) {
-        SecretKey jwtSigningKey;
-        jwtSigningKey = keyStoreHelper.getKey("jwt-signing-key");
-
+        final SecretKey jwtSigningKey = keyStoreHelper.getKey("jwt-signing-key");
         final Instant now = Instant.now();
         final Instant expiration = now.plusSeconds(3600);
         final String keyAlias = clientKeyRegistry.getKeyAliasForClient(generateJwtModel.getClientName());

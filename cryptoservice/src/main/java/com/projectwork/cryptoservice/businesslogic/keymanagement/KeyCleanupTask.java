@@ -109,8 +109,7 @@ public class KeyCleanupTask {
             try {
                 passwordProtection.destroy();
             } catch (final DestroyFailedException exception) {
-                throw new InternalServerErrorException(
-                    ErrorCode.PASSWORD_DESTROY_FAILED.builder()
+                throw new InternalServerErrorException(ErrorCode.PASSWORD_DESTROY_FAILED.builder()
                         .withContext(String.format("While destroying PasswordProtection after key expiration check for alias '%s'.", alias))
                         .withException(exception)
                         .build()
@@ -119,9 +118,8 @@ public class KeyCleanupTask {
         }
         
         if (entry instanceof KeyStore.SecretKeyEntry) {
-            long creationTime;
             try {
-                creationTime = keystore.getCreationDate(alias).getTime();
+                return now - keystore.getCreationDate(alias).getTime() > EXPIRATION_TIME_MILLIS;
             } catch (final KeyStoreException exception) {
                 throw new InternalServerErrorException(ErrorCode.KEYSTORE_NOT_INITIALIZED.builder()
                     .withContext("While trying to get the creation date of a key in a keystore. While checking if the key is expired.")
@@ -129,7 +127,6 @@ public class KeyCleanupTask {
                     .build()
                 );
             }   
-            return now - creationTime > EXPIRATION_TIME_MILLIS;
         }
         return false;
     }

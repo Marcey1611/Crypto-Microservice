@@ -1,4 +1,4 @@
-curl -v -X POST https://localhost:8443/crypto/keys/generate   --cert client1.crt --key client1.key   --cacert rootCA.crt
+curl -v -X POST https://localhost:8443/crypto/keys/generate   --cert client1.crt --key client1.key   --cacert server.crt
 
 curl -X POST https://localhost:8443/crypto/jwt/generate   --cert client1.crt --key client1.key --cacert rootCA.crt   \-H "Content-Type: application/json"   \-d '{"issuedTo": "Client1"}'
 
@@ -9,7 +9,9 @@ curl -X POST https://localhost:8443/crypto/decrypt   --cert client1.crt --key cl
 
 
 
-
+curl -k -X POST https://localhost:8443/crypto/encrypt \
+  -H "Content-Type: application/json" \
+  -d '{"plainText": "Hello<World", "jwt": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJDcnlwdG9NaWNyb3NlcnZpY2VBY2Nlc1Rva2VuIiwia2V5QWxpYXMiOiJxM3VydnFsb296MGt3dG52YThobHJhIiwiaXNzdWVkVG8iOiJhbm9ueW1vdXMtY2xpZW50IiwiaWF0IjoxNzQ4NDQwOTQ0LCJleHAiOjE3NDg0NDQ1NDR9.w2vks-5IJj4T3Bi54xv7RUN5iuPWy51EEw_en1wktc0"}'
 
 
 

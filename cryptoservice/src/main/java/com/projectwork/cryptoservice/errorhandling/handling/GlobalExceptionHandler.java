@@ -15,6 +15,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ApiException.class)
     public ResponseEntity<ErrorResponse> handleApiException(final ApiException exception) {
+        System.out.println(exception);
         final ErrorDetail error = exception.getError();
         return new ResponseEntity<>(
             new ErrorResponse(error.getCode(), error.getUserMsg()),
@@ -25,6 +26,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleUnhandled(final Exception exception) {
         final ErrorDetail error = ErrorCode.UNEXPECTED_ERROR.builder().build();
+        System.out.println(exception);
         return new ResponseEntity<>(
             new ErrorResponse(error.getCode(), error.getUserMsg()),
             HttpStatus.INTERNAL_SERVER_ERROR
