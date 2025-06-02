@@ -3,17 +3,37 @@ package com.projectwork.cryptoservice.boundary.security;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+/**
+ * KnownClientStore is a component that maintains a set of known clients.
+ * It provides methods to check if a client is known and to add new clients.
+ */
 @Component
 public class KnownClientStore {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(KnownClientStore.class);
+
     private final Set<String> knownClients = ConcurrentHashMap.newKeySet();
 
-    public boolean isKnown(String cn) {
-        return knownClients.contains(cn);
+    /**
+     * Checks if the client is new based on the request path and known client store.
+     *
+     * @param cn  the Common Name (CN) of the client
+     * @return true if the client is new, false otherwise
+     */
+    public final boolean isKnown(final String cn) {
+        return this.knownClients.contains(cn);
     }
 
-    public void addClient(String cn) {
-        knownClients.add(cn);
+    /**
+     * Adds a new client to the known clients set.
+     *
+     * @param cn the Common Name (CN) of the client to be added
+     */
+    public final void addClient(final String cn) {
+        this.knownClients.add(cn);
     }
 }

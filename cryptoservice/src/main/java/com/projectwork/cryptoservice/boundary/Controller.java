@@ -2,6 +2,10 @@ package com.projectwork.cryptoservice.boundary;
 
 import java.security.Principal;
 
+import com.projectwork.cryptoservice.errorhandling.util.ErrorDetail;
+import com.projectwork.cryptoservice.errorhandling.util.ErrorDetailBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -34,9 +38,15 @@ import com.projectwork.cryptoservice.errorhandling.util.ErrorCode;
 
 import lombok.RequiredArgsConstructor;
 
+/** * Controller class that handles incoming requests for encryption, decryption,
+ * key management, JWT management, and TLS management.
+ * It uses various facades to process the requests and returns appropriate responses.
+ */
 @RequiredArgsConstructor
 @RestController
 public class Controller implements EncryptAPI, DecryptAPI, KeyManagementAPI, JwtManagementAPI, TlsManagementAPI {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(Controller.class);
 
     private final EncryptFacade encryptFacade;
     private final DecryptFacade decryptFacade;
@@ -48,69 +58,113 @@ public class Controller implements EncryptAPI, DecryptAPI, KeyManagementAPI, Jwt
     private final DecryptValidator decryptValidator;
     private final ClientKeyRegistry clientKeyRegistry;
 
+    /**
+     * Handles encryption requests.
+     *
+     * @param encryptRequest the request containing the data to be encrypted
+     * @param principal      the authenticated user principal
+     * @return a response entity containing the encryption result
+     */
     @Override
     public ResponseEntity<EncryptResponse> encryptPost(final EncryptRequest encryptRequest, final Principal principal) {
-        final String clientName = resolveClientName(principal);
-        checkClientNameExists(clientName);
-        encryptValidator.validateEncryptRequest(encryptRequest);
-        final ResponseEntity<EncryptResponse> encryptResponse = encryptFacade.processEncryption(encryptRequest, clientName);
-        return encryptResponse;
+        final String clientName = this.resolveClientName(principal);
+        this.checkClientNameExists(clientName);
+        this.encryptValidator.validateEncryptRequest(encryptRequest);
+        return this.encryptFacade.processEncryption(encryptRequest, clientName);
     }
 
+    /**
+     * Handles decryption requests.
+     *
+     * @param decryptRequest the request containing the data to be decrypted
+     * @param principal      the authenticated user principal
+     * @return a response entity containing the decryption result
+     */
     @Override
     public ResponseEntity<DecryptResponse> decryptPost(final DecryptRequest decryptRequest, final Principal principal) {
-        final String clientName = resolveClientName(principal);
-        checkClientNameExists(clientName);
-        decryptValidator.validateDecryptRequest(decryptRequest);
-        final ResponseEntity<DecryptResponse> decryptResponse = decryptFacade.processDecryption(decryptRequest, clientName);
-        return decryptResponse;
+        final String clientName = this.resolveClientName(principal);
+        this.checkClientNameExists(clientName);
+        this.decryptValidator.validateDecryptRequest(decryptRequest);
+        return this.decryptFacade.processDecryption(decryptRequest, clientName);
     }
 
+    /**
+     * Handles key generation requests.
+     *
+     * @param principal the authenticated user principal
+     * @return a response entity containing the generated key information
+     */
     @Override
     public ResponseEntity<GenerateKeyResponse> generateKeyPost(final Principal principal) {
-        final String clientName = resolveClientName(principal);
-        final ResponseEntity<GenerateKeyResponse> generateKeyResponse = keyManagementFacade.generateKey(clientName);
-        return generateKeyResponse;
+        final String clientName = this.resolveClientName(principal);
+        return this.keyManagementFacade.generateKey(clientName);
     }
 
+    /**
+     * Handles JWT generation requests.
+     *
+     * @param generateJwtRequest the request containing parameters for JWT generation
+     * @param principal          the authenticated user principal
+     * @return a response entity containing the generated JWT
+     */
     @Override
     public ResponseEntity<GenerateJwtResponse> generateJwtPost(final GenerateJwtRequest generateJwtRequest, final Principal principal) {
-        final String clientName = resolveClientName(principal);
-        checkClientNameExists(clientName);
-        jwtManagementValidator.validateGenerateJwtRequest(generateJwtRequest);
-        final ResponseEntity<GenerateJwtResponse> generateJwtResponse = jwtManagementFacade.generateJwt(generateJwtRequest, clientName);
-        return generateJwtResponse;
+        final String clientName = this.resolveClientName(principal);
+        this.checkClientNameExists(clientName);
+        this.jwtManagementValidator.validateGenerateJwtRequest(generateJwtRequest);
+        return this.jwtManagementFacade.generateJwt(generateJwtRequest, clientName);
     }
 
+    /**
+     * Checks if the client name exists in the registry.
+     *
+     * @param clientName the name of the client to check
+     * @throws BadRequestException if the client does not exist
+     */
     // TODO update after new implementation of mtls
     private void checkClientNameExists(final String clientName) {
-        if (!clientKeyRegistry.hasClient(clientName)) {
-            throw new BadRequestException(ErrorCode.CLIENT_NOT_FOUND.builder()
-                .withUserMsgFormatted(clientName)
-                .build()
-            );
+        if (!this.clientKeyRegistry.hasClient(clientName)) {
+            final ErrorCode errorCode = ErrorCode.CLIENT_NOT_FOUND;
+            final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
+            errorDetailBuilder.withUserMsgFormatted(clientName);
+            final ErrorDetail errorDetail = errorDetailBuilder.build();
+            throw new BadRequestException(errorDetail);
         }
     }
 
+    /**
+     * Resolves the client name from the principal.
+     *
+     * @param principal the authenticated user principal
+     * @return the name of the client
+     */
     // TODO update after new implementation of mtls
     private String resolveClientName(final Principal principal) {
-        if (principal != null) {
+        if (null != principal) {
             return principal.getName();
         }
         return "anonymous-client";
     }
 
+    /**
+     * Handles CSR signing requests.
+     *
+     * @param signCsrRequest the request containing the CSR to be signed
+     * @return a response entity containing the signed CSR
+     */
     // TODO delete after new implementation of mtls
     @Override
-    public ResponseEntity<SignCsrResponse> signCsrPost(final SignCsrRequest signCsrRequest) {
-        //validator.validateSignCsrRequest(signCsrRequest);
-        final ResponseEntity<SignCsrResponse> signClientCertResponse = tlsManagementFacade.signCsr(signCsrRequest);
-        return signClientCertResponse;
+    public final ResponseEntity<SignCsrResponse> signCsrPost(final SignCsrRequest signCsrRequest) {
+        return this.tlsManagementFacade.signCsr(signCsrRequest);
     }
 
+    /**
+     * Retrieves the root CA certificate.
+     *
+     * @return a response entity containing the root CA certificate
+     */
     @Override
-    public ResponseEntity<GetRootCaCertResponse> rootCaGet() {
-        final ResponseEntity<GetRootCaCertResponse> rootCaCertResponse = tlsManagementFacade.getRootCaCert();
-        return rootCaCertResponse;
+    public final ResponseEntity<GetRootCaCertResponse> rootCaGet() {
+        return this.tlsManagementFacade.getRootCaCert();
     }
 }

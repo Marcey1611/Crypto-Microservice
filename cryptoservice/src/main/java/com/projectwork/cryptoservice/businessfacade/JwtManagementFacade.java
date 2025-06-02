@@ -1,5 +1,7 @@
 package com.projectwork.cryptoservice.businessfacade;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -13,17 +15,31 @@ import com.projectwork.cryptoservice.entity.models.jwtmanagement.GenerateJwtResu
 
 import lombok.RequiredArgsConstructor;
 
+/**
+ * JwtManagementFacade class that handles the JWT generation process.
+ * It uses JwtManagementService to perform the generation and ModelsFactory to build the necessary models.
+ */
 @RequiredArgsConstructor
 @Service
 public class JwtManagementFacade {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(JwtManagementFacade.class);
+
     private final JwtManagementService jwtManagementService;
     private final ModelsFactory modelsFactory;
     private final ResponseFactory responseFactory;
 
-    public ResponseEntity<GenerateJwtResponse> generateJwt(final GenerateJwtRequest generateJwtRequest, final String clientName) {
-        final GenerateJwtModel generateJwtModel = modelsFactory.buildGenerateJwtModel(generateJwtRequest, clientName);
-        final GenerateJwtResultModel generateJwtResultModel = jwtManagementService.generateJwt(generateJwtModel);
-        return responseFactory.buildGenerateJwtResponse(generateJwtResultModel);
+    /**
+     * Generates a JWT based on the provided request and client name.
+     *
+     * @param generateJwtRequest the request containing the parameters for JWT generation
+     * @param clientName the name of the client making the request
+     * @return a ResponseEntity containing the GenerateJwtResponse with the generated JWT
+     */
+    public final ResponseEntity<GenerateJwtResponse> generateJwt(final GenerateJwtRequest generateJwtRequest, final String clientName) {
+        final GenerateJwtModel generateJwtModel = this.modelsFactory.buildGenerateJwtModel(generateJwtRequest, clientName);
+        final GenerateJwtResultModel generateJwtResultModel = this.jwtManagementService.generateJwt(generateJwtModel);
+        return this.responseFactory.buildGenerateJwtResponse(generateJwtResultModel);
     }
     
 }

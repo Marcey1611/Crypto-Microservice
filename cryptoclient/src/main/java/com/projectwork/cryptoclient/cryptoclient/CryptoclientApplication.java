@@ -36,7 +36,7 @@ public class CryptoclientApplication {
             "CryptoMicroservice2025!"
         );
 
-        final String message = "";//generateFullAsciiString();
+        final String message = generateFullAsciiString();
 
         System.out.println("");
         System.out.println("------------------------------Client 1 to Client 2------------------------------");
