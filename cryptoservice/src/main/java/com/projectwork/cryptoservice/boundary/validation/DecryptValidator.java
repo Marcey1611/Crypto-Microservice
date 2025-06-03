@@ -1,47 +1,40 @@
 package com.projectwork.cryptoservice.boundary.validation;
 
-import javax.crypto.SecretKey;
-
+import com.projectwork.cryptoservice.businesslogic.keymanagement.KeyStoreHelper;
+import com.projectwork.cryptoservice.entity.models.decrypt.DecryptRequest;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import com.projectwork.cryptoservice.businesslogic.keymanagement.KeyStoreHelper;
-import com.projectwork.cryptoservice.entity.models.decrypt.DecryptRequest;
-
-import lombok.RequiredArgsConstructor;
+import javax.crypto.SecretKey;
 
 /**
- * Validator for decrypt requests, ensuring that the request parameters
- * meet the required criteria such as non-blank fields, maximum length,
- * and valid JWT format.
+ * DecryptValidator class for validating decryption requests.
+ * This class checks the validity of the decryption request parameters and JWT.
  */
-@RequiredArgsConstructor
 @Component
-public class DecryptValidator extends BaseValidator {
+@RequiredArgsConstructor
+public class DecryptValidator {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DecryptValidator.class);
-
-    private static final int CIPHER_TEXT_MAX_LENGTH = 2048;
     private static final int JWT_MAX_LENGTH = 4096;
+    private static final int CIPHER_TEXT_MAX_LENGTH = 2048;
+
+    private final ValidationService validationService;
     private final KeyStoreHelper keyStoreHelper;
 
     /**
-     * Validates the decrypt request parameters.
+     * Validates the decryption request.
      *
-     * @param request the decrypt request to validate
+     * @param request the DecryptRequest containing the cipher text and JWT
      */
     public final void validateDecryptRequest(final DecryptRequest request) {
-        final SecretKey jwtSigningKey = this.keyStoreHelper.getKey("jwt-signing-key");
+        final SecretKey key = this.keyStoreHelper.getKey("jwt-signing-key");
         final String cipherText = request.getCipherText();
+        this.validationService.validateTextWithoutWhitelist(cipherText, "cipherText", CIPHER_TEXT_MAX_LENGTH);
         final String jwt = request.getJwt();
-
-        this.validateNotBlank(cipherText, "cipherText");
-        this.validateMaxLength(cipherText, CIPHER_TEXT_MAX_LENGTH, "cipherText");
-        this.validateNoUnicodeEscapes(cipherText, "cipherText");
-
-        this.validateNotBlank(jwt, "jwt");
-        this.validateMaxLength(jwt, JWT_MAX_LENGTH, "jwt");
-        this.validateJwt(jwt, jwtSigningKey);
+        this.validationService.validateText(jwt, "jwt", JWT_MAX_LENGTH, false);
+        this.validationService.validateJwt(jwt, key);
     }
 }

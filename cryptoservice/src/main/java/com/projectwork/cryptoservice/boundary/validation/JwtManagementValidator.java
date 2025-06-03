@@ -1,34 +1,31 @@
 package com.projectwork.cryptoservice.boundary.validation;
 
+import com.projectwork.cryptoservice.entity.models.jwtmanagement.GenerateJwtRequest;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import com.projectwork.cryptoservice.entity.models.jwtmanagement.GenerateJwtRequest;
-
 /**
- * Validator for JWT management requests, ensuring that the request parameters
- * meet the required criteria such as non-blank fields, maximum length,
- * and valid characters.
+ * JwtManagementValidator class for validating JWT management requests.
+ * This class provides methods to validate the GenerateJwtRequest.
  */
 @Component
-public class JwtManagementValidator extends BaseValidator {
+@RequiredArgsConstructor
+public class JwtManagementValidator {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JwtManagementValidator.class);
     private static final int ISSUED_TO_MAX_LENGTH = 64;
 
+    private final ValidationService validationService;
+
     /**
-     * Validates the GenerateJwtRequest parameters.
+     * Validates the GenerateJwtRequest.
      *
-     * @param request the GenerateJwtRequest to validate
+     * @param request the GenerateJwtRequest containing the parameters for JWT generation
      */
     public final void validateGenerateJwtRequest(final GenerateJwtRequest request) {
         final String issuedTo = request.getIssuedTo();
-
-        this.validateNotBlank(issuedTo, "issuedTo");
-        this.validateMaxLength(issuedTo, ISSUED_TO_MAX_LENGTH, "issuedTo");
-        this.validateNoUnicodeEscapes(issuedTo, "issuedTo");
-        this.validateWhitelist(issuedTo, "issuedTo");
+        this.validationService.validateText(issuedTo, "issuedTo", ISSUED_TO_MAX_LENGTH, false);
     }
 }
-

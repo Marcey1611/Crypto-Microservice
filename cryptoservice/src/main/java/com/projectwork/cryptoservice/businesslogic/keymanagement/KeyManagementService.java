@@ -7,6 +7,10 @@ import java.util.Base64;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 
+import com.projectwork.cryptoservice.errorhandling.util.ErrorDetail;
+import com.projectwork.cryptoservice.errorhandling.util.ErrorDetailBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import com.projectwork.cryptoservice.entity.factory.ResultModelsFactory;
@@ -27,6 +31,10 @@ import lombok.RequiredArgsConstructor;
 @Service
 public class KeyManagementService {
     // OWASP [106] Key Management Policy & Process
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(KeyManagementService.class);
+    private static final int KEY_SIZE = 256;
+
     private final KeyStoreHelper keyStoreHelper;
     private final ResultModelsFactory resultModelsFactory;
     private final ClientKeyRegistry clientKeyRegistry;
@@ -34,68 +42,82 @@ public class KeyManagementService {
     /**
      * Generates a secure client key, 
      * 
+     * @param generateKeyModel the model containing parameters for key generation
      * @return An object of GenerateKeyResultModel
-     * @throws Exception
-     * 
      * SecureCodingPractices:
      * - OWASP [104] Secure Random Number Generation for Key and Alias
      * - OWASP [101] JWT generation and signing (done on server-side)
      */
-    public GenerateKeyResultModel generateKey(final GenerateKeyModel generateKeyModel) {
-        final boolean clientNameExist = clientKeyRegistry.hasClient(generateKeyModel.getClientName());
+    public final GenerateKeyResultModel generateKey(final GenerateKeyModel generateKeyModel) {
+        final String clientName = generateKeyModel.getClientName();
+        final boolean clientNameExist = this.clientKeyRegistry.hasClient(clientName);
         if (clientNameExist) {
-            System.out.println("Key already exists for client: " + generateKeyModel.getClientName());
-            return resultModelsFactory.buildGenerateKeyResultModel("Key already exists for client: " + generateKeyModel.getClientName());
+            //TODO Logging System.out.println("Key already exists for client: " + clientName);
+            final String message = String.format("Key already exists for client: '%s'", clientName);
+            return this.resultModelsFactory.buildGenerateKeyResultModel(message);
         }
 
-        final SecretKey aesKey = generateRandomKey();
-        final String keyAlias = generateRandomKeyAlias(); // OWASP [104] SecureRandom for unguessable alias
-        keyStoreHelper.storeKey(keyAlias, aesKey);
-        clientKeyRegistry.registerClientKey(generateKeyModel.getClientName(), keyAlias);
-    
-        return resultModelsFactory.buildGenerateKeyResultModel("Key generated for client: " + generateKeyModel.getClientName());
+        final SecretKey aesKey = this.generateRandomKey();
+        final String keyAlias = this.generateRandomKeyAlias(); // OWASP [104] SecureRandom for unguessable alias
+        this.keyStoreHelper.storeKey(keyAlias, aesKey);
+        this.clientKeyRegistry.registerClientKey(clientName, keyAlias);
+
+        final String message = String.format("Key generated for client: '%s'", clientName);
+        return this.resultModelsFactory.buildGenerateKeyResultModel(message);
     }
 
+    /**
+     * Generates a random AES key and stores it in the KeyStore.
+     *
+     * @return A SecretKey object representing the generated AES key.
+     * @throws InternalServerErrorException if there is an error during key generation.
+     */
     private SecretKey generateRandomKey() {
         final SecureRandom secureRandom;
         try {
             secureRandom = SecureRandom.getInstanceStrong();
         } catch (final NoSuchAlgorithmException exception) {
-            throw new InternalServerErrorException(
-                ErrorCode.AES_KEYGEN_SECURE_RANDOM_FAILED.builder()
-                    .withContext("While generating a random client key.")
-                    .withException(exception)
-                    .build()
-            );
+            final ErrorCode errorCode = ErrorCode.AES_KEYGEN_SECURE_RANDOM_FAILED;
+            final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
+            errorDetailBuilder.withContext("While generating a random client key.");
+            errorDetailBuilder.withException(exception);
+            final ErrorDetail errorDetail = errorDetailBuilder.build();
+            throw new InternalServerErrorException(errorDetail);
         }
     
         final KeyGenerator keyGen;
         try {
             keyGen = KeyGenerator.getInstance("AES");
         } catch (final NoSuchAlgorithmException exception) {
-            throw new InternalServerErrorException(
-                ErrorCode.AES_KEYGEN_INIT_FAILED.builder()
-                    .withContext("While preparing AES key generator for client key creation.")
-                    .withException(exception)
-                    .build()
-            );
+            final ErrorCode errorCode = ErrorCode.AES_KEYGEN_INIT_FAILED;
+            final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
+            errorDetailBuilder.withContext("While preparing AES key generator for client key creation.");
+            errorDetailBuilder.withException(exception);
+            final ErrorDetail errorDetail = errorDetailBuilder.build();
+            throw new InternalServerErrorException(errorDetail);
         }
     
-        keyGen.init(256, secureRandom); // [OWASP 104]
+        keyGen.init(KEY_SIZE, secureRandom); // [OWASP 104]
         return keyGen.generateKey();
     }
 
+    /**
+     * Generates a random key alias using a secure random number generator.
+     *
+     * @return A Base64 encoded string representing the random key alias.
+     * @throws InternalServerErrorException if there is an error during secure random generation.
+     */
     private String generateRandomKeyAlias() {
-        SecureRandom secureRandom;
+        final SecureRandom secureRandom;
         try {
             secureRandom = SecureRandom.getInstanceStrong();
         } catch (final NoSuchAlgorithmException exception) {
-            throw new InternalServerErrorException(
-                ErrorCode.AES_KEYGEN_SECURE_RANDOM_FAILED.builder()
-                    .withContext("While generating a random client key alias.")
-                    .withException(exception)
-                    .build()
-            );
+            final ErrorCode errorCode = ErrorCode.AES_KEYGEN_SECURE_RANDOM_FAILED;
+            final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
+            errorDetailBuilder.withContext("While generating a random client key alias.");
+            errorDetailBuilder.withException(exception);
+            final ErrorDetail errorDetail = errorDetailBuilder.build();
+            throw new InternalServerErrorException(errorDetail);
         }
         final byte[] randomBytes = new byte[16];
         secureRandom.nextBytes(randomBytes);

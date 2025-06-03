@@ -16,33 +16,78 @@ import com.projectwork.cryptoservice.entity.models.tlsmanagement.GetRootCaCertRe
 import com.projectwork.cryptoservice.entity.models.tlsmanagement.SignCsrResponse;
 import com.projectwork.cryptoservice.entity.models.tlsmanagement.SignCsrResultModel;
 
+/**
+ * ResponseFactory class that builds various response entities
+ */
 @Component
 public class ResponseFactory {
 
-    public ResponseEntity<EncryptResponse> buildEncryptResponse(EncryptResultModel encryptResultModel) {
-        return ResponseEntity.ok(new EncryptResponse(encryptResultModel.getCipherText()));
+    /**
+     * Builds a response entity for encryption results.
+     *
+     * @param encryptResultModel the model containing the encryption result
+     * @return a ResponseEntity containing the EncryptResponse
+     */
+    public final ResponseEntity<EncryptResponse> buildEncryptResponse(final EncryptResultModel encryptResultModel) {
+        final String cipherText = encryptResultModel.getCipherText();
+        return ResponseEntity.ok(new EncryptResponse(cipherText));
     }
 
-    public ResponseEntity<DecryptResponse> buildDecryptResponse(DecryptResultModel decryptResultModel) {
-        return ResponseEntity.ok(new DecryptResponse(decryptResultModel.getPlainText()));
+    /**
+     * Builds a response entity for decryption results.
+     *
+     * @param decryptResultModel the model containing the decryption result
+     * @return a ResponseEntity containing the DecryptResponse
+     */
+    public final ResponseEntity<DecryptResponse> buildDecryptResponse(final DecryptResultModel decryptResultModel) {
+        final String plainText = decryptResultModel.getPlainText();
+        return ResponseEntity.ok(new DecryptResponse(plainText));
     }
 
-    public ResponseEntity<GenerateKeyResponse> buildGenerateKeyResponse(final GenerateKeyResultModel generateKeyResultModel) {
-        return ResponseEntity.ok(new GenerateKeyResponse(generateKeyResultModel.getMessage()));
+    /**
+     * Builds a response entity for key generation results.
+     *
+     * @param generateKeyResultModel the model containing the key generation result
+     * @return a ResponseEntity containing the GenerateKeyResponse
+     */
+    public final ResponseEntity<GenerateKeyResponse> buildGenerateKeyResponse(final GenerateKeyResultModel generateKeyResultModel) {
+        final String message = generateKeyResultModel.getMessage();
+        return ResponseEntity.ok(new GenerateKeyResponse(message));
     }
 
-    public ResponseEntity<GenerateJwtResponse> buildGenerateJwtResponse(GenerateJwtResultModel generateJwtResultModel) {
-        return ResponseEntity.ok(new GenerateJwtResponse(generateJwtResultModel.getJwt()));
+    /**
+     * Builds a response entity for JWT generation results.
+     *
+     * @param generateJwtResultModel the model containing the JWT generation result
+     * @return a ResponseEntity containing the GenerateJwtResponse
+     */
+    public final ResponseEntity<GenerateJwtResponse> buildGenerateJwtResponse(final GenerateJwtResultModel generateJwtResultModel) {
+        final String jwt = generateJwtResultModel.getJwt();
+        return ResponseEntity.ok(new GenerateJwtResponse(jwt));
     }
 
     // TODO delete after new implementation of mtls
-    public ResponseEntity<SignCsrResponse> buildSignCsrResponse(SignCsrResultModel signCsrResultModel) {
-        return ResponseEntity.ok(new SignCsrResponse(signCsrResultModel.getPemCert()));
+    /**
+     * Builds a response entity for signing a CSR (Certificate Signing Request).
+     *
+     * @param signCsrResultModel the model containing the result of signing the CSR
+     * @return a ResponseEntity containing the SignCsrResponse
+     */
+    public final ResponseEntity<SignCsrResponse> buildSignCsrResponse(final SignCsrResultModel signCsrResultModel) {
+        final String pemCert = signCsrResultModel.getPemCert();
+        return ResponseEntity.ok(new SignCsrResponse(pemCert));
     }
 
     // TODO delete after new implementation of mtls
-    public ResponseEntity<GetRootCaCertResponse> buildGetRootCaCertResponse(GetRootCaCertResultModel getRootCaCertResultModel) {
-        return ResponseEntity.ok(new GetRootCaCertResponse(getRootCaCertResultModel.getRootCaCert()));
+    /**
+     * Builds a response entity for retrieving the root CA certificate.
+     *
+     * @param getRootCaCertResultModel the model containing the root CA certificate
+     * @return a ResponseEntity containing the GetRootCaCertResponse
+     */
+    public final ResponseEntity<GetRootCaCertResponse> buildGetRootCaCertResponse(final GetRootCaCertResultModel getRootCaCertResultModel) {
+        final String rootCaCert = getRootCaCertResultModel.getRootCaCert();
+        return ResponseEntity.ok(new GetRootCaCertResponse(rootCaCert));
     }
 
 }

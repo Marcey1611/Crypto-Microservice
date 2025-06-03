@@ -39,13 +39,13 @@ public class DynamicUserDetailsService implements UserDetailsService {
 
         final List<GrantedAuthority> roleUser = AuthorityUtils.createAuthorityList("ROLE_USER");
         if (this.isNewClient(username, path)) {
-            System.out.println("New client detected: " + username);
+            //TODO logging System.out.println("New client detected: " + username);
             this.knownClientStore.addClient(username);
             return new User(username, "", roleUser);
         }
 
         if (this.knownClientStore.isKnown(username)) {
-            System.out.println("Known client: " + username);
+            //TODO logging System.out.println("Known client: " + username);
             return new User(username, "", roleUser);
         }
 

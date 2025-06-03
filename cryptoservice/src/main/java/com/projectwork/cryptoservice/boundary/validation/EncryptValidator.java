@@ -1,48 +1,40 @@
 package com.projectwork.cryptoservice.boundary.validation;
 
-import javax.crypto.SecretKey;
-
+import com.projectwork.cryptoservice.businesslogic.keymanagement.KeyStoreHelper;
+import com.projectwork.cryptoservice.entity.models.encrypt.EncryptRequest;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import com.projectwork.cryptoservice.businesslogic.keymanagement.KeyStoreHelper;
-import com.projectwork.cryptoservice.entity.models.encrypt.EncryptRequest;
-
-import lombok.RequiredArgsConstructor;
+import javax.crypto.SecretKey;
 
 /**
- * Validator for encrypt requests, ensuring that the request parameters
- * meet the required criteria such as non-blank fields, maximum length,
- * and valid JWT format.
+ * EncryptValidator class for validating encryption requests.
+ * This class checks the validity of the encryption request parameters and JWT.
  */
-@RequiredArgsConstructor
 @Component
-public class EncryptValidator extends BaseValidator {
+@RequiredArgsConstructor
+public class EncryptValidator {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(EncryptValidator.class);
     private static final int PLAIN_TEXT_MAX_LENGTH = 2048;
     private static final int JWT_MAX_LENGTH = 4096;
 
+    private final ValidationService validationService;
     private final KeyStoreHelper keyStoreHelper;
 
     /**
-     * Validates the encrypt request parameters.
+     * Validates the encryption request.
      *
-     * @param encryptRequest the encrypt request to validate
+     * @param request the EncryptRequest containing the plain text and JWT
      */
-    public final void validateEncryptRequest(final EncryptRequest encryptRequest) {
-        final SecretKey jwtSigningKey = this.keyStoreHelper.getKey("jwt-signing-key");
-        final String plainText = encryptRequest.getPlainText();
-        final String jwt = encryptRequest.getJwt();
-
-        this.validateNotBlank(plainText, "plainText");
-        this.validateMaxLength(plainText, PLAIN_TEXT_MAX_LENGTH, "plainText");
-        this.validateNoUnicodeEscapes(plainText, "plainText");
-        this.validateExtendedWhitelist(plainText, "plainText");
-
-        this.validateNotBlank(jwt, "jwt");
-        this.validateMaxLength(jwt, JWT_MAX_LENGTH, "jwt");
-        this.validateJwt(jwt, jwtSigningKey);
+    public final void validateEncryptRequest(final EncryptRequest request) {
+        final SecretKey key = this.keyStoreHelper.getKey("jwt-signing-key");
+        final String plainText = request.getPlainText();
+        this.validationService.validateText(plainText, "plainText", PLAIN_TEXT_MAX_LENGTH, true);
+        final String jwt = request.getJwt();
+        this.validationService.validateText(jwt, "jwt", JWT_MAX_LENGTH, false);
+        this.validationService.validateJwt(jwt, key);
     }
 }

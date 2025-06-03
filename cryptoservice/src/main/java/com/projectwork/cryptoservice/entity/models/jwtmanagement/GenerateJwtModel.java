@@ -1,18 +1,16 @@
 package com.projectwork.cryptoservice.entity.models.jwtmanagement;
 
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * GenerateJwtModel class that represents the request for generating a JWT.
+ * It contains the issuedTo and clientName required for the JWT generation process.
+ */
+@Getter
 @RequiredArgsConstructor
 public class GenerateJwtModel {
     private final String issuedTo;
     private final String clientName;
 
-    public String getIssuedTo() {
-        return issuedTo;
-    }
-
-    public String getClientName() {
-        return clientName;
-    }
-    
 }

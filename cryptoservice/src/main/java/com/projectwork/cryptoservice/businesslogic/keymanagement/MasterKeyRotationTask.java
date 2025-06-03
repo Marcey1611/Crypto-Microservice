@@ -22,6 +22,10 @@ import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
+import com.projectwork.cryptoservice.errorhandling.util.ErrorDetail;
+import com.projectwork.cryptoservice.errorhandling.util.ErrorDetailBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -30,67 +34,79 @@ import com.projectwork.cryptoservice.errorhandling.util.ErrorCode;
 
 import lombok.RequiredArgsConstructor;
 
+//TODO refactoring too complex (methods)
+/**
+ * MasterKeyRotationTask is a scheduled task that rotates the master key in the keystore.
+ * It re-wraps all client keys with the new master key and updates the keystore accordingly.
+ * SecureCodingPractices:
+ * - OWASP [101] Crypto operations (key gen) on trusted server
+ * - OWASP [104] Secure Random for all key generations
+ * - OWASP [106] Key management initialization (ensures master and signing keys)
+ */
 @RequiredArgsConstructor
 @Component
 public class MasterKeyRotationTask {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(MasterKeyRotationTask.class);
+    private static final int KEY_SIZE = 256;
+
     private final KeyStoreHelper keyStoreHelper;
 
-    @Scheduled(fixedRate = 86400000)
-    public void rotateMasterKey() {
-        System.out.println("Start master-key rotation...");
+    @Scheduled(fixedRate = 86400000L)
+    public final void rotateMasterKey() {
+        //TODO logging System.out.println("Start master-key rotation...");
 
-        final KeyStore keystore = keyStoreHelper.loadKeyStore();
+        final KeyStore keystore = this.keyStoreHelper.loadKeyStore();
 
-        String keystorePassword = System.getenv("KEYSTORE_PASSWORD");
+        final String keystorePassword = System.getenv("KEYSTORE_PASSWORD");
         final char[] passwordChars = keystorePassword.toCharArray();
-        keystorePassword = null;
 
         final SecretKey oldMasterKey;
         try {
             oldMasterKey = (SecretKey) keystore.getKey("master-key", passwordChars);
         } catch (final KeyStoreException | NoSuchAlgorithmException | UnrecoverableKeyException exception) {
-            throw new InternalServerErrorException(
-                ErrorCode.KEYSTORE_KEY_ACCESS_FAILED.builder()
-                    .withContext("While accessing old master key from keystore during master key rotation.")
-                    .withLogMsgFormatted("master-key")
-                    .withException(exception)
-                    .build()
-            );
+            final ErrorCode errorCode = ErrorCode.KEYSTORE_KEY_ACCESS_FAILED;
+            final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
+            errorDetailBuilder.withContext("While accessing old master key from keystore during master key rotation.");
+            errorDetailBuilder.withLogMsgFormatted("master-key");
+            errorDetailBuilder.withException(exception);
+            final ErrorDetail errorDetail = errorDetailBuilder.build();
+            throw new InternalServerErrorException(errorDetail);
         }
 
         final SecureRandom secureRandom;
         try {
             secureRandom = SecureRandom.getInstanceStrong();
         } catch (final NoSuchAlgorithmException exception) {
-            throw new InternalServerErrorException(
-                ErrorCode.MASTER_KEY_SECURE_RANDOM_FAILED.builder()
-                    .withContext("While generating new master key during master key rotation – SecureRandom initialization.")
-                    .withException(exception)
-                    .build()
-            );
+            final ErrorCode errorCode = ErrorCode.MASTER_KEY_SECURE_RANDOM_FAILED;
+            final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
+            errorDetailBuilder.withContext("While generating new master key during master key rotation – SecureRandom initialization.");
+            errorDetailBuilder.withException(exception);
+            final ErrorDetail errorDetail = errorDetailBuilder.build();
+            throw new InternalServerErrorException(errorDetail);
         }
         
         final KeyGenerator keyGen;
         try {
             keyGen = KeyGenerator.getInstance("AES");
         } catch (final NoSuchAlgorithmException exception) {
-            throw new InternalServerErrorException(
-                ErrorCode.MASTER_KEYGEN_INIT_FAILED.builder()
-                    .withContext("While generating new master key during master key rotation – KeyGenerator creation.")
-                    .withException(exception)
-                    .build()
-            );
+            final ErrorCode errorCode = ErrorCode.MASTER_KEYGEN_INIT_FAILED;
+            final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
+            errorDetailBuilder.withContext("While generating new master key during master key rotation – KeyGenerator creation.");
+            errorDetailBuilder.withException(exception);
+            final ErrorDetail errorDetail = errorDetailBuilder.build();
+            throw new InternalServerErrorException(errorDetail);
         }
         
         try {
-            keyGen.init(256, secureRandom);
+            keyGen.init(KEY_SIZE, secureRandom);
         } catch (final InvalidParameterException exception) {
-            throw new InternalServerErrorException(
-                ErrorCode.MASTER_KEYGEN_PARAMS_INVALID.builder()
-                    .withContext("While initializing KeyGenerator for master key rotation.")
-                    .withException(exception)
-                    .build()
-            );
+            final ErrorCode errorCode = ErrorCode.MASTER_KEYGEN_PARAMS_INVALID;
+            final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
+            errorDetailBuilder.withContext("While initializing KeyGenerator for master key rotation.");
+            errorDetailBuilder.withException(exception);
+            final ErrorDetail errorDetail = errorDetailBuilder.build();
+            throw new InternalServerErrorException(errorDetail);
         }
         
         final SecretKey newMasterKey = keyGen.generateKey();
@@ -99,18 +115,18 @@ public class MasterKeyRotationTask {
         try {
             aliases = keystore.aliases();
         } catch (final KeyStoreException exception) {
-            throw new InternalServerErrorException(
-                ErrorCode.KEYSTORE_NOT_INITIALIZED.builder()
-                    .withContext("While retrieving aliases from keystore during master key rotation.")
-                    .withException(exception)
-                    .build()
-            );
+            final ErrorCode errorCode = ErrorCode.KEYSTORE_NOT_INITIALIZED;
+            final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
+            errorDetailBuilder.withContext("While retrieving aliases from keystore during master key rotation.");
+            errorDetailBuilder.withException(exception);
+            final ErrorDetail errorDetail = errorDetailBuilder.build();
+            throw new InternalServerErrorException(errorDetail);
         }
         
         final List<String> clientKeyAliases = new ArrayList<>();
         while (aliases.hasMoreElements()) {
             final String alias = aliases.nextElement();
-            if (!alias.equals("master-key") && !alias.equals("jwt-signing-key")) {
+            if (!"master-key".equals(alias) && !"jwt-signing-key".equals(alias)) {
                 clientKeyAliases.add(alias);
             }
         }
@@ -120,12 +136,16 @@ public class MasterKeyRotationTask {
             try {
                 entry = (SecretKeyEntry) keystore.getEntry(clientAlias, new PasswordProtection(passwordChars));
             } catch (final KeyStoreException | NoSuchAlgorithmException | UnrecoverableEntryException exception) {
-                throw new InternalServerErrorException(
-                    ErrorCode.GETTING_KEYSTORE_ENTRY_FAILED.builder()
-                        .withContext(String.format("While getting entry for alias '%s' during master key rotation.", clientAlias))
-                        .withException(exception)
-                        .build()
+                final ErrorCode errorCode = ErrorCode.GETTING_KEYSTORE_ENTRY_FAILED;
+                final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
+                final String context = String.format(
+                        "While getting entry for alias '%s' during master key rotation.",
+                        clientAlias
                 );
+                errorDetailBuilder.withContext(context);
+                errorDetailBuilder.withException(exception);
+                final ErrorDetail errorDetail = errorDetailBuilder.build();
+                throw new InternalServerErrorException(errorDetail);
             }
         
             final SecretKeySpec wrappedKeySpec = (SecretKeySpec) entry.getSecretKey();
@@ -134,70 +154,79 @@ public class MasterKeyRotationTask {
             try {
                 unwrapCipher = Cipher.getInstance("AES");
             } catch (final NoSuchAlgorithmException | NoSuchPaddingException exception) {
-                throw new InternalServerErrorException(
-                    ErrorCode.AES_CIPHER_INSTANCE_FAILED.builder()
-                        .withContext("While creating AES unwrap cipher during master key rotation.")
-                        .withException(exception)
-                        .build()
-                );
+                final ErrorCode errorCode = ErrorCode.AES_CIPHER_INSTANCE_FAILED;
+                final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
+                errorDetailBuilder.withContext("While creating AES unwrap cipher during master key rotation.");
+                errorDetailBuilder.withException(exception);
+                final ErrorDetail errorDetail = errorDetailBuilder.build();
+                throw new InternalServerErrorException(errorDetail);
             }
         
             try {
                 unwrapCipher.init(Cipher.UNWRAP_MODE, oldMasterKey);
             } catch (final InvalidKeyException | UnsupportedOperationException | InvalidParameterException exception) {
-                throw new InternalServerErrorException(
-                    ErrorCode.AES_CIPHER_INIT_FAILED.builder()
-                        .withContext("While initializing unwrap cipher with old master key.")
-                        .withException(exception)
-                        .build()
-                );
+                final ErrorCode errorCode = ErrorCode.AES_CIPHER_INIT_FAILED;
+                final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
+                errorDetailBuilder.withContext("While initializing unwrap cipher with old master key.");
+                errorDetailBuilder.withException(exception);
+                final ErrorDetail errorDetail = errorDetailBuilder.build();
+                throw new InternalServerErrorException(errorDetail);
             }
         
             final SecretKey unwrappedClientKey;
             try {
-                unwrappedClientKey = (SecretKey) unwrapCipher.unwrap(wrappedKeySpec.getEncoded(), "AES", Cipher.SECRET_KEY);
+                final byte[] wrappedKeySpecEncoded = wrappedKeySpec.getEncoded();
+                unwrappedClientKey = (SecretKey) unwrapCipher.unwrap(wrappedKeySpecEncoded, "AES", Cipher.SECRET_KEY);
             } catch (final IllegalStateException | NoSuchAlgorithmException | InvalidKeyException | UnsupportedOperationException exception) {
-                throw new InternalServerErrorException(
-                    ErrorCode.CLIENT_KEY_UNWRAP_FAILED.builder()
-                        .withContext(String.format("While unwrapping client key for alias '%s' during master key rotation.", clientAlias))
-                        .withException(exception)
-                        .build()
+                final ErrorCode errorCode = ErrorCode.CLIENT_KEY_UNWRAP_FAILED;
+                final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
+                final String context = String.format(
+                        "While unwrapping client key for alias '%s' during master key rotation.",
+                        clientAlias
                 );
+                errorDetailBuilder.withContext(context);
+                errorDetailBuilder.withException(exception);
+                final ErrorDetail errorDetail = errorDetailBuilder.build();
+                throw new InternalServerErrorException(errorDetail);
             }
         
             final Cipher wrapCipher;
             try {
                 wrapCipher = Cipher.getInstance("AES");
             } catch (final NoSuchAlgorithmException | NoSuchPaddingException exception) {
-                throw new InternalServerErrorException(
-                    ErrorCode.AES_CIPHER_INSTANCE_FAILED.builder()
-                        .withContext("While creating AES wrap cipher during master key rotation.")
-                        .withException(exception)
-                        .build()
-                );
+                final ErrorCode errorCode = ErrorCode.AES_CIPHER_INSTANCE_FAILED;
+                final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
+                errorDetailBuilder.withContext("While creating AES wrap cipher during master key rotation.");
+                errorDetailBuilder.withException(exception);
+                final ErrorDetail errorDetail = errorDetailBuilder.build();
+                throw new InternalServerErrorException(errorDetail);
             }
         
             try {
                 wrapCipher.init(Cipher.WRAP_MODE, newMasterKey);
             } catch (final InvalidKeyException | UnsupportedOperationException | InvalidParameterException exception) {
-                throw new InternalServerErrorException(
-                    ErrorCode.AES_CIPHER_INIT_FAILED.builder()
-                        .withContext("While initializing wrap cipher with new master key.")
-                        .withException(exception)
-                        .build()
-                );
+                final ErrorCode errorCode = ErrorCode.AES_CIPHER_INIT_FAILED;
+                final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
+                errorDetailBuilder.withContext("While initializing wrap cipher with new master key.");
+                errorDetailBuilder.withException(exception);
+                final ErrorDetail errorDetail = errorDetailBuilder.build();
+                throw new InternalServerErrorException(errorDetail);
             }
         
             final byte[] newEncryptedKey;
             try {
                 newEncryptedKey = wrapCipher.wrap(unwrappedClientKey);
             } catch (final IllegalStateException | IllegalBlockSizeException | InvalidKeyException | UnsupportedOperationException exception) {
-                throw new InternalServerErrorException(
-                    ErrorCode.AES_KEY_WRAP_FAILED.builder()
-                        .withContext(String.format("While wrapping re-encrypted client key for alias '%s' during master key rotation.", clientAlias))
-                        .withException(exception)
-                        .build()
+                final ErrorCode errorCode = ErrorCode.AES_KEY_WRAP_FAILED;
+                final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
+                final String context = String.format(
+                        "While wrapping re-encrypted client key for alias '%s' during master key rotation.",
+                        clientAlias
                 );
+                errorDetailBuilder.withContext(context);
+                errorDetailBuilder.withException(exception);
+                final ErrorDetail errorDetail = errorDetailBuilder.build();
+                throw new InternalServerErrorException(errorDetail);
             }
         
             final SecretKeySpec newWrappedKeySpec = new SecretKeySpec(newEncryptedKey, "AES");
@@ -206,12 +235,16 @@ public class MasterKeyRotationTask {
             try {
                 keystore.setEntry(clientAlias, newEntry, new PasswordProtection(passwordChars));
             } catch (final KeyStoreException exception) {
-                throw new InternalServerErrorException(
-                    ErrorCode.SETTING_KEYSTORE_ENTRY_FAILED.builder()
-                        .withContext(String.format("While storing rewrapped key for alias '%s' in keystore during master key rotation.", clientAlias))
-                        .withException(exception)
-                        .build()
+                final ErrorCode errorCode = ErrorCode.SETTING_KEYSTORE_ENTRY_FAILED;
+                final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
+                final String context = String.format(
+                        "While storing rewrapped key for alias '%s' in keystore during master key rotation.",
+                        clientAlias
                 );
+                errorDetailBuilder.withContext(context);
+                errorDetailBuilder.withException(exception);
+                final ErrorDetail errorDetail = errorDetailBuilder.build();
+                throw new InternalServerErrorException(errorDetail);
             }
         }
         
@@ -219,18 +252,17 @@ public class MasterKeyRotationTask {
         try {
             keystore.setEntry("master-key", newMasterEntry, new PasswordProtection(passwordChars));
         } catch (final KeyStoreException exception) {
-            throw new InternalServerErrorException(
-                ErrorCode.SETTING_KEYSTORE_ENTRY_FAILED.builder()
-                    .withContext("While storing new master key in keystore after re-wrapping all client keys.")
-                    .withException(exception)
-                    .build()
-            );
+            final ErrorCode errorCode = ErrorCode.SETTING_KEYSTORE_ENTRY_FAILED;
+            final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
+            errorDetailBuilder.withContext("While storing new master key in keystore after re-wrapping all client keys.");
+            errorDetailBuilder.withException(exception);
+            final ErrorDetail errorDetail = errorDetailBuilder.build();
+            throw new InternalServerErrorException(errorDetail);
         } finally {
            Arrays.fill(passwordChars, '\0'); // OWASP [199]
-
         }
 
-        keyStoreHelper.saveKeyStore(keystore);
-        System.out.println("Master-Key Rotation abgeschlossen und alle Client-Keys re-wrapped.");
+        this.keyStoreHelper.saveKeyStore(keystore);
+        //TODO logging System.out.println("Master-Key Rotation abgeschlossen und alle Client-Keys re-wrapped.");
     }
 }

@@ -5,6 +5,8 @@ import java.util.Date;
 
 import javax.crypto.SecretKey;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import com.projectwork.cryptoservice.businesslogic.keymanagement.ClientKeyRegistry;
@@ -17,31 +19,54 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * JwtManagementService class that handles the generation and management of JWTs.
+ * It uses KeyStoreHelper to retrieve the signing key and ClientKeyRegistry to manage client keys.
+ */
 @RequiredArgsConstructor
 @Service
 public class JwtManagementService {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(JwtManagementService.class);
+
     private final ResultModelsFactory resultModelsFactory;
     private final KeyStoreHelper keyStoreHelper;
     private final ClientKeyRegistry clientKeyRegistry;
 
-    public GenerateJwtResultModel generateJwt(final GenerateJwtModel generateJwtModel) {
-        final SecretKey jwtSigningKey = keyStoreHelper.getKey("jwt-signing-key");
+    /**
+     * Generates a JWT based on the provided GenerateJwtModel.
+     *
+     * @param generateJwtModel the model containing parameters for JWT generation
+     * @return a GenerateJwtResultModel containing the generated JWT
+     */
+    public final GenerateJwtResultModel generateJwt(final GenerateJwtModel generateJwtModel) {
+        final SecretKey jwtSigningKey = this.keyStoreHelper.getKey("jwt-signing-key");
         final Instant now = Instant.now();
-        final Instant expiration = now.plusSeconds(3600);
-        final String keyAlias = clientKeyRegistry.getKeyAliasForClient(generateJwtModel.getClientName());
+        final Instant expiration = now.plusSeconds(3600L);
+        final String clientName = generateJwtModel.getClientName();
+        final String keyAlias = this.clientKeyRegistry.getKeyAliasForClient(clientName);
+        final String issuedTo = generateJwtModel.getIssuedTo();
+        final Date fromNow = Date.from(now);
+        final Date fromExpiration = Date.from(expiration);
         final String jwt = Jwts.builder()
             .setSubject("CryptoMicroserviceAccesToken")
             .claim("keyAlias", keyAlias)
-            .claim("issuedTo", generateJwtModel.getIssuedTo())
-            .setIssuedAt(Date.from(now))
-            .setExpiration(Date.from(expiration))
+            .claim("issuedTo", issuedTo)
+            .setIssuedAt(fromNow)
+            .setExpiration(fromExpiration)
             .signWith(jwtSigningKey, SignatureAlgorithm.HS256)
             .compact();
-        return resultModelsFactory.buildGenerateJwtResultModel(jwt);
+        return this.resultModelsFactory.buildGenerateJwtResultModel(jwt);
     }
 
-    public String extractClientKeyAlias(final String jwtToken) {
-        final SecretKey jwtSigningKey = keyStoreHelper.getKey("jwt-signing-key");
+    /**
+     * Extracts the client key alias from the provided JWT token.
+     *
+     * @param jwtToken the JWT token from which to extract the key alias
+     * @return the client key alias
+     */
+    public final String extractClientKeyAlias(final String jwtToken) {
+        final SecretKey jwtSigningKey = this.keyStoreHelper.getKey("jwt-signing-key");
         return Jwts.parserBuilder()
             .setSigningKey(jwtSigningKey)
             .build()
@@ -50,8 +75,14 @@ public class JwtManagementService {
             .get("keyAlias", String.class);
     }
 
-    public String extractIssuedTo(final String jwtToken){
-        final SecretKey jwtSigningKey = keyStoreHelper.getKey("jwt-signing-key");
+    /**
+     * Extracts the issuedTo field from the provided JWT token.
+     *
+     * @param jwtToken the JWT token from which to extract the issuedTo field
+     * @return the issuedTo value
+     */
+    public final String extractIssuedTo(final String jwtToken){
+        final SecretKey jwtSigningKey = this.keyStoreHelper.getKey("jwt-signing-key");
         return Jwts.parserBuilder()
             .setSigningKey(jwtSigningKey)
             .build()
