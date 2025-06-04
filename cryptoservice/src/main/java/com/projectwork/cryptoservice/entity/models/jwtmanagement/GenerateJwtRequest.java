@@ -11,5 +11,4 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class GenerateJwtRequest {
     private final String issuedTo;
-
 }

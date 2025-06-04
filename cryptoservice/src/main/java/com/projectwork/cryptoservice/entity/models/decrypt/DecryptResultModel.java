@@ -11,5 +11,4 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class DecryptResultModel {
     private final String plainText;
-
 }

@@ -13,5 +13,4 @@ public class DecryptModel {
     private final String cipherText;
     private final String jwt;
     private final String clientName;
-
 }

@@ -24,5 +24,4 @@ public class ClientKeyData {
         this.keyAlias = keyAlias;
         this.iv = iv;
     }
-
 }

@@ -2,6 +2,7 @@ package com.projectwork.cryptoservice.errorhandling.util;
 
 import org.slf4j.event.Level;
 
+
 public enum ErrorCode {
     //400
     FIELD_BLANK(

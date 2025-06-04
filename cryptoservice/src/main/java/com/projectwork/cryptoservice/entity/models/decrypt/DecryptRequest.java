@@ -12,5 +12,4 @@ import lombok.RequiredArgsConstructor;
 public class DecryptRequest {
     private final String cipherText;
     private final String jwt;
-
 }

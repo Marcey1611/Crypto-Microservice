@@ -11,5 +11,4 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class EncryptResponse {
     private final String cipherText;
-
 }

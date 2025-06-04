@@ -49,6 +49,7 @@ public class KeyManagementService {
      * - OWASP [101] JWT generation and signing (done on server-side)
      */
     public final GenerateKeyResultModel generateKey(final GenerateKeyModel generateKeyModel) {
+        System.out.println("generateKey");
         final String clientName = generateKeyModel.getClientName();
         final boolean clientNameExist = this.clientKeyRegistry.hasClient(clientName);
         if (clientNameExist) {
@@ -73,6 +74,7 @@ public class KeyManagementService {
      * @throws InternalServerErrorException if there is an error during key generation.
      */
     private SecretKey generateRandomKey() {
+        System.out.println("generateRandomKey");
         final SecureRandom secureRandom;
         try {
             secureRandom = SecureRandom.getInstanceStrong();
@@ -108,6 +110,7 @@ public class KeyManagementService {
      * @throws InternalServerErrorException if there is an error during secure random generation.
      */
     private String generateRandomKeyAlias() {
+        System.out.println("generateRandomKeyAlias");
         final SecureRandom secureRandom;
         try {
             secureRandom = SecureRandom.getInstanceStrong();

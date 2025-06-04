@@ -11,5 +11,4 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class GenerateKeyModel {
     private final String clientName;
-
 }

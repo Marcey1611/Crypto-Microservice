@@ -57,6 +57,7 @@ public class KeyStoreHelper {
      * - OWASP [194] Passwords cleared from memory after use (Arrays.fill).
      */
     public final void storeKey(final String alias, final SecretKey key) {
+        System.out.println("storeKey");
         final KeyStore keystore = this.loadKeyStore();
 
         final String keystorePassword = System.getenv("KEYSTORE_PASSWORD");
@@ -154,6 +155,7 @@ public class KeyStoreHelper {
      * - OWASP [199] Resources (File streams) properly closed using try-with-resources
      */
     public final KeyStore loadKeyStore() {
+        System.out.println("loadKeyStore");
         final KeyStore keystore;
         try {
             keystore = KeyStore.getInstance("PKCS12");
@@ -204,6 +206,7 @@ public class KeyStoreHelper {
      * - OWASP [199]
      */
     public final void saveKeyStore(final KeyStore keystore) {
+        System.out.println("saveKeyStore");
         final File keystoreFile = new File(KEYSTORE_PATH);
         final String keystorePassword = System.getenv("KEYSTORE_PASSWORD");
         final char[] passwordChars = keystorePassword.toCharArray();
@@ -245,6 +248,7 @@ public class KeyStoreHelper {
      * - OWASP [194] Carefully handle sensitive data (keystore password), wiping char arrays after use
      */
     public final SecretKey getClientKey(final String alias) {
+        System.out.println("getClientKey");
         final KeyStore keystore = this.loadKeyStore();
         final String keystorePassword = System.getenv("KEYSTORE_PASSWORD");
         final char[] passwordChars = keystorePassword.toCharArray();
@@ -331,6 +335,7 @@ public class KeyStoreHelper {
      * - OWASP [194] Carefully handle sensitive data (keystore password), wiping char arrays after use
      */
     public final SecretKey getKey(final String alias) {
+        System.out.println("getKey");
         final KeyStore keystore = this.loadKeyStore();
         final String keystorePassword = System.getenv("KEYSTORE_PASSWORD");
         final char[] passwordChars = keystorePassword.toCharArray();

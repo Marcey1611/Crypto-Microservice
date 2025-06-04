@@ -13,5 +13,4 @@ public class EncryptModel {
     private final String plainText;
     private final String jwt;
     private final String clientName;
-
 }

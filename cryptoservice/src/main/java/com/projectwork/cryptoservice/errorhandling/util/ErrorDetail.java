@@ -1,9 +1,16 @@
 package com.projectwork.cryptoservice.errorhandling.util;
 
+import lombok.Getter;
 import org.slf4j.event.Level;
 
 import lombok.RequiredArgsConstructor;
 
+/**
+ * ErrorDetail class that represents the details of an error.
+ * It contains information such as error code, user message, log headline,
+ * context, exception, and log level.
+ */
+@Getter
 @RequiredArgsConstructor
 public class ErrorDetail {
     private final String code;
@@ -12,11 +19,4 @@ public class ErrorDetail {
     private final String context;
     private final Throwable exception;
     private final Level logLevel;
-
-    public String getCode() {return code;}
-    public String getUserMsg() {return userMsg;}
-    public String getLogHeadline() {return logHeadline;}
-    public String getContext() {return context;}
-    public Throwable getException() {return exception;}
-    public Level getLogLevel() {return logLevel;}
 }

@@ -1,0 +1,254 @@
+2025-06-04T20:35:02.328+02:00  INFO 113202 --- [main] c.p.c.CryptoserviceApplication           : Starting CryptoserviceApplication using Java 21.0.7 with PID 113202 (/home/marcel/crypto-microservice/crypto-microservice/cryptoservice/target/classes started by marcel in /home/marcel/crypto-microservice/crypto-microservice/cryptoservice)
+2025-06-04T20:35:02.330+02:00 DEBUG 113202 --- [main] c.p.c.CryptoserviceApplication           : Running with Spring Boot v3.4.3, Spring v6.2.3
+2025-06-04T20:35:02.331+02:00  INFO 113202 --- [main] c.p.c.CryptoserviceApplication           : No active profile set, falling back to 1 default profile: "default"
+2025-06-04T20:35:03.007+02:00  INFO 113202 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8443 (https)
+2025-06-04T20:35:03.022+02:00  INFO 113202 --- [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2025-06-04T20:35:03.022+02:00  INFO 113202 --- [main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.36]
+2025-06-04T20:35:03.053+02:00  INFO 113202 --- [main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2025-06-04T20:35:03.054+02:00  INFO 113202 --- [main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 691 ms
+2025-06-04T20:35:03.191+02:00  INFO 113202 --- [main] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with UserDetailsService bean with name dynamicUserDetailsService
+2025-06-04T20:35:03.317+02:00  INFO 113202 --- [main] c.p.c.boundary.security.SecurityConfig   : SecurityFilterChain for CryptoService initialized.
+2025-06-04T20:35:03.574+02:00  INFO 113202 --- [main] o.a.t.util.net.NioEndpoint.certificate   : Connector [https-jsse-nio-8443], TLS virtual host [_default_], certificate type [UNDEFINED] configured from keystore [/home/marcel/.keystore] using alias [localhost] with trust store [null]
+2025-06-04T20:35:03.580+02:00  INFO 113202 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8443 (https) with context path '/'
+2025-06-04T20:35:03.590+02:00  INFO 113202 --- [main] c.p.c.CryptoserviceApplication           : Started CryptoserviceApplication in 1.532 seconds (process running for 1.745)
+2025-06-04T20:35:03.591+02:00  INFO 113202 --- [scheduling-1] c.p.c.b.keymanagement.KeyCleanupTask     : Starte periodischen Key Cleanup...
+2025-06-04T20:35:03.651+02:00  INFO 113202 --- [scheduling-1] c.p.c.b.keymanagement.KeyCleanupTask     : Client Key gelöscht: 5kbdrplrvdnshlq9isrkfg
+2025-06-04T20:35:03.652+02:00  INFO 113202 --- [scheduling-1] c.p.c.b.keymanagement.KeyCleanupTask     : Client Key gelöscht: qwb6oxy3v_mfzaazwvjybq
+2025-06-04T20:35:03.659+02:00  INFO 113202 --- [scheduling-1] c.p.c.b.keymanagement.KeyCleanupTask     : Key Cleanup abgeschlossen.
+2025-06-04T20:35:11.844+02:00  INFO 113202 --- [https-jsse-nio-8443-exec-6] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2025-06-04T20:35:11.844+02:00  INFO 113202 --- [https-jsse-nio-8443-exec-6] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2025-06-04T20:35:11.845+02:00  INFO 113202 --- [https-jsse-nio-8443-exec-6] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+2025-06-04T20:37:20.442+02:00  INFO 113202 --- [SpringApplicationShutdownHook] o.s.b.w.e.tomcat.GracefulShutdown        : Commencing graceful shutdown. Waiting for active requests to complete
+2025-06-04T20:37:20.444+02:00  INFO 113202 --- [tomcat-shutdown] o.s.b.w.e.tomcat.GracefulShutdown        : Graceful shutdown complete
+2025-06-04T20:37:25.976+02:00  INFO 113904 --- [main] c.p.c.CryptoserviceApplication           : Starting CryptoserviceApplication using Java 21.0.7 with PID 113904 (/home/marcel/crypto-microservice/crypto-microservice/cryptoservice/target/classes started by marcel in /home/marcel/crypto-microservice/crypto-microservice/cryptoservice)
+2025-06-04T20:37:25.977+02:00 DEBUG 113904 --- [main] c.p.c.CryptoserviceApplication           : Running with Spring Boot v3.4.3, Spring v6.2.3
+2025-06-04T20:37:25.977+02:00  INFO 113904 --- [main] c.p.c.CryptoserviceApplication           : No active profile set, falling back to 1 default profile: "default"
+2025-06-04T20:37:26.700+02:00  INFO 113904 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8443 (https)
+2025-06-04T20:37:26.709+02:00  INFO 113904 --- [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2025-06-04T20:37:26.709+02:00  INFO 113904 --- [main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.36]
+2025-06-04T20:37:26.742+02:00  INFO 113904 --- [main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2025-06-04T20:37:26.742+02:00  INFO 113904 --- [main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 733 ms
+2025-06-04T20:37:26.877+02:00  INFO 113904 --- [main] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with UserDetailsService bean with name dynamicUserDetailsService
+2025-06-04T20:37:27.013+02:00  INFO 113904 --- [main] c.p.c.boundary.security.SecurityConfig   : SecurityFilterChain for CryptoService initialized.
+2025-06-04T20:37:27.281+02:00  INFO 113904 --- [main] o.a.t.util.net.NioEndpoint.certificate   : Connector [https-jsse-nio-8443], TLS virtual host [_default_], certificate type [UNDEFINED] configured from keystore [/home/marcel/.keystore] using alias [localhost] with trust store [null]
+2025-06-04T20:37:27.289+02:00  INFO 113904 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8443 (https) with context path '/'
+2025-06-04T20:37:27.296+02:00  INFO 113904 --- [main] c.p.c.CryptoserviceApplication           : Started CryptoserviceApplication in 1.614 seconds (process running for 1.83)
+2025-06-04T20:37:35.971+02:00  INFO 113904 --- [https-jsse-nio-8443-exec-6] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2025-06-04T20:37:35.971+02:00  INFO 113904 --- [https-jsse-nio-8443-exec-6] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2025-06-04T20:37:35.972+02:00  INFO 113904 --- [https-jsse-nio-8443-exec-6] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+2025-06-04T20:51:06.915+02:00  INFO 113904 --- [SpringApplicationShutdownHook] o.s.b.w.e.tomcat.GracefulShutdown        : Commencing graceful shutdown. Waiting for active requests to complete
+2025-06-04T20:51:06.917+02:00  INFO 113904 --- [tomcat-shutdown] o.s.b.w.e.tomcat.GracefulShutdown        : Graceful shutdown complete
+2025-06-04T20:51:12.781+02:00  INFO 115242 --- [main] c.p.c.CryptoserviceApplication           : Starting CryptoserviceApplication using Java 21.0.7 with PID 115242 (/home/marcel/crypto-microservice/crypto-microservice/cryptoservice/target/classes started by marcel in /home/marcel/crypto-microservice/crypto-microservice/cryptoservice)
+2025-06-04T20:51:12.782+02:00 DEBUG 115242 --- [main] c.p.c.CryptoserviceApplication           : Running with Spring Boot v3.4.3, Spring v6.2.3
+2025-06-04T20:51:12.783+02:00  INFO 115242 --- [main] c.p.c.CryptoserviceApplication           : No active profile set, falling back to 1 default profile: "default"
+2025-06-04T20:51:13.454+02:00  INFO 115242 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8443 (https)
+2025-06-04T20:51:13.463+02:00  INFO 115242 --- [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2025-06-04T20:51:13.464+02:00  INFO 115242 --- [main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.36]
+2025-06-04T20:51:13.496+02:00  INFO 115242 --- [main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2025-06-04T20:51:13.496+02:00  INFO 115242 --- [main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 683 ms
+2025-06-04T20:51:13.624+02:00  INFO 115242 --- [main] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with UserDetailsService bean with name dynamicUserDetailsService
+2025-06-04T20:51:13.749+02:00  INFO 115242 --- [main] c.p.c.boundary.security.SecurityConfig   : SecurityFilterChain for CryptoService initialized.
+2025-06-04T20:51:14.005+02:00  INFO 115242 --- [main] o.a.t.util.net.NioEndpoint.certificate   : Connector [https-jsse-nio-8443], TLS virtual host [_default_], certificate type [UNDEFINED] configured from keystore [/home/marcel/.keystore] using alias [localhost] with trust store [null]
+2025-06-04T20:51:14.014+02:00  INFO 115242 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8443 (https) with context path '/'
+2025-06-04T20:51:14.020+02:00  INFO 115242 --- [main] c.p.c.CryptoserviceApplication           : Started CryptoserviceApplication in 1.508 seconds (process running for 1.69)
+2025-06-04T20:51:21.700+02:00  INFO 115242 --- [https-jsse-nio-8443-exec-6] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2025-06-04T20:51:21.702+02:00  INFO 115242 --- [https-jsse-nio-8443-exec-6] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2025-06-04T20:51:21.704+02:00  INFO 115242 --- [https-jsse-nio-8443-exec-6] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+2025-06-04T20:52:33.664+02:00  INFO 115242 --- [SpringApplicationShutdownHook] o.s.b.w.e.tomcat.GracefulShutdown        : Commencing graceful shutdown. Waiting for active requests to complete
+2025-06-04T20:52:33.669+02:00  INFO 115242 --- [tomcat-shutdown] o.s.b.w.e.tomcat.GracefulShutdown        : Graceful shutdown complete
+2025-06-04T20:52:43.264+02:00  INFO 115562 --- [main] c.p.c.CryptoserviceApplication           : Starting CryptoserviceApplication using Java 21.0.7 with PID 115562 (/home/marcel/crypto-microservice/crypto-microservice/cryptoservice/target/classes started by marcel in /home/marcel/crypto-microservice/crypto-microservice/cryptoservice)
+2025-06-04T20:52:43.265+02:00 DEBUG 115562 --- [main] c.p.c.CryptoserviceApplication           : Running with Spring Boot v3.4.3, Spring v6.2.3
+2025-06-04T20:52:43.266+02:00  INFO 115562 --- [main] c.p.c.CryptoserviceApplication           : No active profile set, falling back to 1 default profile: "default"
+2025-06-04T20:52:43.926+02:00  INFO 115562 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8443 (https)
+2025-06-04T20:52:43.935+02:00  INFO 115562 --- [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2025-06-04T20:52:43.936+02:00  INFO 115562 --- [main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.36]
+2025-06-04T20:52:43.967+02:00  INFO 115562 --- [main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2025-06-04T20:52:43.968+02:00  INFO 115562 --- [main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 673 ms
+2025-06-04T20:52:44.095+02:00  INFO 115562 --- [main] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with UserDetailsService bean with name dynamicUserDetailsService
+2025-06-04T20:52:44.220+02:00  INFO 115562 --- [main] c.p.c.boundary.security.SecurityConfig   : SecurityFilterChain for CryptoService initialized.
+2025-06-04T20:52:44.467+02:00  INFO 115562 --- [main] o.a.t.util.net.NioEndpoint.certificate   : Connector [https-jsse-nio-8443], TLS virtual host [_default_], certificate type [UNDEFINED] configured from keystore [/home/marcel/.keystore] using alias [localhost] with trust store [null]
+2025-06-04T20:52:44.473+02:00  INFO 115562 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8443 (https) with context path '/'
+2025-06-04T20:52:44.480+02:00  INFO 115562 --- [main] c.p.c.CryptoserviceApplication           : Started CryptoserviceApplication in 1.486 seconds (process running for 1.664)
+2025-06-04T20:52:49.543+02:00  INFO 115562 --- [https-jsse-nio-8443-exec-6] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2025-06-04T20:52:49.543+02:00  INFO 115562 --- [https-jsse-nio-8443-exec-6] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2025-06-04T20:52:49.544+02:00  INFO 115562 --- [https-jsse-nio-8443-exec-6] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+2025-06-04T20:53:30.322+02:00  INFO 115562 --- [SpringApplicationShutdownHook] o.s.b.w.e.tomcat.GracefulShutdown        : Commencing graceful shutdown. Waiting for active requests to complete
+2025-06-04T20:53:30.329+02:00  INFO 115562 --- [tomcat-shutdown] o.s.b.w.e.tomcat.GracefulShutdown        : Graceful shutdown complete
+2025-06-04T20:53:38.511+02:00  INFO 115849 --- [main] c.p.c.CryptoserviceApplication           : Starting CryptoserviceApplication using Java 21.0.7 with PID 115849 (/home/marcel/crypto-microservice/crypto-microservice/cryptoservice/target/classes started by marcel in /home/marcel/crypto-microservice/crypto-microservice/cryptoservice)
+2025-06-04T20:53:38.512+02:00 DEBUG 115849 --- [main] c.p.c.CryptoserviceApplication           : Running with Spring Boot v3.4.3, Spring v6.2.3
+2025-06-04T20:53:38.512+02:00  INFO 115849 --- [main] c.p.c.CryptoserviceApplication           : No active profile set, falling back to 1 default profile: "default"
+2025-06-04T20:53:39.222+02:00  INFO 115849 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8443 (https)
+2025-06-04T20:53:39.235+02:00  INFO 115849 --- [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2025-06-04T20:53:39.235+02:00  INFO 115849 --- [main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.36]
+2025-06-04T20:53:39.275+02:00  INFO 115849 --- [main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2025-06-04T20:53:39.275+02:00  INFO 115849 --- [main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 735 ms
+2025-06-04T20:53:39.403+02:00  INFO 115849 --- [main] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with UserDetailsService bean with name dynamicUserDetailsService
+2025-06-04T20:53:39.535+02:00  INFO 115849 --- [main] c.p.c.boundary.security.SecurityConfig   : SecurityFilterChain for CryptoService initialized.
+2025-06-04T20:53:39.801+02:00  INFO 115849 --- [main] o.a.t.util.net.NioEndpoint.certificate   : Connector [https-jsse-nio-8443], TLS virtual host [_default_], certificate type [UNDEFINED] configured from keystore [/home/marcel/.keystore] using alias [localhost] with trust store [null]
+2025-06-04T20:53:39.814+02:00  INFO 115849 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8443 (https) with context path '/'
+2025-06-04T20:53:39.824+02:00  INFO 115849 --- [main] c.p.c.CryptoserviceApplication           : Started CryptoserviceApplication in 1.615 seconds (process running for 1.819)
+2025-06-04T20:53:44.284+02:00  INFO 115849 --- [https-jsse-nio-8443-exec-6] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2025-06-04T20:53:44.284+02:00  INFO 115849 --- [https-jsse-nio-8443-exec-6] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2025-06-04T20:53:44.285+02:00  INFO 115849 --- [https-jsse-nio-8443-exec-6] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+2025-06-04T21:05:04.953+02:00  INFO 115849 --- [SpringApplicationShutdownHook] o.s.b.w.e.tomcat.GracefulShutdown        : Commencing graceful shutdown. Waiting for active requests to complete
+2025-06-04T21:05:04.957+02:00  INFO 115849 --- [tomcat-shutdown] o.s.b.w.e.tomcat.GracefulShutdown        : Graceful shutdown complete
+2025-06-04T21:05:10.737+02:00  INFO 117184 --- [main] c.p.c.CryptoserviceApplication           : Starting CryptoserviceApplication using Java 21.0.7 with PID 117184 (/home/marcel/crypto-microservice/crypto-microservice/cryptoservice/target/classes started by marcel in /home/marcel/crypto-microservice/crypto-microservice/cryptoservice)
+2025-06-04T21:05:10.738+02:00 DEBUG 117184 --- [main] c.p.c.CryptoserviceApplication           : Running with Spring Boot v3.4.3, Spring v6.2.3
+2025-06-04T21:05:10.738+02:00  INFO 117184 --- [main] c.p.c.CryptoserviceApplication           : No active profile set, falling back to 1 default profile: "default"
+2025-06-04T21:05:11.396+02:00  INFO 117184 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8443 (https)
+2025-06-04T21:05:11.405+02:00  INFO 117184 --- [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2025-06-04T21:05:11.405+02:00  INFO 117184 --- [main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.36]
+2025-06-04T21:05:11.435+02:00  INFO 117184 --- [main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2025-06-04T21:05:11.436+02:00  INFO 117184 --- [main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 668 ms
+2025-06-04T21:05:11.570+02:00  INFO 117184 --- [main] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with UserDetailsService bean with name dynamicUserDetailsService
+2025-06-04T21:05:11.695+02:00  INFO 117184 --- [main] c.p.c.boundary.security.SecurityConfig   : SecurityFilterChain for CryptoService initialized.
+2025-06-04T21:05:11.938+02:00  INFO 117184 --- [main] o.a.t.util.net.NioEndpoint.certificate   : Connector [https-jsse-nio-8443], TLS virtual host [_default_], certificate type [UNDEFINED] configured from keystore [/home/marcel/.keystore] using alias [localhost] with trust store [null]
+2025-06-04T21:05:11.945+02:00  INFO 117184 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8443 (https) with context path '/'
+2025-06-04T21:05:11.951+02:00  INFO 117184 --- [main] c.p.c.CryptoserviceApplication           : Started CryptoserviceApplication in 1.488 seconds (process running for 1.669)
+2025-06-04T21:05:16.636+02:00  INFO 117184 --- [https-jsse-nio-8443-exec-6] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2025-06-04T21:05:16.637+02:00  INFO 117184 --- [https-jsse-nio-8443-exec-6] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2025-06-04T21:05:16.637+02:00  INFO 117184 --- [https-jsse-nio-8443-exec-6] o.s.web.servlet.DispatcherServlet        : Completed initialization in 0 ms
+2025-06-04T21:36:26.445+02:00  INFO 117184 --- [SpringApplicationShutdownHook] o.s.b.w.e.tomcat.GracefulShutdown        : Commencing graceful shutdown. Waiting for active requests to complete
+2025-06-04T21:36:26.447+02:00  INFO 117184 --- [tomcat-shutdown] o.s.b.w.e.tomcat.GracefulShutdown        : Graceful shutdown complete
+2025-06-04T21:36:32.917+02:00  INFO 119228 --- [main] c.p.c.CryptoserviceApplication           : Starting CryptoserviceApplication using Java 21.0.7 with PID 119228 (/home/marcel/crypto-microservice/crypto-microservice/cryptoservice/target/classes started by marcel in /home/marcel/crypto-microservice/crypto-microservice/cryptoservice)
+2025-06-04T21:36:32.918+02:00 DEBUG 119228 --- [main] c.p.c.CryptoserviceApplication           : Running with Spring Boot v3.4.3, Spring v6.2.3
+2025-06-04T21:36:32.918+02:00  INFO 119228 --- [main] c.p.c.CryptoserviceApplication           : No active profile set, falling back to 1 default profile: "default"
+2025-06-04T21:36:33.594+02:00  INFO 119228 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8443 (https)
+2025-06-04T21:36:33.604+02:00  INFO 119228 --- [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2025-06-04T21:36:33.604+02:00  INFO 119228 --- [main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.36]
+2025-06-04T21:36:33.635+02:00  INFO 119228 --- [main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2025-06-04T21:36:33.636+02:00  INFO 119228 --- [main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 688 ms
+2025-06-04T21:36:33.767+02:00  INFO 119228 --- [main] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with UserDetailsService bean with name dynamicUserDetailsService
+2025-06-04T21:36:33.896+02:00  INFO 119228 --- [main] c.p.c.boundary.security.SecurityConfig   : SecurityFilterChain for CryptoService initialized.
+2025-06-04T21:36:34.152+02:00  INFO 119228 --- [main] o.a.t.util.net.NioEndpoint.certificate   : Connector [https-jsse-nio-8443], TLS virtual host [_default_], certificate type [UNDEFINED] configured from keystore [/home/marcel/.keystore] using alias [localhost] with trust store [null]
+2025-06-04T21:36:34.159+02:00  INFO 119228 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8443 (https) with context path '/'
+2025-06-04T21:36:34.165+02:00  INFO 119228 --- [main] c.p.c.CryptoserviceApplication           : Started CryptoserviceApplication in 1.529 seconds (process running for 1.728)
+2025-06-04T21:36:39.007+02:00  INFO 119228 --- [https-jsse-nio-8443-exec-6] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2025-06-04T21:36:39.007+02:00  INFO 119228 --- [https-jsse-nio-8443-exec-6] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2025-06-04T21:36:39.008+02:00  INFO 119228 --- [https-jsse-nio-8443-exec-6] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+2025-06-04T21:42:41.217+02:00  INFO 119228 --- [SpringApplicationShutdownHook] o.s.b.w.e.tomcat.GracefulShutdown        : Commencing graceful shutdown. Waiting for active requests to complete
+2025-06-04T21:42:41.219+02:00  INFO 119228 --- [tomcat-shutdown] o.s.b.w.e.tomcat.GracefulShutdown        : Graceful shutdown complete
+2025-06-04T21:46:06.165+02:00  INFO 120053 --- [main] c.p.c.CryptoserviceApplication           : Starting CryptoserviceApplication using Java 21.0.7 with PID 120053 (/home/marcel/crypto-microservice/crypto-microservice/cryptoservice/target/classes started by marcel in /home/marcel/crypto-microservice/crypto-microservice/cryptoservice)
+2025-06-04T21:46:06.166+02:00 DEBUG 120053 --- [main] c.p.c.CryptoserviceApplication           : Running with Spring Boot v3.4.3, Spring v6.2.3
+2025-06-04T21:46:06.167+02:00  INFO 120053 --- [main] c.p.c.CryptoserviceApplication           : No active profile set, falling back to 1 default profile: "default"
+2025-06-04T21:46:06.840+02:00  INFO 120053 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8443 (https)
+2025-06-04T21:46:06.851+02:00  INFO 120053 --- [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2025-06-04T21:46:06.851+02:00  INFO 120053 --- [main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.36]
+2025-06-04T21:46:06.887+02:00  INFO 120053 --- [main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2025-06-04T21:46:06.887+02:00  INFO 120053 --- [main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 690 ms
+2025-06-04T21:46:07.010+02:00  INFO 120053 --- [main] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with UserDetailsService bean with name dynamicUserDetailsService
+2025-06-04T21:46:07.128+02:00  INFO 120053 --- [main] c.p.c.boundary.security.SecurityConfig   : SecurityFilterChain for CryptoService initialized.
+2025-06-04T21:46:07.379+02:00  INFO 120053 --- [main] o.a.t.util.net.NioEndpoint.certificate   : Connector [https-jsse-nio-8443], TLS virtual host [_default_], certificate type [UNDEFINED] configured from keystore [/home/marcel/.keystore] using alias [localhost] with trust store [null]
+2025-06-04T21:46:07.385+02:00  INFO 120053 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8443 (https) with context path '/'
+2025-06-04T21:46:07.393+02:00  INFO 120053 --- [main] c.p.c.CryptoserviceApplication           : Started CryptoserviceApplication in 1.503 seconds (process running for 1.711)
+2025-06-04T21:47:27.348+02:00  INFO 120053 --- [SpringApplicationShutdownHook] o.s.b.w.e.tomcat.GracefulShutdown        : Commencing graceful shutdown. Waiting for active requests to complete
+2025-06-04T21:47:27.352+02:00  INFO 120053 --- [tomcat-shutdown] o.s.b.w.e.tomcat.GracefulShutdown        : Graceful shutdown complete
+2025-06-04T21:47:32.745+02:00  INFO 120307 --- [main] c.p.c.CryptoserviceApplication           : Starting CryptoserviceApplication using Java 21.0.7 with PID 120307 (/home/marcel/crypto-microservice/crypto-microservice/cryptoservice/target/classes started by marcel in /home/marcel/crypto-microservice/crypto-microservice/cryptoservice)
+2025-06-04T21:47:32.746+02:00 DEBUG 120307 --- [main] c.p.c.CryptoserviceApplication           : Running with Spring Boot v3.4.3, Spring v6.2.3
+2025-06-04T21:47:32.746+02:00  INFO 120307 --- [main] c.p.c.CryptoserviceApplication           : No active profile set, falling back to 1 default profile: "default"
+2025-06-04T21:47:33.448+02:00  INFO 120307 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8443 (https)
+2025-06-04T21:47:33.457+02:00  INFO 120307 --- [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2025-06-04T21:47:33.457+02:00  INFO 120307 --- [main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.36]
+2025-06-04T21:47:33.490+02:00  INFO 120307 --- [main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2025-06-04T21:47:33.491+02:00  INFO 120307 --- [main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 719 ms
+2025-06-04T21:47:33.636+02:00  INFO 120307 --- [main] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with UserDetailsService bean with name dynamicUserDetailsService
+2025-06-04T21:47:33.770+02:00  INFO 120307 --- [main] c.p.c.boundary.security.SecurityConfig   : SecurityFilterChain for CryptoService initialized.
+2025-06-04T21:47:34.035+02:00  INFO 120307 --- [main] o.a.t.util.net.NioEndpoint.certificate   : Connector [https-jsse-nio-8443], TLS virtual host [_default_], certificate type [UNDEFINED] configured from keystore [/home/marcel/.keystore] using alias [localhost] with trust store [null]
+2025-06-04T21:47:34.044+02:00  INFO 120307 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8443 (https) with context path '/'
+2025-06-04T21:47:34.050+02:00  INFO 120307 --- [main] c.p.c.CryptoserviceApplication           : Started CryptoserviceApplication in 1.573 seconds (process running for 1.761)
+2025-06-04T21:47:56.523+02:00  INFO 120307 --- [SpringApplicationShutdownHook] o.s.b.w.e.tomcat.GracefulShutdown        : Commencing graceful shutdown. Waiting for active requests to complete
+2025-06-04T21:47:56.527+02:00  INFO 120307 --- [tomcat-shutdown] o.s.b.w.e.tomcat.GracefulShutdown        : Graceful shutdown complete
+2025-06-04T21:48:19.032+02:00  INFO 120512 --- [main] c.p.c.CryptoserviceApplication           : Starting CryptoserviceApplication using Java 21.0.7 with PID 120512 (/home/marcel/crypto-microservice/crypto-microservice/cryptoservice/target/classes started by marcel in /home/marcel/crypto-microservice/crypto-microservice/cryptoservice)
+2025-06-04T21:48:19.033+02:00 DEBUG 120512 --- [main] c.p.c.CryptoserviceApplication           : Running with Spring Boot v3.4.3, Spring v6.2.3
+2025-06-04T21:48:19.034+02:00  INFO 120512 --- [main] c.p.c.CryptoserviceApplication           : No active profile set, falling back to 1 default profile: "default"
+2025-06-04T21:48:19.685+02:00  INFO 120512 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8443 (https)
+2025-06-04T21:48:19.695+02:00  INFO 120512 --- [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2025-06-04T21:48:19.695+02:00  INFO 120512 --- [main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.36]
+2025-06-04T21:48:19.732+02:00  INFO 120512 --- [main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2025-06-04T21:48:19.732+02:00  INFO 120512 --- [main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 672 ms
+2025-06-04T21:48:19.918+02:00  INFO 120512 --- [main] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with UserDetailsService bean with name dynamicUserDetailsService
+2025-06-04T21:48:20.045+02:00  INFO 120512 --- [main] c.p.c.boundary.security.SecurityConfig   : SecurityFilterChain for CryptoService initialized.
+2025-06-04T21:48:20.282+02:00  INFO 120512 --- [main] o.a.t.util.net.NioEndpoint.certificate   : Connector [https-jsse-nio-8443], TLS virtual host [_default_], certificate type [UNDEFINED] configured from keystore [/home/marcel/.keystore] using alias [localhost] with trust store [null]
+2025-06-04T21:48:20.287+02:00  INFO 120512 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8443 (https) with context path '/'
+2025-06-04T21:48:20.295+02:00  INFO 120512 --- [main] c.p.c.CryptoserviceApplication           : Started CryptoserviceApplication in 1.533 seconds (process running for 1.727)
+2025-06-04T21:48:35.083+02:00  INFO 120512 --- [SpringApplicationShutdownHook] o.s.b.w.e.tomcat.GracefulShutdown        : Commencing graceful shutdown. Waiting for active requests to complete
+2025-06-04T21:48:35.086+02:00  INFO 120512 --- [tomcat-shutdown] o.s.b.w.e.tomcat.GracefulShutdown        : Graceful shutdown complete
+2025-06-04T21:48:40.866+02:00  INFO 120627 --- [main] c.p.c.CryptoserviceApplication           : Starting CryptoserviceApplication using Java 21.0.7 with PID 120627 (/home/marcel/crypto-microservice/crypto-microservice/cryptoservice/target/classes started by marcel in /home/marcel/crypto-microservice/crypto-microservice/cryptoservice)
+2025-06-04T21:48:40.867+02:00 DEBUG 120627 --- [main] c.p.c.CryptoserviceApplication           : Running with Spring Boot v3.4.3, Spring v6.2.3
+2025-06-04T21:48:40.868+02:00  INFO 120627 --- [main] c.p.c.CryptoserviceApplication           : No active profile set, falling back to 1 default profile: "default"
+2025-06-04T21:48:41.541+02:00  INFO 120627 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8443 (https)
+2025-06-04T21:48:41.551+02:00  INFO 120627 --- [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2025-06-04T21:48:41.551+02:00  INFO 120627 --- [main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.36]
+2025-06-04T21:48:41.582+02:00  INFO 120627 --- [main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2025-06-04T21:48:41.582+02:00  INFO 120627 --- [main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 681 ms
+2025-06-04T21:48:41.722+02:00  INFO 120627 --- [main] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with UserDetailsService bean with name dynamicUserDetailsService
+2025-06-04T21:48:41.845+02:00  INFO 120627 --- [main] c.p.c.boundary.security.SecurityConfig   : SecurityFilterChain for CryptoService initialized.
+2025-06-04T21:48:42.083+02:00  INFO 120627 --- [main] o.a.t.util.net.NioEndpoint.certificate   : Connector [https-jsse-nio-8443], TLS virtual host [_default_], certificate type [UNDEFINED] configured from keystore [/home/marcel/.keystore] using alias [localhost] with trust store [null]
+2025-06-04T21:48:42.089+02:00  INFO 120627 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8443 (https) with context path '/'
+2025-06-04T21:48:42.096+02:00  INFO 120627 --- [main] c.p.c.CryptoserviceApplication           : Started CryptoserviceApplication in 1.5 seconds (process running for 1.694)
+2025-06-04T21:58:01.449+02:00  INFO 120627 --- [SpringApplicationShutdownHook] o.s.b.w.e.tomcat.GracefulShutdown        : Commencing graceful shutdown. Waiting for active requests to complete
+2025-06-04T21:58:01.453+02:00  INFO 120627 --- [tomcat-shutdown] o.s.b.w.e.tomcat.GracefulShutdown        : Graceful shutdown complete
+2025-06-04T21:58:11.220+02:00  INFO 121114 --- [main] c.p.c.CryptoserviceApplication           : Starting CryptoserviceApplication using Java 21.0.7 with PID 121114 (/home/marcel/crypto-microservice/crypto-microservice/cryptoservice/target/classes started by marcel in /home/marcel/crypto-microservice/crypto-microservice/cryptoservice)
+2025-06-04T21:58:11.221+02:00 DEBUG 121114 --- [main] c.p.c.CryptoserviceApplication           : Running with Spring Boot v3.4.3, Spring v6.2.3
+2025-06-04T21:58:11.221+02:00  INFO 121114 --- [main] c.p.c.CryptoserviceApplication           : No active profile set, falling back to 1 default profile: "default"
+2025-06-04T21:58:11.901+02:00  INFO 121114 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8443 (https)
+2025-06-04T21:58:11.910+02:00  INFO 121114 --- [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2025-06-04T21:58:11.910+02:00  INFO 121114 --- [main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.36]
+2025-06-04T21:58:11.940+02:00  INFO 121114 --- [main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2025-06-04T21:58:11.941+02:00  INFO 121114 --- [main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 689 ms
+2025-06-04T21:58:12.080+02:00  INFO 121114 --- [main] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with UserDetailsService bean with name dynamicUserDetailsService
+2025-06-04T21:58:12.205+02:00  INFO 121114 --- [main] c.p.c.boundary.security.SecurityConfig   : SecurityFilterChain for CryptoService initialized.
+2025-06-04T21:58:12.454+02:00  INFO 121114 --- [main] o.a.t.util.net.NioEndpoint.certificate   : Connector [https-jsse-nio-8443], TLS virtual host [_default_], certificate type [UNDEFINED] configured from keystore [/home/marcel/.keystore] using alias [localhost] with trust store [null]
+2025-06-04T21:58:12.461+02:00  INFO 121114 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8443 (https) with context path '/'
+2025-06-04T21:58:12.468+02:00  INFO 121114 --- [main] c.p.c.CryptoserviceApplication           : Started CryptoserviceApplication in 1.52 seconds (process running for 1.7)
+2025-06-04T22:03:22.151+02:00  INFO 121114 --- [SpringApplicationShutdownHook] o.s.b.w.e.tomcat.GracefulShutdown        : Commencing graceful shutdown. Waiting for active requests to complete
+2025-06-04T22:03:22.154+02:00  INFO 121114 --- [tomcat-shutdown] o.s.b.w.e.tomcat.GracefulShutdown        : Graceful shutdown complete
+2025-06-04T22:03:28.523+02:00  INFO 121577 --- [main] c.p.c.CryptoserviceApplication           : Starting CryptoserviceApplication using Java 21.0.7 with PID 121577 (/home/marcel/crypto-microservice/crypto-microservice/cryptoservice/target/classes started by marcel in /home/marcel/crypto-microservice/crypto-microservice/cryptoservice)
+2025-06-04T22:03:28.527+02:00 DEBUG 121577 --- [main] c.p.c.CryptoserviceApplication           : Running with Spring Boot v3.4.3, Spring v6.2.3
+2025-06-04T22:03:28.532+02:00  INFO 121577 --- [main] c.p.c.CryptoserviceApplication           : No active profile set, falling back to 1 default profile: "default"
+2025-06-04T22:03:29.458+02:00  INFO 121577 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8443 (https)
+2025-06-04T22:03:29.470+02:00  INFO 121577 --- [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2025-06-04T22:03:29.471+02:00  INFO 121577 --- [main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.36]
+2025-06-04T22:03:29.501+02:00  INFO 121577 --- [main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2025-06-04T22:03:29.501+02:00  INFO 121577 --- [main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 918 ms
+2025-06-04T22:03:29.624+02:00  INFO 121577 --- [main] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with UserDetailsService bean with name dynamicUserDetailsService
+2025-06-04T22:03:29.751+02:00  INFO 121577 --- [main] c.p.c.boundary.security.SecurityConfig   : SecurityFilterChain for CryptoService initialized.
+2025-06-04T22:03:30.003+02:00  INFO 121577 --- [main] o.a.t.util.net.NioEndpoint.certificate   : Connector [https-jsse-nio-8443], TLS virtual host [_default_], certificate type [UNDEFINED] configured from keystore [/home/marcel/.keystore] using alias [localhost] with trust store [null]
+2025-06-04T22:03:30.008+02:00  INFO 121577 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8443 (https) with context path '/'
+2025-06-04T22:03:30.016+02:00  INFO 121577 --- [main] c.p.c.CryptoserviceApplication           : Started CryptoserviceApplication in 2.043 seconds (process running for 2.318)
+2025-06-04T22:05:44.297+02:00  INFO 121577 --- [SpringApplicationShutdownHook] o.s.b.w.e.tomcat.GracefulShutdown        : Commencing graceful shutdown. Waiting for active requests to complete
+2025-06-04T22:05:44.304+02:00  INFO 121577 --- [tomcat-shutdown] o.s.b.w.e.tomcat.GracefulShutdown        : Graceful shutdown complete
+2025-06-04T22:05:50.191+02:00  INFO 121757 --- [main] c.p.c.CryptoserviceApplication           : Starting CryptoserviceApplication using Java 21.0.7 with PID 121757 (/home/marcel/crypto-microservice/crypto-microservice/cryptoservice/target/classes started by marcel in /home/marcel/crypto-microservice/crypto-microservice/cryptoservice)
+2025-06-04T22:05:50.192+02:00 DEBUG 121757 --- [main] c.p.c.CryptoserviceApplication           : Running with Spring Boot v3.4.3, Spring v6.2.3
+2025-06-04T22:05:50.192+02:00  INFO 121757 --- [main] c.p.c.CryptoserviceApplication           : No active profile set, falling back to 1 default profile: "default"
+2025-06-04T22:05:50.855+02:00  INFO 121757 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8443 (https)
+2025-06-04T22:05:50.868+02:00  INFO 121757 --- [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2025-06-04T22:05:50.868+02:00  INFO 121757 --- [main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.36]
+2025-06-04T22:05:50.906+02:00  INFO 121757 --- [main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2025-06-04T22:05:50.906+02:00  INFO 121757 --- [main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 685 ms
+2025-06-04T22:05:51.025+02:00  INFO 121757 --- [main] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with UserDetailsService bean with name dynamicUserDetailsService
+2025-06-04T22:05:51.150+02:00  INFO 121757 --- [main] c.p.c.boundary.security.SecurityConfig   : SecurityFilterChain for CryptoService initialized.
+2025-06-04T22:05:51.400+02:00  INFO 121757 --- [main] o.a.t.util.net.NioEndpoint.certificate   : Connector [https-jsse-nio-8443], TLS virtual host [_default_], certificate type [UNDEFINED] configured from keystore [/home/marcel/.keystore] using alias [localhost] with trust store [null]
+2025-06-04T22:05:51.407+02:00  INFO 121757 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8443 (https) with context path '/'
+2025-06-04T22:05:51.419+02:00  INFO 121757 --- [main] c.p.c.CryptoserviceApplication           : Started CryptoserviceApplication in 1.498 seconds (process running for 1.68)
+2025-06-04T22:05:56.701+02:00  INFO 121757 --- [https-jsse-nio-8443-exec-6] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2025-06-04T22:05:56.702+02:00  INFO 121757 --- [https-jsse-nio-8443-exec-6] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2025-06-04T22:05:56.702+02:00  INFO 121757 --- [https-jsse-nio-8443-exec-6] o.s.web.servlet.DispatcherServlet        : Completed initialization in 0 ms
+2025-06-04T22:08:34.485+02:00  INFO 121757 --- [SpringApplicationShutdownHook] o.s.b.w.e.tomcat.GracefulShutdown        : Commencing graceful shutdown. Waiting for active requests to complete
+2025-06-04T22:08:34.487+02:00  INFO 121757 --- [tomcat-shutdown] o.s.b.w.e.tomcat.GracefulShutdown        : Graceful shutdown complete
+2025-06-04T22:08:37.407+02:00  INFO 122199 --- [main] c.p.c.CryptoserviceApplication           : Starting CryptoserviceApplication using Java 21.0.7 with PID 122199 (/home/marcel/crypto-microservice/crypto-microservice/cryptoservice/target/classes started by marcel in /home/marcel/crypto-microservice/crypto-microservice/cryptoservice)
+2025-06-04T22:08:37.408+02:00 DEBUG 122199 --- [main] c.p.c.CryptoserviceApplication           : Running with Spring Boot v3.4.3, Spring v6.2.3
+2025-06-04T22:08:37.408+02:00  INFO 122199 --- [main] c.p.c.CryptoserviceApplication           : No active profile set, falling back to 1 default profile: "default"
+2025-06-04T22:08:38.111+02:00  INFO 122199 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8443 (https)
+2025-06-04T22:08:38.121+02:00  INFO 122199 --- [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2025-06-04T22:08:38.122+02:00  INFO 122199 --- [main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.36]
+2025-06-04T22:08:38.153+02:00  INFO 122199 --- [main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2025-06-04T22:08:38.153+02:00  INFO 122199 --- [main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 717 ms
+2025-06-04T22:08:38.286+02:00  INFO 122199 --- [main] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with UserDetailsService bean with name dynamicUserDetailsService
+2025-06-04T22:08:38.408+02:00  INFO 122199 --- [main] c.p.c.boundary.security.SecurityConfig   : SecurityFilterChain for CryptoService initialized.
+2025-06-04T22:08:38.744+02:00  INFO 122199 --- [main] o.a.t.util.net.NioEndpoint.certificate   : Connector [https-jsse-nio-8443], TLS virtual host [_default_], certificate type [UNDEFINED] configured from keystore [/home/marcel/.keystore] using alias [localhost] with trust store [null]
+2025-06-04T22:08:38.792+02:00  INFO 122199 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8443 (https) with context path '/'
+2025-06-04T22:08:38.829+02:00  INFO 122199 --- [main] c.p.c.CryptoserviceApplication           : Started CryptoserviceApplication in 1.699 seconds (process running for 1.897)
+2025-06-04T22:08:45.289+02:00  INFO 122199 --- [https-jsse-nio-8443-exec-6] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2025-06-04T22:08:45.290+02:00  INFO 122199 --- [https-jsse-nio-8443-exec-6] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2025-06-04T22:08:45.290+02:00  INFO 122199 --- [https-jsse-nio-8443-exec-6] o.s.web.servlet.DispatcherServlet        : Completed initialization in 0 ms
