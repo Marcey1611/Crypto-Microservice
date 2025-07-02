@@ -1,30 +1,42 @@
 package com.projectwork.cryptoservice.businessfacade;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.projectwork.cryptoservice.businesslogic.keymanagement.KeyManagementService;
-import com.projectwork.cryptoservice.entity.keymanagement.GenerateKeyModel;
-import com.projectwork.cryptoservice.entity.keymanagement.GenerateKeyResponse;
-import com.projectwork.cryptoservice.entity.keymanagement.GenerateKeyResultModel;
-import com.projectwork.cryptoservice.factory.ModelsFactory;
-import com.projectwork.cryptoservice.factory.ResponseFactory;
+import com.projectwork.cryptoservice.entity.factory.ModelsFactory;
+import com.projectwork.cryptoservice.entity.factory.ResponseFactory;
+import com.projectwork.cryptoservice.entity.models.keymanagement.GenerateKeyModel;
+import com.projectwork.cryptoservice.entity.models.keymanagement.GenerateKeyResponse;
+import com.projectwork.cryptoservice.entity.models.keymanagement.GenerateKeyResultModel;
 
+import lombok.RequiredArgsConstructor;
+
+/**
+ * KeyManagementFacade class that handles the key generation process.
+ * It uses KeyManagementService to perform the generation and ModelsFactory to build the necessary models.
+ */
+@RequiredArgsConstructor
 @Service
 public class KeyManagementFacade {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(KeyManagementFacade.class);
+
     private final KeyManagementService keyManagementService;
     private final ModelsFactory modelsFactory;
     private final ResponseFactory responseFactory;
 
-    public KeyManagementFacade(final KeyManagementService keyManagementService, final ModelsFactory modelsFactory, final ResponseFactory responseFactory) {
-        this.responseFactory = responseFactory;
-        this.modelsFactory = modelsFactory;
-        this.keyManagementService = keyManagementService;
-    }
-
-    public ResponseEntity<GenerateKeyResponse> generateKey(final String clientName) {
-        final GenerateKeyModel generateKeyModel = modelsFactory.buildGenerateKeyModel(clientName);
-        final GenerateKeyResultModel generateKeyResultModel = keyManagementService.generateKey(generateKeyModel);
-        return responseFactory.buildGenerateKeyResponse(generateKeyResultModel);
+    /**
+     * Generates a key for the specified client.
+     *
+     * @param clientName the name of the client for whom the key is being generated
+     * @return a ResponseEntity containing the GenerateKeyResponse with the generated key
+     */
+    public final ResponseEntity<GenerateKeyResponse> generateKey(final String clientName) {
+        final GenerateKeyModel generateKeyModel = this.modelsFactory.buildGenerateKeyModel(clientName);
+        final GenerateKeyResultModel generateKeyResultModel = this.keyManagementService.generateKey(generateKeyModel);
+        return this.responseFactory.buildGenerateKeyResponse(generateKeyResultModel);
     }
 }

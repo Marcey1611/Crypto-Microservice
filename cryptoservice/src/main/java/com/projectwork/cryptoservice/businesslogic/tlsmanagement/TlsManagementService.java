@@ -9,20 +9,24 @@ import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 
 import org.bouncycastle.pkcs.PKCS10CertificationRequest;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.projectwork.cryptoservice.entity.tlsmanagement.GetRootCaCertResultModel;
-import com.projectwork.cryptoservice.entity.tlsmanagement.SignCsrModel;
-import com.projectwork.cryptoservice.entity.tlsmanagement.SignCsrResultModel;
-import com.projectwork.cryptoservice.factory.ResultModelsFactory;
+import com.projectwork.cryptoservice.entity.factory.ResultModelsFactory;
+import com.projectwork.cryptoservice.entity.models.tlsmanagement.GetRootCaCertResultModel;
+import com.projectwork.cryptoservice.entity.models.tlsmanagement.SignCsrModel;
+import com.projectwork.cryptoservice.entity.models.tlsmanagement.SignCsrResultModel;
 
+import lombok.RequiredArgsConstructor;
+
+// TODO delete after new implementation of mtls
+
+@RequiredArgsConstructor
 @Service
 public class TlsManagementService {
     private final Path caKeyPath = Paths.get("src/main/resources/tls/rootCA.key");
     private final Path caCertPath = Paths.get("src/main/resources/tls/rootCA.crt");
 
-    @Autowired private ResultModelsFactory resultModelsFactory;
+    private final ResultModelsFactory resultModelsFactory;
 
     public SignCsrResultModel signCsr(SignCsrModel signCsrModel) {
         // 1. CA Private Key laden
@@ -61,7 +65,7 @@ public class TlsManagementService {
         try {
             signedCert = PemUtils.signCsrWithCa(csr, caKey, caCert);
         } catch (Exception e) {
-            // TODO Auto-generated catch block
+            // TODO error handling
             e.printStackTrace();
         }
 
@@ -70,7 +74,7 @@ public class TlsManagementService {
         try {
             signedPem = PemUtils.toPem(signedCert);
         } catch (IOException e) {
-            // TODO Auto-generated catch block
+            // TODO error handling
             e.printStackTrace();
         }
 
@@ -83,7 +87,7 @@ public class TlsManagementService {
         try {
             pem = Files.readString(caCertPath);
         } catch (IOException e) {
-            // TODO Auto-generated catch block
+            // TODO error handling
             e.printStackTrace();
         }
         return resultModelsFactory.buildGetRootCaCertResultModel(pem);

@@ -1,7 +1,9 @@
 package com.projectwork.cryptoservice.businesslogic;
 
+import java.nio.charset.StandardCharsets;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
+import java.security.InvalidParameterException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Base64;
@@ -13,63 +15,173 @@ import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.GCMParameterSpec;
 
+import com.projectwork.cryptoservice.errorhandling.util.ErrorDetail;
+import com.projectwork.cryptoservice.errorhandling.util.ErrorDetailBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import com.projectwork.cryptoservice.businesslogic.jwtmanagement.JwtManagementService;
-import com.projectwork.cryptoservice.businesslogic.keymanagement.ClientKeyDataMap;
+import com.projectwork.cryptoservice.businesslogic.keymanagement.ClientKeyRegistry;
 import com.projectwork.cryptoservice.businesslogic.keymanagement.KeyStoreHelper;
-import com.projectwork.cryptoservice.entity.encrypt.EncryptModel;
-import com.projectwork.cryptoservice.entity.encrypt.EncryptResultModel;
-import com.projectwork.cryptoservice.factory.ResultModelsFactory;
+import com.projectwork.cryptoservice.entity.factory.ResultModelsFactory;
+import com.projectwork.cryptoservice.entity.models.encrypt.EncryptModel;
+import com.projectwork.cryptoservice.entity.models.encrypt.EncryptResultModel;
+import com.projectwork.cryptoservice.errorhandling.exceptions.BadRequestException;
+import com.projectwork.cryptoservice.errorhandling.exceptions.InternalServerErrorException;
+import com.projectwork.cryptoservice.errorhandling.util.ErrorCode;
 
+import lombok.RequiredArgsConstructor;
+
+//TODO refactoring too complex (methods)
+/**
+ * EncryptService class that handles the encryption of plaintext using AES-GCM.
+ * It validates the client key alias from the JWT and performs encryption using the client's key.
+ */
+@RequiredArgsConstructor
 @Service
 public class EncryptService {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(EncryptService.class);
+
     private static final String ENCRYPTION_ALGORITHM = "AES/GCM/NoPadding";
     private static final int GCM_TAG_LENGTH = 128;
 
     private final KeyStoreHelper keyStoreHelper;
     private final JwtManagementService jwtManagementService;
-    private final ClientKeyDataMap clientKeyAliasMap;
+    private final ClientKeyRegistry clientKeyRegistry;
     private final ResultModelsFactory resultModelsFactory;
 
-    public EncryptService(final KeyStoreHelper keyStoreHelper, final JwtManagementService jwtManagementService, final ClientKeyDataMap clientKeyAliasMap, final ResultModelsFactory resultModelsFactory) {
-        this.resultModelsFactory = resultModelsFactory;
-        this.clientKeyAliasMap = clientKeyAliasMap;
-        this.keyStoreHelper = keyStoreHelper;
-        this.jwtManagementService = jwtManagementService;
-    }
+    /**
+     * Encrypts the provided plaintext using AES-GCM with the client's key.
+     * Validates the client key alias from the JWT and generates a random IV for encryption.
+     *
+     * @param encryptModel the model containing the plaintext and JWT
+     * @param clientName the name of the client making the request
+     * @return an EncryptResultModel containing the encrypted ciphertext
+     */
+    public final EncryptResultModel encrypt(final EncryptModel encryptModel, final String clientName) {
+        final String jwt = encryptModel.getJwt();
+        final String keyAlias = this.jwtManagementService.extractClientKeyAlias(jwt);
 
-    public EncryptResultModel encrypt(final EncryptModel encryptModel, final String clientName) {
-        final String keyAlias = jwtManagementService.extractClientKeyAlias(encryptModel.getJwt());
-        if(keyAlias == clientKeyAliasMap.getKeyAlias(clientName)){
-            throw new RuntimeException("Client key alias does not match the client name");
+        final String keyAliasForClient = this.clientKeyRegistry.getKeyAliasForClient(clientName);
+        if (!keyAlias.equals(keyAliasForClient)) {
+            final ErrorCode errorCode = ErrorCode.CLIENT_KEY_ALIAS_MISMATCH_CLIENT_NAME;
+            final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
+            final String context = String.format(
+                    "JWT key alias '%s' does not match registered key alias for client '%s'.",
+                    keyAlias,
+                    clientName
+            );
+            errorDetailBuilder.withContext(context);
+            final ErrorDetail errorDetail = errorDetailBuilder.build();
+            throw new BadRequestException(errorDetail);
         }
-        final SecretKey clientKey = keyStoreHelper.getClientKey(keyAlias);
-        final byte[] iv = generateIV();
-        clientKeyAliasMap.putIv(iv, clientName);
-        final String cipherText = processEncryption(iv, clientKey, encryptModel.getPlainText());
-        return resultModelsFactory.buildEncryptResultModel(cipherText);
-    }
+    
+        final SecretKey clientKey = this.keyStoreHelper.getClientKey(keyAlias);
+        if (null == clientKey) {
+            final ErrorCode errorCode = ErrorCode.NO_CLIENT_KEY_FOUND_FOR_ALIAS;
+            final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
+            final String context = String.format(
+                    "While retrieving client key for alias '%s'.",
+                    keyAlias
+            );
+            errorDetailBuilder.withContext(context);
+            errorDetailBuilder.withLogMsgFormatted(keyAlias);
+            final ErrorDetail errorDetail = errorDetailBuilder.build();
+            throw new BadRequestException(errorDetail);
+        }
+    
+        final byte[] iv = this.generateIV();
 
+        this.clientKeyRegistry.updateIvForClient(clientName, iv);
+        final String plainText = encryptModel.getPlainText();
+        final String cipherText = this.processEncryption(iv, clientKey, plainText);
+        return this.resultModelsFactory.buildEncryptResultModel(cipherText);
+    }
+    
+    /**
+     * Generates a random Initialization Vector (IV) for AES-GCM encryption.
+     * Uses a strong SecureRandom instance to ensure cryptographic security.
+     *
+     * @return a byte array representing the generated IV
+     */
     private byte[] generateIV() {
-        final SecureRandom secureRandom = new SecureRandom();
-        final byte[] iv = new byte[12];
+        final SecureRandom secureRandom;
+        try {
+            secureRandom = SecureRandom.getInstanceStrong();
+        } catch (final NoSuchAlgorithmException exception) {
+            final ErrorCode errorCode = ErrorCode.AES_KEYGEN_SECURE_RANDOM_FAILED;
+            final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
+            errorDetailBuilder.withContext("While generating IV for encryption.");
+            errorDetailBuilder.withException(exception);
+            final ErrorDetail errorDetail = errorDetailBuilder.build();
+            throw new InternalServerErrorException(errorDetail);
+        }
+        final byte[] iv = new byte[12]; // Standard IV size for GCM
         secureRandom.nextBytes(iv);
         return iv;
     }
 
+    /**
+     * Processes the encryption of the plaintext using AES-GCM with the provided IV and client key.
+     *
+     * @param iv the Initialization Vector for AES-GCM
+     * @param clientKey the SecretKey for AES encryption
+     * @param plainText the plaintext to be encrypted
+     * @return the Base64 encoded ciphertext
+     */
     private String processEncryption(final byte[] iv, final SecretKey clientKey, final String plainText) {
-        byte[] encryptedData = null;
+        final Cipher cipher;
         try {
-            final Cipher cipher = Cipher.getInstance(ENCRYPTION_ALGORITHM);
-            final GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(GCM_TAG_LENGTH, iv);
-            cipher.init(Cipher.ENCRYPT_MODE, clientKey, gcmParameterSpec);
-            encryptedData = cipher.doFinal(plainText.getBytes());
-        } catch (final NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | InvalidAlgorithmParameterException | IllegalBlockSizeException | BadPaddingException exception) {
-            // TODO Auto-generated catch block
-            exception.printStackTrace();
+            cipher = Cipher.getInstance(ENCRYPTION_ALGORITHM);
+        } catch (final NoSuchAlgorithmException | NoSuchPaddingException exception) {
+            final ErrorCode errorCode = ErrorCode.AES_CIPHER_INSTANCE_FAILED;
+            final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
+            errorDetailBuilder.withContext("While creating Cipher instance for AES encryption.");
+            errorDetailBuilder.withException(exception);
+            final ErrorDetail errorDetail = errorDetailBuilder.build();
+            throw new InternalServerErrorException(errorDetail);
         }
-        //TODO: return byte[] not String
-        return Base64.getEncoder().encodeToString(encryptedData);
+    
+        final GCMParameterSpec gcmParameterSpec;
+        try {
+            gcmParameterSpec = new GCMParameterSpec(GCM_TAG_LENGTH, iv);
+        } catch (final IllegalArgumentException exception) {
+            final ErrorCode errorCode = ErrorCode.INVALID_GCM_PARAMETERS;
+            final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
+            errorDetailBuilder.withContext("While creating GCMParameterSpec for AES encryption.");
+            errorDetailBuilder.withException(exception);
+            final ErrorDetail errorDetail = errorDetailBuilder.build();
+            throw new BadRequestException(errorDetail);
+        }
+    
+        try {
+            cipher.init(Cipher.ENCRYPT_MODE, clientKey, gcmParameterSpec);
+        } catch (final InvalidKeyException | InvalidAlgorithmParameterException | InvalidParameterException exception) {
+            final ErrorCode errorCode = ErrorCode.AES_CIPHER_INIT_FAILED;
+            final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
+            errorDetailBuilder.withContext("While initializing Cipher for AES encryption with client key and IV.");
+            errorDetailBuilder.withException(exception);
+            final ErrorDetail errorDetail = errorDetailBuilder.build();
+            throw new InternalServerErrorException(errorDetail);
+        }
+    
+        final byte[] encryptedData;
+        try {
+            final byte[] plainTextBytes = plainText.getBytes(StandardCharsets.UTF_8);
+            encryptedData = cipher.doFinal(plainTextBytes);
+        } catch (final IllegalBlockSizeException | BadPaddingException exception) {
+            final ErrorCode errorCode = ErrorCode.ENCRYPTION_FAILED;
+            final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
+            errorDetailBuilder.withContext("While encrypting plainText using AES-GCM.");
+            errorDetailBuilder.withException(exception);
+            final ErrorDetail errorDetail = errorDetailBuilder.build();
+            throw new BadRequestException(errorDetail);
+        }
+
+        final Base64.Encoder encoder = Base64.getEncoder();
+        return encoder.encodeToString(encryptedData);
     }
+    
 }

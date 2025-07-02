@@ -1,6 +1,7 @@
 package com.projectwork.cryptoclient.cryptoclient;
 
 import java.security.SecureRandom;
+import java.util.Random;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -15,6 +16,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class CryptoclientApplication {
     private static final SecureRandom random = new SecureRandom();
     private static final ObjectMapper mapper = new ObjectMapper();
+    private static final String ALLOWED_CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 .,;:!?@()[]{}\"'-";
+
 
 	public static void main(String[] args) throws JsonMappingException, JsonProcessingException {
 		final ConfigurableApplicationContext context = SpringApplication.run(CryptoclientApplication.class, args);
@@ -87,7 +90,7 @@ public class CryptoclientApplication {
         final int length = random.nextInt(100) + 1;
         final StringBuilder sb = new StringBuilder(length);
         for (int i = 0; i < length; i++) {
-            final char c = (char) (32 + random.nextInt(95)); // 32–126
+            final char c = ALLOWED_CHARS.charAt(random.nextInt(ALLOWED_CHARS.length()));
             sb.append(c);
         }
         return sb.toString();
