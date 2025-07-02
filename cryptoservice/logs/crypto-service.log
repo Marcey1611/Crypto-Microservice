@@ -1,0 +1,16 @@
+2025-06-29T11:51:41.937+02:00  INFO 10354 --- [main] c.p.c.CryptoserviceApplication           : Starting CryptoserviceApplication using Java 21.0.7 with PID 10354 (/home/marcel/crypto-microservice/crypto-microservice/cryptoservice/target/classes started by marcel in /home/marcel/crypto-microservice/crypto-microservice/cryptoservice)
+2025-06-29T11:51:41.941+02:00 DEBUG 10354 --- [main] c.p.c.CryptoserviceApplication           : Running with Spring Boot v3.4.3, Spring v6.2.3
+2025-06-29T11:51:41.942+02:00  INFO 10354 --- [main] c.p.c.CryptoserviceApplication           : No active profile set, falling back to 1 default profile: "default"
+2025-06-29T11:51:42.497+02:00  INFO 10354 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8443 (https)
+2025-06-29T11:51:42.507+02:00  INFO 10354 --- [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2025-06-29T11:51:42.507+02:00  INFO 10354 --- [main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.36]
+2025-06-29T11:51:42.539+02:00  INFO 10354 --- [main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2025-06-29T11:51:42.539+02:00  INFO 10354 --- [main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 572 ms
+2025-06-29T11:51:42.637+02:00  INFO 10354 --- [main] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with UserDetailsService bean with name dynamicUserDetailsService
+2025-06-29T11:51:42.736+02:00  INFO 10354 --- [main] c.p.c.boundary.security.SecurityConfig   : SecurityFilterChain for CryptoService initialized.
+2025-06-29T11:51:42.932+02:00  INFO 10354 --- [main] o.a.t.util.net.NioEndpoint.certificate   : Connector [https-jsse-nio-8443], TLS virtual host [_default_], certificate type [UNDEFINED] configured from keystore [/home/marcel/.keystore] using alias [localhost] with trust store [null]
+2025-06-29T11:51:42.938+02:00  INFO 10354 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8443 (https) with context path '/'
+2025-06-29T11:51:42.944+02:00  INFO 10354 --- [main] c.p.c.CryptoserviceApplication           : Started CryptoserviceApplication in 1.238 seconds (process running for 1.388)
+2025-06-29T11:52:10.510+02:00  INFO 10354 --- [https-jsse-nio-8443-exec-6] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2025-06-29T11:52:10.510+02:00  INFO 10354 --- [https-jsse-nio-8443-exec-6] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2025-06-29T11:52:10.511+02:00  INFO 10354 --- [https-jsse-nio-8443-exec-6] o.s.web.servlet.DispatcherServlet        : Completed initialization in 0 ms
