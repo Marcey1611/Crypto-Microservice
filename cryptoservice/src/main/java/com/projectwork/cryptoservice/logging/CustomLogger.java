@@ -1,34 +1,28 @@
 package com.projectwork.cryptoservice.logging;
 
-import com.projectwork.cryptoservice.errorhandling.util.ErrorCode;
+import com.projectwork.cryptoservice.errorhandling.util.ErrorDetail;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
-public class ErrorLogger {
+@Component
+public class CustomLogger {
 
-    /**
-     * Loggt einen strukturierten Fehler auf WARN-Level.
-     *
-     * @param logger     der SLF4J Logger der aufrufenden Klasse
-     * @param errorCode  das Fehlercode-Enum
-     * @param message    optionaler Kontext zur Exception
-     * @param exception  die ausgelöste Exception (z. B. ValidationException)
-     */
-    public static void logWarn(Logger logger, ErrorCode errorCode, String message, Exception exception) {
-        logger.warn("[{}] {}: {}",
-                errorCode.getCode(),
-                errorCode.getMessage(),
-                message != null ? message : exception.getMessage());
+    private static final Logger LOGGER = LoggerFactory.getLogger(CustomLogger.class);
+
+    public final void logValidationError(final ErrorDetail errorDetail) {
+        final String code = errorDetail.getCode();
+        final String logHeadline = errorDetail.getLogHeadline();
+        final Throwable exception = errorDetail.getException();
+        final String message = exception.getMessage();
+        LOGGER.error("[{}] {}: {}", code, logHeadline, message);
     }
 
-    /**
-     * Loggt einen strukturierten Fehler auf ERROR-Level mit Stacktrace.
-     *
-     * @param logger     der SLF4J Logger der aufrufenden Klasse
-     * @param errorCode  das Fehlercode-Enum
-     * @param message    optionaler Kontext zur Exception
-     * @param exception  die ausgelöste Exception (z. B. ValidationException)
-     */
-    public static void logError(Logger logger, ErrorCode errorCode, String message, Exception exception) {
-        logger.error("[{}] {}: {}", errorCode.getCode(), errorCode.getMessage(), message, exception);
+    public final void logProductiveError(final ErrorDetail errorDetail) {
+        final String code = errorDetail.getCode();
+        final String logHeadline = errorDetail.getLogHeadline();
+        final Throwable exception = errorDetail.getException();
+        final String message = exception.getMessage();
+        LOGGER.error("[{}] {}: {}", code, logHeadline, message, exception);
     }
 }

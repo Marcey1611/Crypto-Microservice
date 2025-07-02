@@ -4,7 +4,9 @@ import com.projectwork.cryptoservice.errorhandling.exceptions.BadRequestExceptio
 import com.projectwork.cryptoservice.errorhandling.util.ErrorCode;
 import com.projectwork.cryptoservice.errorhandling.util.ErrorDetail;
 import com.projectwork.cryptoservice.errorhandling.util.ErrorDetailBuilder;
+import com.projectwork.cryptoservice.logging.CustomLogger;
 import io.jsonwebtoken.*;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -20,9 +22,10 @@ import java.util.regex.Pattern;
  * and ensures that the token has not expired.
  */
 @Component
+@RequiredArgsConstructor
 public class JwtValidator {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(JwtValidator.class);
+    private final CustomLogger customLogger;
 
     private static final Pattern JWT_PATTERN = Pattern.compile("^[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+$");
 
@@ -38,6 +41,7 @@ public class JwtValidator {
             final ErrorCode errorCode = ErrorCode.INVALID_JWT;
             final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
             final ErrorDetail errorDetail = errorDetailBuilder.build();
+            this.customLogger.logValidationError(errorDetail);
             throw new BadRequestException(errorDetail);
         }
     }
@@ -58,6 +62,7 @@ public class JwtValidator {
             final ErrorCode errorCode = ErrorCode.INVALID_JWT;
             final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
             final ErrorDetail errorDetail = errorDetailBuilder.build();
+            this.customLogger.logValidationError(errorDetail);
             throw new BadRequestException(errorDetail);
         }
     }
@@ -73,6 +78,7 @@ public class JwtValidator {
             final ErrorCode errorCode = ErrorCode.EXPIRED_JWT;
             final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
             final ErrorDetail errorDetail = errorDetailBuilder.build();
+            this.customLogger.logValidationError(errorDetail);
             throw new BadRequestException(errorDetail);
         }
     }

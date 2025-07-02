@@ -51,12 +51,13 @@ public class MasterKeyRotationTask {
     private static final int KEY_SIZE = 256;
 
     private final KeyStoreHelper keyStoreHelper;
+    private final KeyStoreLoader keyStoreLoader;
 
     @Scheduled(fixedRate = 86400000L)
     public final void rotateMasterKey() {
         //TODO logging System.out.println("Start master-key rotation...");
 
-        final KeyStore keystore = this.keyStoreHelper.loadKeyStore();
+        final KeyStore keystore = this.keyStoreLoader.load();
 
         final String keystorePassword = System.getenv("KEYSTORE_PASSWORD");
         final char[] passwordChars = keystorePassword.toCharArray();
@@ -262,7 +263,7 @@ public class MasterKeyRotationTask {
            Arrays.fill(passwordChars, '\0'); // OWASP [199]
         }
 
-        this.keyStoreHelper.saveKeyStore(keystore);
+        this.keyStoreLoader.save(keystore);
         //TODO logging System.out.println("Master-Key Rotation abgeschlossen und alle Client-Keys re-wrapped.");
     }
 }

@@ -4,6 +4,7 @@ import com.projectwork.cryptoservice.errorhandling.exceptions.BadRequestExceptio
 import com.projectwork.cryptoservice.errorhandling.util.ErrorCode;
 import com.projectwork.cryptoservice.errorhandling.util.ErrorDetail;
 import com.projectwork.cryptoservice.errorhandling.util.ErrorDetailBuilder;
+import com.projectwork.cryptoservice.logging.CustomLogger;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,7 +18,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class JwtClaimsValidator {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(JwtClaimsValidator.class);
+    private final CustomLogger customLogger;
 
     private static final int MAX_LENGTH = 64;
     private final FieldValidator fieldValidator;
@@ -39,6 +40,7 @@ public class JwtClaimsValidator {
             final ErrorCode errorCode = ErrorCode.INSECURE_JWT_ALGO;
             final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
             final ErrorDetail errorDetail = errorDetailBuilder.build();
+            this.customLogger.logValidationError(errorDetail);
             throw new BadRequestException(errorDetail);
         }
     }

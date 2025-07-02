@@ -46,7 +46,7 @@ import lombok.RequiredArgsConstructor;
 @RestController
 public class Controller implements EncryptAPI, DecryptAPI, KeyManagementAPI, JwtManagementAPI, TlsManagementAPI {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(Controller.class);
+    private static final Logger logger = LoggerFactory.getLogger(Controller.class);
 
     private final EncryptFacade encryptFacade;
     private final DecryptFacade decryptFacade;
@@ -66,11 +66,17 @@ public class Controller implements EncryptAPI, DecryptAPI, KeyManagementAPI, Jwt
      * @return a response entity containing the encryption result
      */
     @Override
-    public ResponseEntity<EncryptResponse> encryptPost(final EncryptRequest encryptRequest, final Principal principal) {
+    public final ResponseEntity<EncryptResponse> encryptPost(final EncryptRequest encryptRequest, final Principal principal) {
         final String clientName = this.resolveClientName(principal);
+        logger.info("Received encrypt request for client '{}'", clientName);
         this.checkClientNameExists(clientName);
+
         this.encryptValidator.validateEncryptRequest(encryptRequest);
-        return this.encryptFacade.processEncryption(encryptRequest, clientName);
+        logger.debug("Encrypt request validated for client '{}'", clientName);
+
+        final ResponseEntity<EncryptResponse> response = this.encryptFacade.processEncryption(encryptRequest, clientName);
+        logger.info("Encryption successful for client '{}'", clientName);
+        return response;
     }
 
     /**
@@ -81,11 +87,17 @@ public class Controller implements EncryptAPI, DecryptAPI, KeyManagementAPI, Jwt
      * @return a response entity containing the decryption result
      */
     @Override
-    public ResponseEntity<DecryptResponse> decryptPost(final DecryptRequest decryptRequest, final Principal principal) {
+    public final ResponseEntity<DecryptResponse> decryptPost(final DecryptRequest decryptRequest, final Principal principal) {
         final String clientName = this.resolveClientName(principal);
+        logger.info("Received decrypt request for client '{}'", clientName);
         this.checkClientNameExists(clientName);
+
         this.decryptValidator.validateDecryptRequest(decryptRequest);
-        return this.decryptFacade.processDecryption(decryptRequest, clientName);
+        logger.debug("Decrypt request validated for client '{}'", clientName);
+
+        final ResponseEntity<DecryptResponse> response = this.decryptFacade.processDecryption(decryptRequest, clientName);
+        logger.info("Decryption successful for client '{}'", clientName);
+        return response;
     }
 
     /**
@@ -95,9 +107,12 @@ public class Controller implements EncryptAPI, DecryptAPI, KeyManagementAPI, Jwt
      * @return a response entity containing the generated key information
      */
     @Override
-    public ResponseEntity<GenerateKeyResponse> generateKeyPost(final Principal principal) {
+    public final ResponseEntity<GenerateKeyResponse> generateKeyPost(final Principal principal) {
         final String clientName = this.resolveClientName(principal);
-        return this.keyManagementFacade.generateKey(clientName);
+        logger.info("Key generation requested by client '{}'", clientName);
+        final ResponseEntity<GenerateKeyResponse> response = this.keyManagementFacade.generateKey(clientName);
+        logger.info("Key successfully generated for client '{}'", clientName);
+        return response;
     }
 
     /**
@@ -108,11 +123,17 @@ public class Controller implements EncryptAPI, DecryptAPI, KeyManagementAPI, Jwt
      * @return a response entity containing the generated JWT
      */
     @Override
-    public ResponseEntity<GenerateJwtResponse> generateJwtPost(final GenerateJwtRequest generateJwtRequest, final Principal principal) {
+    public final ResponseEntity<GenerateJwtResponse> generateJwtPost(final GenerateJwtRequest generateJwtRequest, final Principal principal) {
         final String clientName = this.resolveClientName(principal);
+        logger.info("JWT generation requested by client '{}'", clientName);
         this.checkClientNameExists(clientName);
+
         this.jwtManagementValidator.validateGenerateJwtRequest(generateJwtRequest);
-        return this.jwtManagementFacade.generateJwt(generateJwtRequest, clientName);
+        logger.debug("JWT request validated for client '{}'", clientName);
+
+        final ResponseEntity<GenerateJwtResponse> response = this.jwtManagementFacade.generateJwt(generateJwtRequest, clientName);
+        logger.info("JWT successfully generated for client '{}'", clientName);
+        return response;
     }
 
     /**
@@ -124,12 +145,14 @@ public class Controller implements EncryptAPI, DecryptAPI, KeyManagementAPI, Jwt
     // TODO update after new implementation of mtls
     private void checkClientNameExists(final String clientName) {
         if (!this.clientKeyRegistry.hasClient(clientName)) {
+            logger.warn("Client '{}' not found in registry", clientName);
             final ErrorCode errorCode = ErrorCode.CLIENT_NOT_FOUND;
             final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
             errorDetailBuilder.withUserMsgFormatted(clientName);
             final ErrorDetail errorDetail = errorDetailBuilder.build();
             throw new BadRequestException(errorDetail);
         }
+        logger.debug("Client '{}' found in registry", clientName);
     }
 
     /**
@@ -140,10 +163,9 @@ public class Controller implements EncryptAPI, DecryptAPI, KeyManagementAPI, Jwt
      */
     // TODO update after new implementation of mtls
     private String resolveClientName(final Principal principal) {
-        if (null != principal) {
-            return principal.getName();
-        }
-        return "anonymous-client";
+        final String clientName = (null != principal) ? principal.getName() : "anonymous-client";
+        logger.debug("Resolved client name: '{}'", clientName);
+        return clientName;
     }
 
     /**
@@ -155,6 +177,7 @@ public class Controller implements EncryptAPI, DecryptAPI, KeyManagementAPI, Jwt
     // TODO delete after new implementation of mtls
     @Override
     public final ResponseEntity<SignCsrResponse> signCsrPost(final SignCsrRequest signCsrRequest) {
+        logger.info("Received CSR signing request");
         return this.tlsManagementFacade.signCsr(signCsrRequest);
     }
 
@@ -165,6 +188,7 @@ public class Controller implements EncryptAPI, DecryptAPI, KeyManagementAPI, Jwt
      */
     @Override
     public final ResponseEntity<GetRootCaCertResponse> rootCaGet() {
+        logger.info("Root CA certificate requested");
         return this.tlsManagementFacade.getRootCaCert();
     }
 }

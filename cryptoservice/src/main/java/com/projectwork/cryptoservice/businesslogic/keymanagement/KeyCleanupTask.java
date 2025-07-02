@@ -31,6 +31,7 @@ public class KeyCleanupTask {
     private final KeyStoreHelper keyStoreHelper;
     private final ClientKeyRegistry clientKeyRegistry;
     private final KeyExpirationChecker expirationChecker;
+    private final KeyStoreLoader keyStoreLoader;
 
     /**
      * Scheduled method that runs every hour to clean up expired keys.
@@ -46,10 +47,10 @@ public class KeyCleanupTask {
      * This can be called from other parts of the application if needed.
      */
     public final void cleanupExpiredKeys() {
-        final KeyStore keystore = this.keyStoreHelper.loadKeyStore();
+        final KeyStore keystore = this.keyStoreLoader.load();
         final List<String> expiredAliases = this.findExpiredAliases(keystore);
         this.deleteExpiredKeys(keystore, expiredAliases);
-        this.keyStoreHelper.saveKeyStore(keystore);
+        this.keyStoreLoader.save(keystore);
     }
 
     /**

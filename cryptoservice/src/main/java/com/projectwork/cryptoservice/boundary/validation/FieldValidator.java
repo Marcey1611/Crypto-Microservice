@@ -4,6 +4,8 @@ import com.projectwork.cryptoservice.errorhandling.exceptions.BadRequestExceptio
 import com.projectwork.cryptoservice.errorhandling.util.ErrorCode;
 import com.projectwork.cryptoservice.errorhandling.util.ErrorDetail;
 import com.projectwork.cryptoservice.errorhandling.util.ErrorDetailBuilder;
+import com.projectwork.cryptoservice.logging.CustomLogger;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -16,9 +18,10 @@ import java.util.regex.Pattern;
  * such as being non-blank, having a maximum length, and matching specific character whitelists.
  */
 @Component
+@RequiredArgsConstructor
 public class FieldValidator {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(FieldValidator.class);
+    private final CustomLogger customLogger;
 
     private static final Pattern WHITELIST = Pattern.compile("^[a-zA-Z0-9 ._-]+$");
     private static final Pattern EXTENDED_WHITELIST = Pattern.compile("^[a-zA-Z0-9 .,;:!?@()\\[\\]{}\"'-]*$");
@@ -36,6 +39,7 @@ public class FieldValidator {
             final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
             errorDetailBuilder.withUserMsgFormatted(name);
             final ErrorDetail errorDetail = errorDetailBuilder.build();
+            this.customLogger.logValidationError(errorDetail);
             throw new BadRequestException(errorDetail);
         }
     }
@@ -54,6 +58,7 @@ public class FieldValidator {
             final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
             errorDetailBuilder.withUserMsgFormatted(name);
             final ErrorDetail errorDetail = errorDetailBuilder.build();
+            this.customLogger.logValidationError(errorDetail);
             throw new BadRequestException(errorDetail);
         }
     }
@@ -72,6 +77,7 @@ public class FieldValidator {
             final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
             errorDetailBuilder.withUserMsgFormatted(name);
             final ErrorDetail errorDetail = errorDetailBuilder.build();
+            this.customLogger.logValidationError(errorDetail);
             throw new BadRequestException(errorDetail);
         }
     }
@@ -90,6 +96,7 @@ public class FieldValidator {
             final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
             errorDetailBuilder.withUserMsgFormatted(name);
             final ErrorDetail errorDetail = errorDetailBuilder.build();
+            this.customLogger.logValidationError(errorDetail);
             throw new BadRequestException(errorDetail);
         }
     }

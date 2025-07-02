@@ -41,321 +41,73 @@ import com.projectwork.cryptoservice.errorhandling.util.ErrorCode;
 @Component
 public class KeyStoreHelper {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(KeyStoreHelper.class);
+    private final KeyStoreLoader loader;
+    private final MasterKeyService masterKeyService;
+    private final ClientKeyEncryptor encryptor;
 
-    private static final String KEYSTORE_PATH = System.getenv("KEYSTORE_PATH");
+    public KeyStoreHelper(KeyStoreLoader loader, MasterKeyService masterKeyService, ClientKeyEncryptor encryptor) {
+        this.loader = loader;
+        this.masterKeyService = masterKeyService;
+        this.encryptor = encryptor;
+    }
 
-    /**
-     * Stores a client key in the keystore under the specified alias.
-     * 
-     * @param alias The alias under which the key should be stored in the keystore.
-     * @param key The SecretKey to be stored in the keystore.
-     * @throws InternalServerErrorException An exception is thrown if there is an error during the key storage process.
-     * - OWASP [102] Protect master secrets (Master Key retrieved securely).
-     * - OWASP [103] Cryptographic modules fail securely (exception handling during cipher init/wrap).
-     * - OWASP [106] Key management - proper wrapping of client keys with master key.
-     * - OWASP [194] Passwords cleared from memory after use (Arrays.fill).
-     */
-    public final void storeKey(final String alias, final SecretKey key) {
-        System.out.println("storeKey");
-        final KeyStore keystore = this.loadKeyStore();
+    public void storeKey(String alias, SecretKey clientKey) {
+        KeyStore ks = loader.load();
+        SecretKey masterKey = masterKeyService.retrieveMasterKey(ks);
+        byte[] encrypted = encryptor.encrypt(clientKey, masterKey);
+        storeWrappedKey(ks, alias, encrypted);
+        loader.save(ks);
+    }
 
-        final String keystorePassword = System.getenv("KEYSTORE_PASSWORD");
-        final char[] passwordChars = keystorePassword.toCharArray();
+    public SecretKey getClientKey(String alias) {
+        KeyStore ks = loader.load();
+        SecretKey masterKey = masterKeyService.retrieveMasterKey(ks);
+        SecretKey encryptedKey = getKey(ks, alias);
+        return encryptor.decrypt(encryptedKey.getEncoded(), masterKey);
+    }
 
-        final SecretKey masterKey;
-        try {
-            masterKey = (SecretKey) keystore.getKey("master-key", passwordChars);
-            
-        } catch (final KeyStoreException | NoSuchAlgorithmException | UnrecoverableKeyException exception) {
-            final ErrorCode errorCode = ErrorCode.KEYSTORE_KEY_ACCESS_FAILED;
-            final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
-            errorDetailBuilder.withContext("While trying to retrieve the master key from keystore to encrypt and store a new client key.");
-            errorDetailBuilder.withLogMsgFormatted("master-key");
-            errorDetailBuilder.withException(exception);
-            final ErrorDetail errorDetail = errorDetailBuilder.build();
-            throw new InternalServerErrorException(errorDetail);
-        }
-        if (null == masterKey) {
-            final ErrorCode errorCode = ErrorCode.MASTER_KEY_MISSING;
-            final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
-            errorDetailBuilder.withContext("While trying to get master key from keystore to encrypt a new client key and store it to the keystore.");
-            final ErrorDetail errorDetail = errorDetailBuilder.build();
-            throw new InternalServerErrorException(errorDetail);
-        }
+    public SecretKey getKey(String alias) {
+        return getKey(loader.load(), alias);
+    }
 
-        final Cipher cipher;
-        try {
-            cipher = Cipher.getInstance("AES");
-        } catch (final NoSuchAlgorithmException | NoSuchPaddingException exception) {
-            final ErrorCode errorCode = ErrorCode.AES_CIPHER_INSTANCE_FAILED;
-            final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
-            errorDetailBuilder.withContext("While preparing AES cipher to encrypt the client key using the master key.");
-            errorDetailBuilder.withException(exception);
-            final ErrorDetail errorDetail = errorDetailBuilder.build();
-            throw new InternalServerErrorException(errorDetail);
-        }
-        
-        try {
-            cipher.init(Cipher.WRAP_MODE, masterKey);
-        } catch (final InvalidKeyException | UnsupportedOperationException | InvalidParameterException exception) {
-            final ErrorCode errorCode = ErrorCode.AES_CIPHER_INIT_FAILED;
-            final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
-            errorDetailBuilder.withContext("While initializing AES cipher in WRAP_MODE using the master key.");
-            errorDetailBuilder.withException(exception);
-            final ErrorDetail errorDetail = errorDetailBuilder.build();
-            throw new InternalServerErrorException(errorDetail);
-        }
-        
-        final byte[] encryptedKey;
-        try {
-            encryptedKey = cipher.wrap(key);
-        } catch (final IllegalStateException | IllegalBlockSizeException | InvalidKeyException | UnsupportedOperationException exception) {
-            final ErrorCode errorCode = ErrorCode.AES_KEY_WRAP_FAILED;
-            final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
-            errorDetailBuilder.withContext("While wrapping the client key using AES and the initialized cipher.");
-            errorDetailBuilder.withException(exception);
-            final ErrorDetail errorDetail = errorDetailBuilder.build();
-            throw new InternalServerErrorException(errorDetail);
-        }
-
-        final SecretKeySpec encryptedKeySpec = new SecretKeySpec(encryptedKey, "AES");
-        final SecretKeyEntry keyEntry = new SecretKeyEntry(encryptedKeySpec);
-        final ProtectionParameter protection = new PasswordProtection(passwordChars);
+    private void storeWrappedKey(final KeyStore ks, final String alias, final byte[] encrypted) {
+        final char[] password = System.getenv("KEYSTORE_PASSWORD").toCharArray();
 
         try {
-            keystore.setEntry(alias, keyEntry, protection);
+            final SecretKeySpec encryptedKeySpec = new SecretKeySpec(encrypted, "AES");
+            final KeyStore.SecretKeyEntry entry = new KeyStore.SecretKeyEntry(encryptedKeySpec);
+            final KeyStore.ProtectionParameter protection = new KeyStore.PasswordProtection(password);
+            ks.setEntry(alias, entry, protection);
         } catch (final KeyStoreException exception) {
             final ErrorCode errorCode = ErrorCode.SETTING_KEYSTORE_ENTRY_FAILED;
             final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
-            final String context = String.format(
-                    "While trying to store encrypted client key with alias '%s' in keystore.",
-                    alias
-            );
-            errorDetailBuilder.withContext(context);
-            errorDetailBuilder.withException(exception);
-            final ErrorDetail errorDetail = errorDetailBuilder.build();
-            throw new InternalServerErrorException(errorDetail);
-
-        } finally {
-            Arrays.fill(passwordChars, '\0'); // OWASP [199]
-        }
-
-        this.saveKeyStore(keystore); // eigene Methode mit eigenem ErrorCode
-    }
-
-    /**
-     * 
-     * @return KeyStore instance loaded from the keystore file.
-     * @throws InternalServerErrorException if there is an error loading the keystore.
-     * 
-     * SecureCodingPractices
-     * - OWASP [102] Master secret (KeyStore) protection
-     * - OWASP [194] Carefully handle sensitive data (keystore password), wiping char arrays after use
-     * - OWASP [199] Resources (File streams) properly closed using try-with-resources
-     */
-    public final KeyStore loadKeyStore() {
-        System.out.println("loadKeyStore");
-        final KeyStore keystore;
-        try {
-            keystore = KeyStore.getInstance("PKCS12");
-        } catch (final KeyStoreException exception) {
-            final ErrorCode errorCode = ErrorCode.KEYSTORE_TYPE_UNSUPPORTED;
-            final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
-            errorDetailBuilder.withContext("While creating keystore instance for loading the keystore from file.");
-            errorDetailBuilder.withException(exception);
-            final ErrorDetail errorDetail = errorDetailBuilder.build();
-            throw new InternalServerErrorException(errorDetail);
-        }
-    
-        final File keystoreFile = new File(KEYSTORE_PATH);
-        final String keystorePassword = System.getenv("KEYSTORE_PASSWORD");
-        final char[] passwordChars = keystorePassword.toCharArray();
-
-        final String absolutePath = keystoreFile.getAbsolutePath();
-        try (final FileInputStream fis = new FileInputStream(absolutePath)) {
-            try {
-                keystore.load(fis, passwordChars);
-            } catch (final IOException | NoSuchAlgorithmException | CertificateException exception) {
-                final ErrorCode errorCode = ErrorCode.KEYSTORE_LOADING_FAILED;
-                final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
-                errorDetailBuilder.withContext("While loading keystore data from file into memory.");
-                errorDetailBuilder.withException(exception);
-                final ErrorDetail errorDetail = errorDetailBuilder.build();
-                throw new InternalServerErrorException(errorDetail);
-            }
-            return keystore;
-        } catch (final IOException | SecurityException exception) {
-            final ErrorCode errorCode = ErrorCode.KEYSTORE_FILE_READ_FAILED;
-            final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
-            errorDetailBuilder.withContext("While opening keystore file for reading.");
-            errorDetailBuilder.withException(exception);
-            final ErrorDetail errorDetail = errorDetailBuilder.build();
-            throw new InternalServerErrorException(errorDetail);
-        } finally {
-            Arrays.fill(passwordChars, '\0');
-        }
-    }
-
-    /**
-     * 
-     * @param keystore The KeyStore instance to be saved to the keystore file.
-     * @throws InternalServerErrorException if there is an error saving the keystore.
-     * SecureCodingPractices
-     * - OWASP [102] Ensure keystore is always stored securely
-     * - OWASP [199]
-     */
-    public final void saveKeyStore(final KeyStore keystore) {
-        System.out.println("saveKeyStore");
-        final File keystoreFile = new File(KEYSTORE_PATH);
-        final String keystorePassword = System.getenv("KEYSTORE_PASSWORD");
-        final char[] passwordChars = keystorePassword.toCharArray();
-
-        final String absolutePath = keystoreFile.getAbsolutePath();
-        try (final FileOutputStream fos = new FileOutputStream(absolutePath)) {
-            try {
-                keystore.store(fos, passwordChars);
-            } catch (final KeyStoreException | IOException | NoSuchAlgorithmException | CertificateException exception) {
-                final ErrorCode errorCode = ErrorCode.KEYSTORE_SAVE_FAILED;
-                final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
-                errorDetailBuilder.withContext("While storing keystore data to file.");
-                errorDetailBuilder.withException(exception);
-                final ErrorDetail errorDetail = errorDetailBuilder.build();
-                throw new InternalServerErrorException(errorDetail);
-            }
-        } catch (final IOException | SecurityException exception) {
-            final ErrorCode errorCode = ErrorCode.KEYSTORE_FILE_WRITE_FAILED;
-            final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
-            errorDetailBuilder.withContext("While opening keystore file for writing.");
-            errorDetailBuilder.withException(exception);
-            final ErrorDetail errorDetail = errorDetailBuilder.build();
-            throw new InternalServerErrorException(errorDetail);
-        } finally {
-            Arrays.fill(passwordChars, '\0'); // OWASP [199]
-        }
-    }
-
-    /**
-     * Retrieves a client key from the keystore, decrypting it using the master key.
-     *
-     * @param alias The alias of the client key to be retrieved.
-     * @return The decrypted SecretKey associated with the specified alias.
-     * @throws InternalServerErrorException if there is an error accessing or decrypting the key.
-     * SecureCodingPractices
-     * - OWASP [102] Master secret (KeyStore) protection
-     * - OWASP [106] Centralized key storage and retrieval logic (KeyStore as secure container)
-     * - OWASP [133] Stored keys are encrypted (with master key wrapping)
-     * - OWASP [194] Carefully handle sensitive data (keystore password), wiping char arrays after use
-     */
-    public final SecretKey getClientKey(final String alias) {
-        System.out.println("getClientKey");
-        final KeyStore keystore = this.loadKeyStore();
-        final String keystorePassword = System.getenv("KEYSTORE_PASSWORD");
-        final char[] passwordChars = keystorePassword.toCharArray();
-
-        final SecretKey encryptedKey;
-        try {
-            encryptedKey = (SecretKey) keystore.getKey(alias, passwordChars);
-        } catch (final KeyStoreException | NoSuchAlgorithmException | UnrecoverableKeyException exception) {
-            final ErrorCode errorCode = ErrorCode.KEYSTORE_KEY_ACCESS_FAILED;
-            final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
-            final String context = String.format(
-                    "While accessing encrypted client key for alias '%s' in keystore.",
-                    alias
-            );
+            final String context = String.format("Storing encrypted key under alias: '%s'", alias);
             errorDetailBuilder.withContext(context);
             errorDetailBuilder.withLogMsgFormatted(alias);
             errorDetailBuilder.withException(exception);
             final ErrorDetail errorDetail = errorDetailBuilder.build();
             throw new InternalServerErrorException(errorDetail);
-        }
-
-        SecretKey masterKey;
-        try {
-            masterKey = (SecretKey) keystore.getKey("master-key", passwordChars);
-        } catch (final KeyStoreException | NoSuchAlgorithmException | UnrecoverableKeyException exception) {
-            final ErrorCode errorCode = ErrorCode.KEYSTORE_KEY_ACCESS_FAILED;
-            final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
-            errorDetailBuilder.withContext("While accessing master key from keystore to decrypt client key.");
-            errorDetailBuilder.withLogMsgFormatted("master-key");
-            errorDetailBuilder.withException(exception);
-            final ErrorDetail errorDetail = errorDetailBuilder.build();
-            throw new InternalServerErrorException(errorDetail);
         } finally {
-            Arrays.fill(passwordChars, '\0');
+            Arrays.fill(password, '\0');
         }
-
-        final Cipher cipher;
-        try {
-            cipher = Cipher.getInstance("AES");
-        } catch (final NoSuchAlgorithmException | NoSuchPaddingException exception) {
-            final ErrorCode errorCode = ErrorCode.AES_CIPHER_INSTANCE_FAILED;
-            final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
-            errorDetailBuilder.withContext("While preparing AES cipher for client key decryption.");
-            errorDetailBuilder.withException(exception);
-            final ErrorDetail errorDetail = errorDetailBuilder.build();
-            throw new InternalServerErrorException(errorDetail);
-        }
-
-        try {
-            cipher.init(Cipher.UNWRAP_MODE, masterKey);
-        } catch (final InvalidKeyException | UnsupportedOperationException | InvalidParameterException exception) {
-            final ErrorCode errorCode = ErrorCode.AES_CIPHER_INIT_FAILED;
-            final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
-            errorDetailBuilder.withContext("While initializing AES cipher in UNWRAP_MODE to decrypt client key.");
-            errorDetailBuilder.withException(exception);
-            final ErrorDetail errorDetail = errorDetailBuilder.build();
-            throw new InternalServerErrorException(errorDetail);
-        }
-
-        final SecretKey decryptedKey;
-        try {
-            final byte[] encryptedKeyEncoded = encryptedKey.getEncoded();
-            decryptedKey = (SecretKey) cipher.unwrap(encryptedKeyEncoded, "AES", Cipher.SECRET_KEY);
-        } catch (final IllegalStateException | NoSuchAlgorithmException | InvalidKeyException | UnsupportedOperationException exception) {
-            final ErrorCode errorCode = ErrorCode.CLIENT_KEY_UNWRAP_FAILED;
-            final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
-            errorDetailBuilder.withContext("While unwrapping (decrypting) client key using master key and AES cipher.");
-            errorDetailBuilder.withException(exception);
-            final ErrorDetail errorDetail = errorDetailBuilder.build();
-            throw new InternalServerErrorException(errorDetail);
-        }
-        return decryptedKey;
     }
 
-    /**
-     * Retrieves a key from the keystore by its alias.
-     *
-     * @param alias The alias of the key to be retrieved.
-     * @return The SecretKey associated with the specified alias.
-     * @throws InternalServerErrorException if there is an error accessing the key.
-     * SecureCodingPractices
-     * - OWASP [102] Master secret (KeyStore) protection
-     * - OWASP [106] Centralized key storage and retrieval logic (KeyStore as secure container)
-     * - OWASP [194] Carefully handle sensitive data (keystore password), wiping char arrays after use
-     */
-    public final SecretKey getKey(final String alias) {
-        System.out.println("getKey");
-        final KeyStore keystore = this.loadKeyStore();
-        final String keystorePassword = System.getenv("KEYSTORE_PASSWORD");
-        final char[] passwordChars = keystorePassword.toCharArray();
+    private SecretKey getKey(final KeyStore ks, final String alias) {
+        final char[] password = System.getenv("KEYSTORE_PASSWORD").toCharArray();
+
         try {
-            return (SecretKey) keystore.getKey(alias, passwordChars);
+            return (SecretKey) ks.getKey(alias, password);
         } catch (final KeyStoreException | NoSuchAlgorithmException | UnrecoverableKeyException exception) {
             final ErrorCode errorCode = ErrorCode.KEYSTORE_KEY_ACCESS_FAILED;
             final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
-            final String context = String.format(
-                    "While accessing key with alias '%s' from keystore.",
-                    alias
-            );
+            final String context = String.format("Retrieving key under alias: '%s' from keystore.", alias);
             errorDetailBuilder.withContext(context);
             errorDetailBuilder.withLogMsgFormatted(alias);
             errorDetailBuilder.withException(exception);
             final ErrorDetail errorDetail = errorDetailBuilder.build();
             throw new InternalServerErrorException(errorDetail);
-
         } finally {
-            Arrays.fill(passwordChars, '\0'); // OWASP [199]
+            Arrays.fill(password, '\0');
         }
     }
 }

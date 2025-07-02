@@ -37,6 +37,7 @@ public class KeyStoreInitializer {
     private static final int KEY_SIZE = 256;
 
     private final KeyStoreHelper keyStoreHelper;
+    private final KeyStoreLoader keyStoreLoader;
 
     // OWASP [102] Ensuring master secrets (master-key & jwt-signing-key) are protected and initialized
     /**
@@ -75,7 +76,7 @@ public class KeyStoreInitializer {
      * - OWASP [106] Key management initialization (ensures master and signing keys)
      */
     private boolean checkContainsAlias(final String alias) {
-        final KeyStore keystore = this.keyStoreHelper.loadKeyStore();
+        final KeyStore keystore = this.keyStoreLoader.load();
 
         try {
             return !keystore.containsAlias(alias);

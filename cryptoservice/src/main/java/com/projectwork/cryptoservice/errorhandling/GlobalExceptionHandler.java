@@ -1,4 +1,4 @@
-package com.projectwork.cryptoservice.errorhandling.handling;
+package com.projectwork.cryptoservice.errorhandling;
 
 import com.projectwork.cryptoservice.errorhandling.util.ErrorDetailBuilder;
 import org.slf4j.Logger;

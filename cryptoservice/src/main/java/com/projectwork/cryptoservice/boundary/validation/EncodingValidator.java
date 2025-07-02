@@ -4,6 +4,8 @@ import com.projectwork.cryptoservice.errorhandling.exceptions.BadRequestExceptio
 import com.projectwork.cryptoservice.errorhandling.util.ErrorCode;
 import com.projectwork.cryptoservice.errorhandling.util.ErrorDetail;
 import com.projectwork.cryptoservice.errorhandling.util.ErrorDetailBuilder;
+import com.projectwork.cryptoservice.logging.CustomLogger;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -12,9 +14,10 @@ import org.springframework.stereotype.Component;
  * Validator for checking the encoding of fields, specifically to ensure that they do not contain Unicode escape sequences.
  */
 @Component
+@RequiredArgsConstructor
 public class EncodingValidator {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(EncodingValidator.class);
+    private final CustomLogger customLogger;
 
     /**
      * Validates that the given field does not contain any Unicode escape sequences.
@@ -29,6 +32,7 @@ public class EncodingValidator {
             final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
             errorDetailBuilder.withUserMsgFormatted(name);
             final ErrorDetail errorDetail = errorDetailBuilder.build();
+            this.customLogger.logValidationError(errorDetail);
             throw new BadRequestException(errorDetail);
         }
     }
