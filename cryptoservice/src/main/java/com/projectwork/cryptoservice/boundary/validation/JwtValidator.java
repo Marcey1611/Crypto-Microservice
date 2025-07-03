@@ -7,8 +7,6 @@ import com.projectwork.cryptoservice.errorhandling.util.ErrorDetailBuilder;
 import com.projectwork.cryptoservice.logging.CustomLogger;
 import io.jsonwebtoken.*;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
@@ -41,7 +39,7 @@ public class JwtValidator {
             final ErrorCode errorCode = ErrorCode.INVALID_JWT;
             final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
             final ErrorDetail errorDetail = errorDetailBuilder.build();
-            this.customLogger.logValidationError(errorDetail);
+            this.customLogger.logError(errorDetail);
             throw new BadRequestException(errorDetail);
         }
     }
@@ -62,7 +60,7 @@ public class JwtValidator {
             final ErrorCode errorCode = ErrorCode.INVALID_JWT;
             final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
             final ErrorDetail errorDetail = errorDetailBuilder.build();
-            this.customLogger.logValidationError(errorDetail);
+            this.customLogger.logError(errorDetail);
             throw new BadRequestException(errorDetail);
         }
     }
@@ -78,7 +76,7 @@ public class JwtValidator {
             final ErrorCode errorCode = ErrorCode.EXPIRED_JWT;
             final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
             final ErrorDetail errorDetail = errorDetailBuilder.build();
-            this.customLogger.logValidationError(errorDetail);
+            this.customLogger.logError(errorDetail);
             throw new BadRequestException(errorDetail);
         }
     }

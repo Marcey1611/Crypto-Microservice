@@ -17,7 +17,6 @@ import javax.crypto.SecretKey;
 @RequiredArgsConstructor
 public class EncryptValidator {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(EncryptValidator.class);
     private static final int PLAIN_TEXT_MAX_LENGTH = 2048;
     private static final int JWT_MAX_LENGTH = 4096;
 

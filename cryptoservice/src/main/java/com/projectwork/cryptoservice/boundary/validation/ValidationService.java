@@ -19,8 +19,6 @@ import java.util.Date;
 @RequiredArgsConstructor
 public class ValidationService {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ValidationService.class);
-
     private final FieldValidator fieldValidator;
     private final EncodingValidator encodingValidator;
     private final JwtValidator jwtValidator;

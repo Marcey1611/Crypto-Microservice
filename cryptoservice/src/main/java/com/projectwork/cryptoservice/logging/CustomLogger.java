@@ -10,7 +10,7 @@ public class CustomLogger {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CustomLogger.class);
 
-    public final void logValidationError(final ErrorDetail errorDetail) {
+    public final void logError(final ErrorDetail errorDetail) {
         final String code = errorDetail.getCode();
         final String logHeadline = errorDetail.getLogHeadline();
         final Throwable exception = errorDetail.getException();
@@ -18,7 +18,7 @@ public class CustomLogger {
         LOGGER.error("[{}] {}: {}", code, logHeadline, message);
     }
 
-    public final void logProductiveError(final ErrorDetail errorDetail) {
+    public final void logErrorWithException(final ErrorDetail errorDetail) {
         final String code = errorDetail.getCode();
         final String logHeadline = errorDetail.getLogHeadline();
         final Throwable exception = errorDetail.getException();

@@ -14,7 +14,6 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class JwtManagementValidator {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(JwtManagementValidator.class);
     private static final int ISSUED_TO_MAX_LENGTH = 64;
 
     private final ValidationService validationService;

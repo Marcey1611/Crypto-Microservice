@@ -7,6 +7,7 @@ import com.projectwork.cryptoservice.boundary.validation.EncryptValidator;
 import com.projectwork.cryptoservice.boundary.validation.JwtManagementValidator;
 import com.projectwork.cryptoservice.errorhandling.util.ErrorDetail;
 import com.projectwork.cryptoservice.errorhandling.util.ErrorDetailBuilder;
+import com.projectwork.cryptoservice.logging.CustomLogger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -47,6 +48,7 @@ import lombok.RequiredArgsConstructor;
 public class Controller implements EncryptAPI, DecryptAPI, KeyManagementAPI, JwtManagementAPI, TlsManagementAPI {
 
     private static final Logger logger = LoggerFactory.getLogger(Controller.class);
+    private final CustomLogger customLogger;
 
     private final EncryptFacade encryptFacade;
     private final DecryptFacade decryptFacade;
@@ -145,11 +147,11 @@ public class Controller implements EncryptAPI, DecryptAPI, KeyManagementAPI, Jwt
     // TODO update after new implementation of mtls
     private void checkClientNameExists(final String clientName) {
         if (!this.clientKeyRegistry.hasClient(clientName)) {
-            logger.warn("Client '{}' not found in registry", clientName);
             final ErrorCode errorCode = ErrorCode.CLIENT_NOT_FOUND;
             final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
             errorDetailBuilder.withUserMsgFormatted(clientName);
             final ErrorDetail errorDetail = errorDetailBuilder.build();
+            this.customLogger.logError(errorDetail);
             throw new BadRequestException(errorDetail);
         }
         logger.debug("Client '{}' found in registry", clientName);

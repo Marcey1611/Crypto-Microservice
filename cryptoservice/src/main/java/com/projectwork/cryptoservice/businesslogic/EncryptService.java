@@ -61,6 +61,7 @@ public class EncryptService {
      * @return an EncryptResultModel containing the encrypted ciphertext
      */
     public final EncryptResultModel encrypt(final EncryptModel encryptModel, final String clientName) {
+        LOGGER.info("Starting encryption process for client '{}'.", clientName);
         final String jwt = encryptModel.getJwt();
         final String keyAlias = this.jwtManagementService.extractClientKeyAlias(jwt);
 
@@ -77,7 +78,7 @@ public class EncryptService {
             final ErrorDetail errorDetail = errorDetailBuilder.build();
             throw new BadRequestException(errorDetail);
         }
-    
+
         final SecretKey clientKey = this.keyStoreHelper.getClientKey(keyAlias);
         if (null == clientKey) {
             final ErrorCode errorCode = ErrorCode.NO_CLIENT_KEY_FOUND_FOR_ALIAS;
@@ -87,14 +88,13 @@ public class EncryptService {
                     keyAlias
             );
             errorDetailBuilder.withContext(context);
-            errorDetailBuilder.withLogMsgFormatted(keyAlias);
             final ErrorDetail errorDetail = errorDetailBuilder.build();
             throw new BadRequestException(errorDetail);
         }
-    
-        final byte[] iv = this.generateIV();
 
+        final byte[] iv = this.generateIV();
         this.clientKeyRegistry.updateIvForClient(clientName, iv);
+
         final String plainText = encryptModel.getPlainText();
         final String cipherText = this.processEncryption(iv, clientKey, plainText);
         return this.resultModelsFactory.buildEncryptResultModel(cipherText);

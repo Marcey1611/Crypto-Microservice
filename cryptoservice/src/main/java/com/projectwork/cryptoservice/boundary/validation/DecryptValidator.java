@@ -17,7 +17,6 @@ import javax.crypto.SecretKey;
 @RequiredArgsConstructor
 public class DecryptValidator {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(DecryptValidator.class);
     private static final int JWT_MAX_LENGTH = 4096;
     private static final int CIPHER_TEXT_MAX_LENGTH = 2048;
 

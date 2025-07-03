@@ -6,8 +6,6 @@ import com.projectwork.cryptoservice.errorhandling.util.ErrorDetail;
 import com.projectwork.cryptoservice.errorhandling.util.ErrorDetailBuilder;
 import com.projectwork.cryptoservice.logging.CustomLogger;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.util.regex.Matcher;
@@ -39,7 +37,7 @@ public class FieldValidator {
             final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
             errorDetailBuilder.withUserMsgFormatted(name);
             final ErrorDetail errorDetail = errorDetailBuilder.build();
-            this.customLogger.logValidationError(errorDetail);
+            this.customLogger.logError(errorDetail);
             throw new BadRequestException(errorDetail);
         }
     }
@@ -58,7 +56,7 @@ public class FieldValidator {
             final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
             errorDetailBuilder.withUserMsgFormatted(name);
             final ErrorDetail errorDetail = errorDetailBuilder.build();
-            this.customLogger.logValidationError(errorDetail);
+            this.customLogger.logError(errorDetail);
             throw new BadRequestException(errorDetail);
         }
     }
@@ -77,7 +75,7 @@ public class FieldValidator {
             final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
             errorDetailBuilder.withUserMsgFormatted(name);
             final ErrorDetail errorDetail = errorDetailBuilder.build();
-            this.customLogger.logValidationError(errorDetail);
+            this.customLogger.logError(errorDetail);
             throw new BadRequestException(errorDetail);
         }
     }
@@ -96,7 +94,7 @@ public class FieldValidator {
             final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
             errorDetailBuilder.withUserMsgFormatted(name);
             final ErrorDetail errorDetail = errorDetailBuilder.build();
-            this.customLogger.logValidationError(errorDetail);
+            this.customLogger.logError(errorDetail);
             throw new BadRequestException(errorDetail);
         }
     }
