@@ -13,6 +13,8 @@ import javax.security.auth.DestroyFailedException;
 import java.security.KeyStore;
 import java.security.KeyStore.PasswordProtection;
 import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.UnrecoverableEntryException;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Optional;
@@ -32,28 +34,23 @@ public class KeyExpirationChecker {
 
     /**
      * Checks if a key with the given alias in the provided keystore is expired.
-     *
-     * @param keystore the KeyStore instance to check
-     * @param alias    the alias of the key to check
-     * @return true if the key is expired, false otherwise
      */
     public final boolean isExpired(final KeyStore keystore, final String alias) {
+        LOGGER.debug("Checking expiration status for alias '{}'", alias);
         final KeyStore.Entry entry = this.getEntry(keystore, alias);
         if (!(entry instanceof KeyStore.SecretKeyEntry)) {
+            LOGGER.debug("Alias '{}' is not a SecretKeyEntry – skipping expiration check", alias);
             return false;
         }
         final Date creationDate = this.getCreationDate(keystore, alias);
-        return System.currentTimeMillis() - creationDate.getTime() > EXPIRATION_TIME_MILLIS;
+        final long ageMillis = System.currentTimeMillis() - creationDate.getTime();
+        final boolean expired = ageMillis > EXPIRATION_TIME_MILLIS;
+        LOGGER.debug("Alias '{}' created at {}, expired: {}", alias, creationDate, expired);
+        return expired;
     }
 
     /**
-     * Retrieves KeyStore.Entry for the specified alias using password protection derived
-     * from the KEYSTORE_PASSWORD environment variable.
-     *
-     * @param keystore the keystore from which the entry should be retrieved
-     * @param alias    the alias of the key entry
-     * @return the corresponding KeyStore.Entry
-     * @throws InternalServerErrorException if the entry cannot be retrieved or the protection cannot be destroyed
+     * Retrieves KeyStore.Entry for the specified alias using password protection.
      */
     private KeyStore.Entry getEntry(final KeyStore keystore, final String alias) {
         final String envKeystorePassword = System.getenv(ENV_KEYSTORE_PASSWORD);
@@ -62,14 +59,16 @@ public class KeyExpirationChecker {
                 .orElse(new char[0]);
         final PasswordProtection protection = new PasswordProtection(passwordChars);
         Arrays.fill(passwordChars, '\0');
+
         try {
             return keystore.getEntry(alias, protection);
-        } catch (final Exception exception) {
+        } catch (final KeyStoreException | NoSuchAlgorithmException | UnrecoverableEntryException exception) {
             final ErrorCode errorCode = ErrorCode.GETTING_KEYSTORE_ENTRY_FAILED;
             final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
             errorDetailBuilder.withContext("While getting entry for alias: " + alias);
             errorDetailBuilder.withException(exception);
             final ErrorDetail errorDetail = errorDetailBuilder.build();
+            errorDetail.logErrorWithException();
             throw new InternalServerErrorException(errorDetail);
         } finally {
             this.destroyProtection(protection, alias);
@@ -78,10 +77,6 @@ public class KeyExpirationChecker {
 
     /**
      * Retrieves the creation date of the key with the given alias in the provided keystore.
-     *
-     * @param keystore the KeyStore instance to check
-     * @param alias    the alias of the key to check
-     * @return the creation date of the key
      */
     private Date getCreationDate(final KeyStore keystore, final String alias) {
         try {
@@ -92,18 +87,13 @@ public class KeyExpirationChecker {
             errorDetailBuilder.withContext("While getting creation date for alias: " + alias);
             errorDetailBuilder.withException(exception);
             final ErrorDetail errorDetail = errorDetailBuilder.build();
+            errorDetail.logErrorWithException();
             throw new InternalServerErrorException(errorDetail);
         }
     }
 
     /**
-     * Destroys the given PasswordProtection instance to securely erase sensitive credentials
-     * from memory. This helps prevent credential leakage by ensuring the underlying char array
-     * is explicitly cleared.
-     *
-     * @param protection the PasswordProtection object to be destroyed
-     * @param alias the alias associated with the protection, used for error context
-     * @throws InternalServerErrorException if the protection cannot be destroyed securely
+     * Destroys the given PasswordProtection instance securely.
      */
     private void destroyProtection(final PasswordProtection protection, final String alias) {
         try {
@@ -114,6 +104,7 @@ public class KeyExpirationChecker {
             errorDetailBuilder.withContext("While destroying protection for alias: " + alias);
             errorDetailBuilder.withException(exception);
             final ErrorDetail errorDetail = errorDetailBuilder.build();
+            errorDetail.logErrorWithException();
             throw new InternalServerErrorException(errorDetail);
         }
     }

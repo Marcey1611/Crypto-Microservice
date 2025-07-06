@@ -4,6 +4,8 @@ import com.projectwork.cryptoservice.errorhandling.exceptions.InternalServerErro
 import com.projectwork.cryptoservice.errorhandling.util.ErrorCode;
 import com.projectwork.cryptoservice.errorhandling.util.ErrorDetail;
 import com.projectwork.cryptoservice.errorhandling.util.ErrorDetailBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -22,6 +24,7 @@ import java.util.Arrays;
  */
 @Component
 public class KeyStoreLoader {
+    private static final Logger LOGGER = LoggerFactory.getLogger(KeyStoreLoader.class);
     private static final String KEYSTORE_PATH = System.getenv("KEYSTORE_PATH");
     private static final String KEYSTORE_PASSWORD = System.getenv("KEYSTORE_PASSWORD");
 
@@ -36,10 +39,13 @@ public class KeyStoreLoader {
         final char[] passwordChars = KEYSTORE_PASSWORD.toCharArray();
         final String absolutePath = keystoreFile.getAbsolutePath();
 
+        LOGGER.debug("Attempting to load keystore from path '{}'", absolutePath);
+
         try (final FileInputStream fis = new FileInputStream(absolutePath)) {
             final KeyStore keystore = KeyStore.getInstance("PKCS12");
             try {
                 keystore.load(fis, passwordChars);
+                LOGGER.info("Keystore successfully loaded from '{}'", absolutePath);
             } catch (final IOException | NoSuchAlgorithmException | CertificateException exception) {
                 throw this.createException(ErrorCode.KEYSTORE_LOADING_FAILED, "While loading keystore data from file into memory.", exception);
             }
@@ -64,9 +70,12 @@ public class KeyStoreLoader {
         final char[] passwordChars = KEYSTORE_PASSWORD.toCharArray();
         final String absolutePath = keystoreFile.getAbsolutePath();
 
+        LOGGER.debug("Attempting to save keystore to path '{}'", absolutePath);
+
         try (final FileOutputStream fos = new FileOutputStream(absolutePath)) {
             try {
                 keystore.store(fos, passwordChars);
+                LOGGER.info("Keystore successfully saved to '{}'", absolutePath);
             } catch (final KeyStoreException | IOException | NoSuchAlgorithmException | CertificateException exception) {
                 throw this.createException(ErrorCode.KEYSTORE_SAVE_FAILED, "While storing keystore data to file.", exception);
             }
@@ -82,6 +91,7 @@ public class KeyStoreLoader {
         errorDetailBuilder.withContext(context);
         errorDetailBuilder.withException(exception);
         final ErrorDetail errorDetail = errorDetailBuilder.build();
+        errorDetail.logErrorWithException();
         return new InternalServerErrorException(errorDetail);
     }
 }

@@ -49,19 +49,27 @@ public class KeyManagementService {
      * - OWASP [101] JWT generation and signing (done on server-side)
      */
     public final GenerateKeyResultModel generateKey(final GenerateKeyModel generateKeyModel) {
-        System.out.println("generateKey");
         final String clientName = generateKeyModel.getClientName();
+        LOGGER.info("Starting key generation for client '{}'", clientName);
+
         final boolean clientNameExist = this.clientKeyRegistry.hasClient(clientName);
         if (clientNameExist) {
-            //TODO Logging System.out.println("Key already exists for client: " + clientName);
             final String message = String.format("Key already exists for client: '%s'", clientName);
+            LOGGER.warn("Key generation skipped: {}", message);
             return this.resultModelsFactory.buildGenerateKeyResultModel(message);
         }
 
         final SecretKey aesKey = this.generateRandomKey();
-        final String keyAlias = this.generateRandomKeyAlias(); // OWASP [104] SecureRandom for unguessable alias
+        LOGGER.debug("Random AES key generated for client '{}'", clientName);
+
+        final String keyAlias = this.generateRandomKeyAlias();
+        LOGGER.debug("Random key alias generated for client '{}': {}", clientName, keyAlias);
+
         this.keyStoreHelper.storeKey(keyAlias, aesKey);
+        LOGGER.info("Key stored in KeyStore for client '{}', alias '{}'", clientName, keyAlias);
+
         this.clientKeyRegistry.registerClientKey(clientName, keyAlias);
+        LOGGER.info("Client '{}' registered with alias '{}'", clientName, keyAlias);
 
         final String message = String.format("Key generated for client: '%s'", clientName);
         return this.resultModelsFactory.buildGenerateKeyResultModel(message);
@@ -74,7 +82,6 @@ public class KeyManagementService {
      * @throws InternalServerErrorException if there is an error during key generation.
      */
     private SecretKey generateRandomKey() {
-        System.out.println("generateRandomKey");
         final SecureRandom secureRandom;
         try {
             secureRandom = SecureRandom.getInstanceStrong();
@@ -84,6 +91,7 @@ public class KeyManagementService {
             errorDetailBuilder.withContext("While generating a random client key.");
             errorDetailBuilder.withException(exception);
             final ErrorDetail errorDetail = errorDetailBuilder.build();
+            errorDetail.logError();
             throw new InternalServerErrorException(errorDetail);
         }
     
@@ -96,10 +104,11 @@ public class KeyManagementService {
             errorDetailBuilder.withContext("While preparing AES key generator for client key creation.");
             errorDetailBuilder.withException(exception);
             final ErrorDetail errorDetail = errorDetailBuilder.build();
+            errorDetail.logErrorWithException();
             throw new InternalServerErrorException(errorDetail);
         }
-    
-        keyGen.init(KEY_SIZE, secureRandom); // [OWASP 104]
+
+        keyGen.init(KEY_SIZE, secureRandom);
         return keyGen.generateKey();
     }
 
@@ -110,7 +119,6 @@ public class KeyManagementService {
      * @throws InternalServerErrorException if there is an error during secure random generation.
      */
     private String generateRandomKeyAlias() {
-        System.out.println("generateRandomKeyAlias");
         final SecureRandom secureRandom;
         try {
             secureRandom = SecureRandom.getInstanceStrong();
@@ -120,10 +128,11 @@ public class KeyManagementService {
             errorDetailBuilder.withContext("While generating a random client key alias.");
             errorDetailBuilder.withException(exception);
             final ErrorDetail errorDetail = errorDetailBuilder.build();
+            errorDetail.logErrorWithException();
             throw new InternalServerErrorException(errorDetail);
         }
         final byte[] randomBytes = new byte[16];
         secureRandom.nextBytes(randomBytes);
-        return Base64.getUrlEncoder().withoutPadding().encodeToString(randomBytes).toLowerCase(); // OWASP [104] SecureRandom for unguessable alias
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(randomBytes).toLowerCase();
     }
 }

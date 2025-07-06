@@ -4,7 +4,6 @@ import com.projectwork.cryptoservice.errorhandling.exceptions.BadRequestExceptio
 import com.projectwork.cryptoservice.errorhandling.util.ErrorCode;
 import com.projectwork.cryptoservice.errorhandling.util.ErrorDetail;
 import com.projectwork.cryptoservice.errorhandling.util.ErrorDetailBuilder;
-import com.projectwork.cryptoservice.logging.CustomLogger;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -16,7 +15,6 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class JwtClaimsValidator {
 
-    private final CustomLogger customLogger;
 
     private static final int MAX_LENGTH = 64;
     private final FieldValidator fieldValidator;
@@ -37,8 +35,9 @@ public class JwtClaimsValidator {
         if ("none".equalsIgnoreCase(alg)) {
             final ErrorCode errorCode = ErrorCode.INSECURE_JWT_ALGO;
             final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
+            errorDetailBuilder.withContext("While validating JWT algorithm from header.");
             final ErrorDetail errorDetail = errorDetailBuilder.build();
-            this.customLogger.logError(errorDetail);
+            errorDetail.logError();
             throw new BadRequestException(errorDetail);
         }
     }

@@ -21,6 +21,7 @@ import javax.crypto.spec.SecretKeySpec;
 
 import com.projectwork.cryptoservice.errorhandling.util.ErrorDetail;
 import com.projectwork.cryptoservice.errorhandling.util.ErrorDetailBuilder;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -39,45 +40,60 @@ import com.projectwork.cryptoservice.errorhandling.util.ErrorCode;
  * - OWASP [199] Resources (File streams) properly closed using try-with-resources
  */
 @Component
+@RequiredArgsConstructor
 public class KeyStoreHelper {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(KeyStoreHelper.class);
 
     private final KeyStoreLoader loader;
     private final MasterKeyService masterKeyService;
     private final ClientKeyEncryptor encryptor;
 
-    public KeyStoreHelper(KeyStoreLoader loader, MasterKeyService masterKeyService, ClientKeyEncryptor encryptor) {
-        this.loader = loader;
-        this.masterKeyService = masterKeyService;
-        this.encryptor = encryptor;
+    public final void storeKey(final String alias, final SecretKey clientKey) {
+        LOGGER.debug("Storing key for alias '{}'", alias);
+
+        final KeyStore ks = this.loader.load();
+        final SecretKey masterKey = this.masterKeyService.retrieveMasterKey(ks);
+        final byte[] encrypted = this.encryptor.encrypt(clientKey, masterKey);
+
+        this.storeWrappedKey(ks, alias, encrypted);
+        this.loader.save(ks);
+
+        LOGGER.info("Key stored and saved in keystore for alias '{}'", alias);
     }
 
-    public void storeKey(String alias, SecretKey clientKey) {
-        KeyStore ks = loader.load();
-        SecretKey masterKey = masterKeyService.retrieveMasterKey(ks);
-        byte[] encrypted = encryptor.encrypt(clientKey, masterKey);
-        storeWrappedKey(ks, alias, encrypted);
-        loader.save(ks);
+    public final SecretKey getClientKey(final String alias) {
+        LOGGER.debug("Retrieving and decrypting client key for alias '{}'", alias);
+
+        final KeyStore ks = this.loader.load();
+        final SecretKey masterKey = this.masterKeyService.retrieveMasterKey(ks);
+        final SecretKey encryptedKey = this.getKey(ks, alias);
+        final byte[] encoded = encryptedKey.getEncoded();
+        final SecretKey decrypted = this.encryptor.decrypt(encoded, masterKey);
+
+        LOGGER.info("Client key successfully retrieved and decrypted for alias '{}'", alias);
+        return decrypted;
     }
 
-    public SecretKey getClientKey(String alias) {
-        KeyStore ks = loader.load();
-        SecretKey masterKey = masterKeyService.retrieveMasterKey(ks);
-        SecretKey encryptedKey = getKey(ks, alias);
-        return encryptor.decrypt(encryptedKey.getEncoded(), masterKey);
-    }
-
-    public SecretKey getKey(String alias) {
-        return getKey(loader.load(), alias);
+    public final SecretKey getKey(final String alias) {
+        LOGGER.debug("Retrieving key (raw) for alias '{}'", alias);
+        final KeyStore keyStore = this.loader.load();
+        final SecretKey key = this.getKey(keyStore, alias);
+        LOGGER.info("Key successfully retrieved for alias '{}'", alias);
+        return key;
     }
 
     private void storeWrappedKey(final KeyStore ks, final String alias, final byte[] encrypted) {
-        final char[] password = System.getenv("KEYSTORE_PASSWORD").toCharArray();
+        final String keystorePassword = System.getenv("KEYSTORE_PASSWORD");
+        final char[] password = keystorePassword.toCharArray();
 
         try {
+            LOGGER.debug("Storing wrapped key in keystore under alias '{}'", alias);
             final SecretKeySpec encryptedKeySpec = new SecretKeySpec(encrypted, "AES");
-            final KeyStore.SecretKeyEntry entry = new KeyStore.SecretKeyEntry(encryptedKeySpec);
-            final KeyStore.ProtectionParameter protection = new KeyStore.PasswordProtection(password);
+            final SecretKeyEntry entry = new SecretKeyEntry(encryptedKeySpec);
+            final ProtectionParameter protection = new PasswordProtection(password);
             ks.setEntry(alias, entry, protection);
+            LOGGER.debug("Wrapped key stored successfully under alias '{}'", alias);
         } catch (final KeyStoreException exception) {
             final ErrorCode errorCode = ErrorCode.SETTING_KEYSTORE_ENTRY_FAILED;
             final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
@@ -86,6 +102,7 @@ public class KeyStoreHelper {
             errorDetailBuilder.withLogMsgFormatted(alias);
             errorDetailBuilder.withException(exception);
             final ErrorDetail errorDetail = errorDetailBuilder.build();
+            errorDetail.logErrorWithException();
             throw new InternalServerErrorException(errorDetail);
         } finally {
             Arrays.fill(password, '\0');
@@ -93,9 +110,11 @@ public class KeyStoreHelper {
     }
 
     private SecretKey getKey(final KeyStore ks, final String alias) {
-        final char[] password = System.getenv("KEYSTORE_PASSWORD").toCharArray();
+        final String keystorePassword = System.getenv("KEYSTORE_PASSWORD");
+        final char[] password = keystorePassword.toCharArray();
 
         try {
+            LOGGER.debug("Accessing KeyStore entry for alias '{}'", alias);
             return (SecretKey) ks.getKey(alias, password);
         } catch (final KeyStoreException | NoSuchAlgorithmException | UnrecoverableKeyException exception) {
             final ErrorCode errorCode = ErrorCode.KEYSTORE_KEY_ACCESS_FAILED;
@@ -105,6 +124,7 @@ public class KeyStoreHelper {
             errorDetailBuilder.withLogMsgFormatted(alias);
             errorDetailBuilder.withException(exception);
             final ErrorDetail errorDetail = errorDetailBuilder.build();
+            errorDetail.logErrorWithException();
             throw new InternalServerErrorException(errorDetail);
         } finally {
             Arrays.fill(password, '\0');

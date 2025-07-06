@@ -7,9 +7,7 @@ import java.security.InvalidParameterException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 
-import javax.crypto.Cipher;
-import javax.crypto.NoSuchPaddingException;
-import javax.crypto.SecretKey;
+import javax.crypto.*;
 import javax.crypto.spec.GCMParameterSpec;
 
 import com.projectwork.cryptoservice.errorhandling.util.ErrorDetail;
@@ -30,13 +28,6 @@ import com.projectwork.cryptoservice.errorhandling.util.ErrorCode;
 
 import lombok.RequiredArgsConstructor;
 
-//TODO refactoring too complex (methods)
-/**
- * DecryptService class that handles the decryption process.
- * It uses JwtManagementService to extract information from JWT,
- * KeyStoreHelper to retrieve client keys, and ClientKeyRegistry
- * to manage client key aliases and IVs.
- */
 @RequiredArgsConstructor
 @Service
 public class DecryptService {
@@ -51,26 +42,18 @@ public class DecryptService {
     private final ClientKeyRegistry clientKeyRegistry;
     private final ResultModelsFactory resultModelsFactory;
 
-    /**
-     * Decrypts the provided cipher text using the client key and IV extracted from the JWT.
-     *
-     * @param decryptModel the model containing the cipher text and JWT
-     * @param clientName the name of the client making the request
-     * @return a DecryptResultModel containing the decrypted plain text
-     */
     public final DecryptResultModel decrypt(final DecryptModel decryptModel, final String clientName) {
+        LOGGER.info("Starting decryption for client '{}'.", clientName);
+
         final String jwt = decryptModel.getJwt();
         final String issuedTo = this.jwtManagementService.extractIssuedTo(jwt);
         if(!issuedTo.equals(clientName)) {
             final ErrorCode errorCode = ErrorCode.CLIENT_NAME_MISMATCH_ISSUED_TO;
             final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
-            final String context = String.format(
-                    "JWT issuedTo='%s' does not match clientName='%s'",
-                    issuedTo,
-                    clientName
-            );
+            final String context = String.format("JWT issuedTo='%s' does not match clientName='%s'", issuedTo, clientName);
             errorDetailBuilder.withContext(context);
             final ErrorDetail errorDetail = errorDetailBuilder.build();
+            LOGGER.warn("Client name mismatch: {}", context);
             throw new BadRequestException(errorDetail);
         }
 
@@ -80,6 +63,7 @@ public class DecryptService {
             final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
             errorDetailBuilder.withContext("While extracting client key alias from JWT.");
             final ErrorDetail errorDetail = errorDetailBuilder.build();
+            LOGGER.warn("Client key alias is missing in JWT.");
             throw new BadRequestException(errorDetail);
         }
 
@@ -87,13 +71,11 @@ public class DecryptService {
         if(null == clientKey) {
             final ErrorCode errorCode = ErrorCode.NO_CLIENT_KEY_FOUND_FOR_ALIAS;
             final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
-            final String context = String.format(
-                    "While retrieving client key for alias '%s'.",
-                    keyAlias
-            );
+            final String context = String.format("While retrieving client key for alias '%s'.", keyAlias);
             errorDetailBuilder.withContext(context);
             errorDetailBuilder.withLogMsgFormatted(keyAlias);
             final ErrorDetail errorDetail = errorDetailBuilder.build();
+            LOGGER.warn("No client key found for alias '{}'.", keyAlias);
             throw new BadRequestException(errorDetail);
         }
 
@@ -101,13 +83,11 @@ public class DecryptService {
         if (null == clientNameFromKeyAlias) {
             final ErrorCode errorCode = ErrorCode.CLIENT_NAME_BY_ALIAS_NOT_FOUND;
             final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
-            final String context = String.format(
-                    "While mapping key alias '%s' to client name.",
-                    keyAlias
-            );
+            final String context = String.format("While mapping key alias '%s' to client name.", keyAlias);
             errorDetailBuilder.withContext(context);
             errorDetailBuilder.withLogMsgFormatted(keyAlias);
             final ErrorDetail errorDetail = errorDetailBuilder.build();
+            LOGGER.warn("Client name not found for key alias '{}'.", keyAlias);
             throw new BadRequestException(errorDetail);
         }
 
@@ -115,33 +95,25 @@ public class DecryptService {
         if (null == iv) {
             final ErrorCode errorCode = ErrorCode.IV_NOT_FOUND_FOR_CLIENT;
             final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
-            final String context = String.format(
-                    "While retrieving IV for client with alias '%s'.",
-                    keyAlias
-            );
+            final String context = String.format("While retrieving IV for client with alias '%s'.", keyAlias);
             errorDetailBuilder.withContext(context);
             errorDetailBuilder.withLogMsgFormatted(clientNameFromKeyAlias);
             final ErrorDetail errorDetail = errorDetailBuilder.build();
+            LOGGER.warn("IV not found for client '{}'.", clientNameFromKeyAlias);
             throw new BadRequestException(errorDetail);
         }
 
         final String cipherText = decryptModel.getCipherText();
         final String plainText = this.processDecryption(iv, clientKey, cipherText);
+        LOGGER.info("Decryption completed for client '{}'.", clientName);
         return this.resultModelsFactory.buildDecryptResultModel(plainText);
     }
 
-    /**
-     * Processes the decryption of the cipher text using AES-GCM.
-     *
-     * @param iv the initialization vector used for decryption
-     * @param clientKey the secret key used for decryption
-     * @param cipherText the encrypted text to be decrypted
-     * @return the decrypted plain text
-     */
     private String processDecryption(final byte[] iv, final SecretKey clientKey, final String cipherText) {
         final Cipher cipher;
         try {
             cipher = Cipher.getInstance(ENCRYPTION_ALGORITHM);
+            LOGGER.debug("Cipher instance created with algorithm '{}'.", ENCRYPTION_ALGORITHM);
         } catch (final NoSuchAlgorithmException | NoSuchPaddingException exception) {
             final ErrorCode errorCode = ErrorCode.AES_CIPHER_INSTANCE_FAILED;
             final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
@@ -150,10 +122,11 @@ public class DecryptService {
             final ErrorDetail errorDetail = errorDetailBuilder.build();
             throw new InternalServerErrorException(errorDetail);
         }
-    
+
         final GCMParameterSpec gcmParameterSpec;
         try {
             gcmParameterSpec = new GCMParameterSpec(GCM_TAG_LENGTH, iv);
+            LOGGER.debug("GCMParameterSpec created with tag length {}.", GCM_TAG_LENGTH);
         } catch (final IllegalArgumentException exception) {
             final ErrorCode errorCode = ErrorCode.INVALID_GCM_PARAMETERS;
             final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
@@ -162,9 +135,10 @@ public class DecryptService {
             final ErrorDetail errorDetail = errorDetailBuilder.build();
             throw new BadRequestException(errorDetail);
         }
-    
+
         try {
             cipher.init(Cipher.DECRYPT_MODE, clientKey, gcmParameterSpec);
+            LOGGER.debug("Cipher initialized for decryption mode.");
         } catch (final InvalidKeyException | InvalidAlgorithmParameterException | InvalidParameterException exception) {
             final ErrorCode errorCode = ErrorCode.AES_CIPHER_INIT_FAILED;
             final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
@@ -173,11 +147,12 @@ public class DecryptService {
             final ErrorDetail errorDetail = errorDetailBuilder.build();
             throw new InternalServerErrorException(errorDetail);
         }
-    
+
         final byte[] cipherTextBytes;
         try {
             final Base64.Decoder decoder = Base64.getDecoder();
             cipherTextBytes = decoder.decode(cipherText);
+            LOGGER.debug("Cipher text successfully decoded from Base64.");
         } catch (final IllegalArgumentException exception) {
             final ErrorCode errorCode = ErrorCode.INVALID_CIPHERTEXT_ENCODING;
             final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
@@ -186,11 +161,12 @@ public class DecryptService {
             final ErrorDetail errorDetail = errorDetailBuilder.build();
             throw new BadRequestException(errorDetail);
         }
-    
+
         final byte[] decryptedBytes;
         try {
             decryptedBytes = cipher.doFinal(cipherTextBytes);
-        } catch (final Exception exception) {
+            LOGGER.debug("Cipher text successfully decrypted.");
+        } catch (final BadPaddingException | IllegalBlockSizeException exception) {
             final ErrorCode errorCode = ErrorCode.DECRYPTION_FAILED;
             final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
             errorDetailBuilder.withContext("While decrypting cipher text using AES-GCM.");
@@ -198,8 +174,7 @@ public class DecryptService {
             final ErrorDetail errorDetail = errorDetailBuilder.build();
             throw new BadRequestException(errorDetail);
         }
-    
+
         return new String(decryptedBytes, StandardCharsets.UTF_8);
     }
-    
 }

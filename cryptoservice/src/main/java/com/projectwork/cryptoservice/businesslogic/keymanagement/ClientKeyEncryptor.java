@@ -4,6 +4,8 @@ import com.projectwork.cryptoservice.errorhandling.exceptions.InternalServerErro
 import com.projectwork.cryptoservice.errorhandling.util.ErrorCode;
 import com.projectwork.cryptoservice.errorhandling.util.ErrorDetail;
 import com.projectwork.cryptoservice.errorhandling.util.ErrorDetailBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.Cipher;
@@ -16,7 +18,12 @@ import java.security.NoSuchAlgorithmException;
 
 @Component
 public class ClientKeyEncryptor {
-    public byte[] encrypt(final SecretKey clientKey, final SecretKey masterKey) {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ClientKeyEncryptor.class);
+
+    public final byte[] encrypt(final SecretKey clientKey, final SecretKey masterKey) {
+        LOGGER.debug("Encrypting client key with master key (AES wrap)");
+
         final Cipher cipher;
         try {
             cipher = Cipher.getInstance("AES");
@@ -26,13 +33,17 @@ public class ClientKeyEncryptor {
 
         try {
             cipher.init(Cipher.WRAP_MODE, masterKey);
-            return cipher.wrap(clientKey);
+            final byte[] wrapped = cipher.wrap(clientKey);
+            LOGGER.info("Client key successfully encrypted with master key");
+            return wrapped;
         } catch (final InvalidKeyException | IllegalBlockSizeException | UnsupportedOperationException | InvalidParameterException exception) {
             throw this.createException(ErrorCode.AES_KEY_WRAP_FAILED, "Wrapping client key with master key using AES cipher.", exception);
         }
     }
 
-    public SecretKey decrypt(final byte[] encryptedKey, final SecretKey masterKey) {
+    public final SecretKey decrypt(final byte[] encryptedKey, final SecretKey masterKey) {
+        LOGGER.debug("Decrypting client key with master key (AES unwrap)");
+
         final Cipher cipher;
         try {
             cipher = Cipher.getInstance("AES");
@@ -42,9 +53,10 @@ public class ClientKeyEncryptor {
 
         try {
             cipher.init(Cipher.UNWRAP_MODE, masterKey);
-            return (SecretKey) cipher.unwrap(encryptedKey, "AES", Cipher.SECRET_KEY);
-        } catch (final InvalidKeyException | NoSuchAlgorithmException | UnsupportedOperationException |
-                       InvalidParameterException exception) {
+            final SecretKey unwrapped = (SecretKey) cipher.unwrap(encryptedKey, "AES", Cipher.SECRET_KEY);
+            LOGGER.info("Client key successfully decrypted with master key");
+            return unwrapped;
+        } catch (final InvalidKeyException | NoSuchAlgorithmException | UnsupportedOperationException | InvalidParameterException exception) {
             throw this.createException(ErrorCode.CLIENT_KEY_UNWRAP_FAILED, "Unwrapping encrypted client key using AES cipher and master key.", exception);
         }
     }
@@ -54,7 +66,7 @@ public class ClientKeyEncryptor {
         errorDetailBuilder.withContext(context);
         errorDetailBuilder.withException(exception);
         final ErrorDetail errorDetail = errorDetailBuilder.build();
+        errorDetail.logErrorWithException();
         return new InternalServerErrorException(errorDetail);
     }
 }
-

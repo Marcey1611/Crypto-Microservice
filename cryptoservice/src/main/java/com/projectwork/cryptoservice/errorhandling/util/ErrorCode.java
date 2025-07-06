@@ -7,19 +7,19 @@ public enum ErrorCode {
     //400
     FIELD_BLANK(
         "400.001", 
-        "Field %s must not be blank", 
+        "Field %s must not be blank",
         Level.ERROR
     ),
 
     FIELD_TOO_LONG(
         "400.002", 
-        "Field %s is too long", 
+        "Field %s is too long",
         Level.ERROR
     ),
     
     INVALID_ENCODING(
         "400.003", 
-        "Field %s has invalid encoding", 
+        "Field %s has invalid encoding",
         Level.ERROR
     ),
     
@@ -279,15 +279,38 @@ public enum ErrorCode {
 
     DECRYPTION_FAILED(
         "500.014",
-        "Failed to decrypt cipher text.",
+        "Internal server error",
+        "Failed to decrypt data",
         Level.ERROR
     ),
 
     ENCRYPTION_FAILED(
-        "400.018",
-        "Encryption failed.",
+        "500.018",
+        "Internal server error",
+        "Failed to encrypt data",
         Level.ERROR
     ),
+
+    JWT_GENERATION_FAILED(
+        "500.036",
+        "Internal server error",
+        "JWT creation failed for client %s",
+        Level.ERROR
+    ),
+
+    JWT_KEYALIAS_EXTRACTION_FAILED(
+            "500.036",
+            "Internal server error",
+            "JWT KeyAlias extraction failed",
+            Level.ERROR
+    ),
+
+    JWT_ISSUEDTO_EXTRACTION_FAILED(
+            "500.036",
+            "Internal server error",
+            "JWT KeyAlias extraction failed",
+            Level.ERROR
+    )
 
     ;
 

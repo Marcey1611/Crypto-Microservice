@@ -4,6 +4,8 @@ import com.projectwork.cryptoservice.errorhandling.exceptions.InternalServerErro
 import com.projectwork.cryptoservice.errorhandling.util.ErrorCode;
 import com.projectwork.cryptoservice.errorhandling.util.ErrorDetail;
 import com.projectwork.cryptoservice.errorhandling.util.ErrorDetailBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
@@ -24,6 +26,8 @@ import java.util.Arrays;
 @Component
 public class MasterKeyService {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(MasterKeyService.class);
+
     /**
      * Retrieves the master key from the provided KeyStore.
      *
@@ -32,6 +36,8 @@ public class MasterKeyService {
      * @throws InternalServerErrorException if there is an error accessing the master key
      */
     public final SecretKey retrieveMasterKey(final KeyStore keystore) {
+        LOGGER.debug("Retrieving master key from KeyStore");
+
         final String password = System.getenv("KEYSTORE_PASSWORD");
         final char[] passwordChars = password.toCharArray();
 
@@ -42,9 +48,13 @@ public class MasterKeyService {
                 final ErrorDetailBuilder builder = errorCode.builder();
                 builder.withContext("Master key is missing in keystore.");
                 final ErrorDetail errorDetail = builder.build();
+                errorDetail.logErrorWithException();
                 throw new InternalServerErrorException(errorDetail);
             }
+
+            LOGGER.info("Master key successfully retrieved from KeyStore");
             return masterKey;
+
         } catch (final KeyStoreException | NoSuchAlgorithmException | UnrecoverableKeyException exception) {
             final ErrorCode errorCode = ErrorCode.KEYSTORE_KEY_ACCESS_FAILED;
             final ErrorDetailBuilder builder = errorCode.builder();
@@ -52,9 +62,10 @@ public class MasterKeyService {
             builder.withLogMsgFormatted("master-key");
             builder.withException(exception);
             final ErrorDetail errorDetail = builder.build();
+            errorDetail.logErrorWithException();
             throw new InternalServerErrorException(errorDetail);
         } finally {
-            Arrays.fill(passwordChars, '\0');
+            Arrays.fill(passwordChars, '\0'); // OWASP [194]
         }
     }
 }

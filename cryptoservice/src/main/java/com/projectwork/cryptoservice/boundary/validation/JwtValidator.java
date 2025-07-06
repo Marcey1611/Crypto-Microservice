@@ -4,7 +4,6 @@ import com.projectwork.cryptoservice.errorhandling.exceptions.BadRequestExceptio
 import com.projectwork.cryptoservice.errorhandling.util.ErrorCode;
 import com.projectwork.cryptoservice.errorhandling.util.ErrorDetail;
 import com.projectwork.cryptoservice.errorhandling.util.ErrorDetailBuilder;
-import com.projectwork.cryptoservice.logging.CustomLogger;
 import io.jsonwebtoken.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -23,8 +22,6 @@ import java.util.regex.Pattern;
 @RequiredArgsConstructor
 public class JwtValidator {
 
-    private final CustomLogger customLogger;
-
     private static final Pattern JWT_PATTERN = Pattern.compile("^[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+$");
 
     /**
@@ -38,8 +35,9 @@ public class JwtValidator {
         if (!matcher.matches()) {
             final ErrorCode errorCode = ErrorCode.INVALID_JWT;
             final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
+            errorDetailBuilder.withContext("While validating JWT pattern.");
             final ErrorDetail errorDetail = errorDetailBuilder.build();
-            this.customLogger.logError(errorDetail);
+            errorDetail.logError();
             throw new BadRequestException(errorDetail);
         }
     }
@@ -59,8 +57,9 @@ public class JwtValidator {
         } catch (final JwtException exception) {
             final ErrorCode errorCode = ErrorCode.INVALID_JWT;
             final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
+            errorDetailBuilder.withContext("While validating JWT signature.");
             final ErrorDetail errorDetail = errorDetailBuilder.build();
-            this.customLogger.logError(errorDetail);
+            errorDetail.logError();
             throw new BadRequestException(errorDetail);
         }
     }
@@ -75,8 +74,9 @@ public class JwtValidator {
         if (null == expiration || expiration.before(new Date())) {
             final ErrorCode errorCode = ErrorCode.EXPIRED_JWT;
             final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
+            errorDetailBuilder.withContext("While validating JWT expiration date.");
             final ErrorDetail errorDetail = errorDetailBuilder.build();
-            this.customLogger.logError(errorDetail);
+            errorDetail.logError();
             throw new BadRequestException(errorDetail);
         }
     }

@@ -5,6 +5,13 @@ import java.util.Date;
 
 import javax.crypto.SecretKey;
 
+import com.projectwork.cryptoservice.errorhandling.exceptions.BadRequestException;
+import com.projectwork.cryptoservice.errorhandling.exceptions.InternalServerErrorException;
+import com.projectwork.cryptoservice.errorhandling.util.ErrorCode;
+import com.projectwork.cryptoservice.errorhandling.util.ErrorDetail;
+import com.projectwork.cryptoservice.errorhandling.util.ErrorDetailBuilder;
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.security.InvalidKeyException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -40,22 +47,42 @@ public class JwtManagementService {
      * @return a GenerateJwtResultModel containing the generated JWT
      */
     public final GenerateJwtResultModel generateJwt(final GenerateJwtModel generateJwtModel) {
+        final String clientName = generateJwtModel.getClientName();
+        final String issuedTo = generateJwtModel.getIssuedTo();
+
+        LOGGER.info("Generating JWT for client '{}', issuedTo '{}'", clientName, issuedTo);
+
         final SecretKey jwtSigningKey = this.keyStoreHelper.getKey("jwt-signing-key");
         final Instant now = Instant.now();
         final Instant expiration = now.plusSeconds(3600L);
-        final String clientName = generateJwtModel.getClientName();
         final String keyAlias = this.clientKeyRegistry.getKeyAliasForClient(clientName);
-        final String issuedTo = generateJwtModel.getIssuedTo();
         final Date fromNow = Date.from(now);
         final Date fromExpiration = Date.from(expiration);
-        final String jwt = Jwts.builder()
-            .setSubject("CryptoMicroserviceAccesToken")
-            .claim("keyAlias", keyAlias)
-            .claim("issuedTo", issuedTo)
-            .setIssuedAt(fromNow)
-            .setExpiration(fromExpiration)
-            .signWith(jwtSigningKey, SignatureAlgorithm.HS256)
-            .compact();
+
+        LOGGER.debug("JWT claims: keyAlias='{}', issuedTo='{}', expiresAt='{}'", keyAlias, issuedTo, fromExpiration);
+
+        final String jwt;
+        try {
+            jwt = Jwts.builder()
+                    .setSubject("CryptoMicroserviceAccesToken")
+                    .claim("keyAlias", keyAlias)
+                    .claim("issuedTo", issuedTo)
+                    .setIssuedAt(fromNow)
+                    .setExpiration(fromExpiration)
+                    .signWith(jwtSigningKey, SignatureAlgorithm.HS256)
+                    .compact();
+        } catch (final JwtException | IllegalArgumentException | SecurityException exception) {
+            final ErrorCode errorCode = ErrorCode.JWT_GENERATION_FAILED;
+            final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
+            errorDetailBuilder.withLogMsgFormatted(clientName);
+            errorDetailBuilder.withContext("While generating JWT for client: " + clientName);
+            errorDetailBuilder.withException(exception);
+            final ErrorDetail errorDetail = errorDetailBuilder.build();
+            errorDetail.logErrorWithException();
+            throw new InternalServerErrorException(errorDetail);
+        }
+
+        LOGGER.info("JWT successfully generated for client '{}'", clientName);
         return this.resultModelsFactory.buildGenerateJwtResultModel(jwt);
     }
 
@@ -66,14 +93,34 @@ public class JwtManagementService {
      * @return the client key alias
      */
     public final String extractClientKeyAlias(final String jwtToken) {
+        LOGGER.debug("Extracting keyAlias from JWT");
+
         final SecretKey jwtSigningKey = this.keyStoreHelper.getKey("jwt-signing-key");
-        return Jwts.parserBuilder()
-            .setSigningKey(jwtSigningKey)
-            .build()
-            .parseClaimsJws(jwtToken)
-            .getBody()
-            .get("keyAlias", String.class);
+        final String keyAlias;
+
+        try {
+            keyAlias = Jwts.parserBuilder()
+                    .setSigningKey(jwtSigningKey)
+                    .build()
+                    .parseClaimsJws(jwtToken)
+                    .getBody()
+                    .get("keyAlias", String.class);
+
+
+        } catch (final JwtException | IllegalArgumentException exception) {
+            final ErrorCode errorCode = ErrorCode.JWT_KEYALIAS_EXTRACTION_FAILED;
+            final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
+            errorDetailBuilder.withContext("While extracting keyAlias from JWT");
+            errorDetailBuilder.withException(exception);
+            final ErrorDetail errorDetail = errorDetailBuilder.build();
+            errorDetail.logErrorWithException();
+            throw new InternalServerErrorException(errorDetail);
+        }
+
+        LOGGER.debug("Extracted keyAlias: '{}'", keyAlias);
+        return keyAlias;
     }
+
 
     /**
      * Extracts the issuedTo field from the provided JWT token.
@@ -81,13 +128,32 @@ public class JwtManagementService {
      * @param jwtToken the JWT token from which to extract the issuedTo field
      * @return the issuedTo value
      */
-    public final String extractIssuedTo(final String jwtToken){
+    public final String extractIssuedTo(final String jwtToken) {
+        LOGGER.debug("Extracting issuedTo from JWT");
+
         final SecretKey jwtSigningKey = this.keyStoreHelper.getKey("jwt-signing-key");
-        return Jwts.parserBuilder()
-            .setSigningKey(jwtSigningKey)
-            .build()
-            .parseClaimsJws(jwtToken)
-            .getBody()
-            .get("issuedTo", String.class);
+        final String issuedTo;
+
+        try {
+            issuedTo = Jwts.parserBuilder()
+                    .setSigningKey(jwtSigningKey)
+                    .build()
+                    .parseClaimsJws(jwtToken)
+                    .getBody()
+                    .get("issuedTo", String.class);
+
+
+        } catch (final JwtException | IllegalArgumentException exception) {
+            final ErrorCode errorCode = ErrorCode.JWT_ISSUEDTO_EXTRACTION_FAILED;
+            final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
+            errorDetailBuilder.withContext("While extracting issued to from JWT");
+            errorDetailBuilder.withException(exception);
+            final ErrorDetail errorDetail = errorDetailBuilder.build();
+            errorDetail.logErrorWithException();
+            throw new InternalServerErrorException(errorDetail);
+        }
+
+        LOGGER.debug("Extracted issuedTo: '{}'", issuedTo);
+        return issuedTo;
     }
 }
