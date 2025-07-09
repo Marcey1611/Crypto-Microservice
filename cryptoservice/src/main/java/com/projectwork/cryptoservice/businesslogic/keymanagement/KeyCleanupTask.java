@@ -55,7 +55,11 @@ public class KeyCleanupTask {
     }
 
     /**
-     * Finds all expired keys in the provided keystore.
+     * Finds all expired aliases in the provided KeyStore.
+     * It skips reserved aliases that should not be deleted.
+     *
+     * @param keystore the KeyStore to check for expired keys
+     * @return a list of aliases that are expired
      */
     private List<String> findExpiredAliases(final KeyStore keystore) {
         final List<String> expired = new ArrayList<>();
@@ -72,7 +76,11 @@ public class KeyCleanupTask {
     }
 
     /**
-     * Retrieves all aliases from the provided KeyStore.
+     * Retrieves all aliases from the KeyStore.
+     * If an error occurs while retrieving aliases, it logs the error and throws an InternalServerErrorException.
+     *
+     * @param keystore the KeyStore from which to retrieve aliases
+     * @return an Enumeration of aliases in the KeyStore
      */
     private Enumeration<String> getAliases(final KeyStore keystore) {
         try {
@@ -89,7 +97,10 @@ public class KeyCleanupTask {
     }
 
     /**
-     * Checks if the given alias is a reserved alias that should not be deleted.
+     * Checks if the provided alias is a reserved alias that should not be deleted.
+     *
+     * @param alias the alias to check
+     * @return true if the alias is reserved, false otherwise
      */
     private boolean isReservedAlias(final String alias) {
         return MASTER_KEY_ALIAS.equals(alias) || JWT_SIGNING_KEY_ALIAS.equals(alias);
@@ -97,6 +108,10 @@ public class KeyCleanupTask {
 
     /**
      * Deletes expired keys from the KeyStore and removes them from the ClientKeyRegistry.
+     * It logs each deletion and handles any exceptions that occur during the deletion process.
+     *
+     * @param keystore         the KeyStore from which to delete expired keys
+     * @param aliasesToDelete  a list of aliases to delete from the KeyStore
      */
     private void deleteExpiredKeys(final KeyStore keystore, final List<String> aliasesToDelete) {
         for (final String alias : aliasesToDelete) {

@@ -1,24 +1,7 @@
 package com.projectwork.cryptoservice.businesslogic.keymanagement;
 
-import java.io.*;
-import java.security.InvalidKeyException;
-import java.security.InvalidParameterException;
-import java.security.KeyStore;
-import java.security.KeyStore.PasswordProtection;
-import java.security.KeyStore.ProtectionParameter;
-import java.security.KeyStore.SecretKeyEntry;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.UnrecoverableKeyException;
-import java.security.cert.CertificateException;
-import java.util.Arrays;
-
-import javax.crypto.Cipher;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
-import javax.crypto.SecretKey;
-import javax.crypto.spec.SecretKeySpec;
-
+import com.projectwork.cryptoservice.errorhandling.exceptions.InternalServerErrorException;
+import com.projectwork.cryptoservice.errorhandling.util.ErrorCode;
 import com.projectwork.cryptoservice.errorhandling.util.ErrorDetail;
 import com.projectwork.cryptoservice.errorhandling.util.ErrorDetailBuilder;
 import lombok.RequiredArgsConstructor;
@@ -26,18 +9,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import com.projectwork.cryptoservice.errorhandling.exceptions.InternalServerErrorException;
-import com.projectwork.cryptoservice.errorhandling.util.ErrorCode;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
+import java.security.KeyStore;
+import java.security.KeyStore.PasswordProtection;
+import java.security.KeyStore.ProtectionParameter;
+import java.security.KeyStore.SecretKeyEntry;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.UnrecoverableKeyException;
+import java.util.Arrays;
 
-//TODO Refactor -> to long, methods to long and complex extend with helper classes or split in separate classes
 /**
  * KeyStoreHelper is a utility class for managing cryptographic keys in a secure manner.
- * SecureCodingPractices
- * - OWASP [102] Master secret (KeyStore) protection
- * - OWASP [106] Centralized key storage and retrieval logic (KeyStore as secure container)
- * - OWASP [133] Stored keys are encrypted (with master key wrapping)
- * - OWASP [194] Carefully handle sensitive data (keystore password), wiping char arrays after use
- * - OWASP [199] Resources (File streams) properly closed using try-with-resources
  */
 @Component
 @RequiredArgsConstructor
@@ -49,6 +33,12 @@ public class KeyStoreHelper {
     private final MasterKeyService masterKeyService;
     private final ClientKeyEncryptor encryptor;
 
+    /**
+     * Stores a client key in the keystore under the specified alias.
+     *
+     * @param alias      the alias under which the key will be stored
+     * @param clientKey  the client key to be stored
+     */
     public final void storeKey(final String alias, final SecretKey clientKey) {
         LOGGER.debug("Storing key for alias '{}'", alias);
 
@@ -62,6 +52,12 @@ public class KeyStoreHelper {
         LOGGER.info("Key stored and saved in keystore for alias '{}'", alias);
     }
 
+    /**
+     * Retrieves and decrypts the client key stored under the specified alias.
+     *
+     * @param alias the alias of the key to retrieve
+     * @return the decrypted client key
+     */
     public final SecretKey getClientKey(final String alias) {
         LOGGER.debug("Retrieving and decrypting client key for alias '{}'", alias);
 
@@ -75,6 +71,12 @@ public class KeyStoreHelper {
         return decrypted;
     }
 
+    /**
+     * Retrieves the raw key stored under the specified alias without decryption.
+     *
+     * @param alias the alias of the key to retrieve
+     * @return the raw SecretKey associated with the alias
+     */
     public final SecretKey getKey(final String alias) {
         LOGGER.debug("Retrieving key (raw) for alias '{}'", alias);
         final KeyStore keyStore = this.loader.load();
@@ -83,6 +85,13 @@ public class KeyStoreHelper {
         return key;
     }
 
+    /**
+     * Stores a wrapped key in the KeyStore under the specified alias.
+     *
+     * @param ks        the KeyStore instance where the key will be stored
+     * @param alias     the alias under which the key will be stored
+     * @param encrypted the encrypted key to be stored
+     */
     private void storeWrappedKey(final KeyStore ks, final String alias, final byte[] encrypted) {
         final String keystorePassword = System.getenv("KEYSTORE_PASSWORD");
         final char[] password = keystorePassword.toCharArray();
@@ -109,6 +118,14 @@ public class KeyStoreHelper {
         }
     }
 
+/**
+     * Retrieves a SecretKey from the KeyStore using the specified alias.
+     * It uses the keystore password from the environment variable "KEYSTORE_PASSWORD".
+     *
+     * @param ks    the KeyStore instance to retrieve the key from
+     * @param alias the alias of the key to retrieve
+     * @return the SecretKey associated with the specified alias
+     */
     private SecretKey getKey(final KeyStore ks, final String alias) {
         final String keystorePassword = System.getenv("KEYSTORE_PASSWORD");
         final char[] password = keystorePassword.toCharArray();

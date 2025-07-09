@@ -1,30 +1,25 @@
 package com.projectwork.cryptoservice.businesslogic.jwtmanagement;
 
-import java.time.Instant;
-import java.util.Date;
-
-import javax.crypto.SecretKey;
-
-import com.projectwork.cryptoservice.errorhandling.exceptions.BadRequestException;
-import com.projectwork.cryptoservice.errorhandling.exceptions.InternalServerErrorException;
-import com.projectwork.cryptoservice.errorhandling.util.ErrorCode;
-import com.projectwork.cryptoservice.errorhandling.util.ErrorDetail;
-import com.projectwork.cryptoservice.errorhandling.util.ErrorDetailBuilder;
-import io.jsonwebtoken.JwtException;
-import io.jsonwebtoken.security.InvalidKeyException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
-
 import com.projectwork.cryptoservice.businesslogic.keymanagement.ClientKeyRegistry;
 import com.projectwork.cryptoservice.businesslogic.keymanagement.KeyStoreHelper;
 import com.projectwork.cryptoservice.entity.factory.ResultModelsFactory;
 import com.projectwork.cryptoservice.entity.models.jwtmanagement.GenerateJwtModel;
 import com.projectwork.cryptoservice.entity.models.jwtmanagement.GenerateJwtResultModel;
-
+import com.projectwork.cryptoservice.errorhandling.exceptions.InternalServerErrorException;
+import com.projectwork.cryptoservice.errorhandling.util.ErrorCode;
+import com.projectwork.cryptoservice.errorhandling.util.ErrorDetail;
+import com.projectwork.cryptoservice.errorhandling.util.ErrorDetailBuilder;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+
+import javax.crypto.SecretKey;
+import java.time.Instant;
+import java.util.Date;
 
 /**
  * JwtManagementService class that handles the generation and management of JWTs.

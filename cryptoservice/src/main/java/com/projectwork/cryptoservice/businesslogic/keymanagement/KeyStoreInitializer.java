@@ -21,6 +21,10 @@ import com.projectwork.cryptoservice.errorhandling.util.ErrorCode;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * KeyStoreInitializer is responsible for initializing the KeyStore with necessary keys.
+ * It checks for the existence of specific keys and generates them if they are missing.
+ */
 @RequiredArgsConstructor
 @Component
 public class KeyStoreInitializer {
@@ -31,6 +35,10 @@ public class KeyStoreInitializer {
     private final KeyStoreHelper keyStoreHelper;
     private final KeyStoreLoader keyStoreLoader;
 
+    /**
+     * Initializes the KeyStore by checking for the existence of the JWT signing key and master key.
+     * If they do not exist, it generates them.
+     */
     @PostConstruct
     public final void initKeyStore() {
         LOGGER.info("Initializing KeyStore...");
@@ -52,6 +60,12 @@ public class KeyStoreInitializer {
         }
     }
 
+    /**
+     * Checks if the KeyStore contains a specific alias.
+     *
+     * @param alias the alias to check
+     * @return true if the alias is missing, false otherwise
+     */
     private boolean checkContainsAlias(final String alias) {
         final KeyStore keystore = this.keyStoreLoader.load();
 
@@ -71,6 +85,10 @@ public class KeyStoreInitializer {
         }
     }
 
+    /**
+     * Initializes the JWT signing key and stores it in the KeyStore.
+     * If the key already exists, it skips the initialization.
+     */
     private void initJwtSigningKey() {
         final SecureRandom secureRandom;
         try {
@@ -118,6 +136,10 @@ public class KeyStoreInitializer {
         this.keyStoreHelper.storeKey("jwt-signing-key", signingKey);
     }
 
+    /**
+     * Initializes the master key and stores it in the KeyStore.
+     * If the key already exists, it skips the initialization.
+     */
     private void initMasterKey() {
         final SecureRandom secureRandom;
         try {

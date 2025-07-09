@@ -1,10 +1,16 @@
 package com.projectwork.cryptoservice.boundary;
 
-import com.projectwork.cryptoservice.boundary.api.*;
+import com.projectwork.cryptoservice.boundary.api.DecryptAPI;
+import com.projectwork.cryptoservice.boundary.api.EncryptAPI;
+import com.projectwork.cryptoservice.boundary.api.JwtManagementAPI;
+import com.projectwork.cryptoservice.boundary.api.KeyManagementAPI;
 import com.projectwork.cryptoservice.boundary.validation.DecryptValidator;
 import com.projectwork.cryptoservice.boundary.validation.EncryptValidator;
 import com.projectwork.cryptoservice.boundary.validation.JwtManagementValidator;
-import com.projectwork.cryptoservice.businessfacade.*;
+import com.projectwork.cryptoservice.businessfacade.DecryptFacade;
+import com.projectwork.cryptoservice.businessfacade.EncryptFacade;
+import com.projectwork.cryptoservice.businessfacade.JwtManagementFacade;
+import com.projectwork.cryptoservice.businessfacade.KeyManagementFacade;
 import com.projectwork.cryptoservice.businesslogic.keymanagement.ClientKeyRegistry;
 import com.projectwork.cryptoservice.entity.models.decrypt.DecryptRequest;
 import com.projectwork.cryptoservice.entity.models.decrypt.DecryptResponse;
@@ -13,9 +19,6 @@ import com.projectwork.cryptoservice.entity.models.encrypt.EncryptResponse;
 import com.projectwork.cryptoservice.entity.models.jwtmanagement.GenerateJwtRequest;
 import com.projectwork.cryptoservice.entity.models.jwtmanagement.GenerateJwtResponse;
 import com.projectwork.cryptoservice.entity.models.keymanagement.GenerateKeyResponse;
-import com.projectwork.cryptoservice.entity.models.tlsmanagement.GetRootCaCertResponse;
-import com.projectwork.cryptoservice.entity.models.tlsmanagement.SignCsrRequest;
-import com.projectwork.cryptoservice.entity.models.tlsmanagement.SignCsrResponse;
 import com.projectwork.cryptoservice.errorhandling.exceptions.BadRequestException;
 import com.projectwork.cryptoservice.errorhandling.util.ErrorCode;
 import com.projectwork.cryptoservice.errorhandling.util.ErrorDetail;
@@ -34,7 +37,7 @@ import java.security.Principal;
  */
 @RequiredArgsConstructor
 @RestController
-public class Controller implements EncryptAPI, DecryptAPI, KeyManagementAPI, JwtManagementAPI, TlsManagementAPI {
+public class Controller implements EncryptAPI, DecryptAPI, KeyManagementAPI, JwtManagementAPI {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Controller.class);
 
@@ -42,7 +45,6 @@ public class Controller implements EncryptAPI, DecryptAPI, KeyManagementAPI, Jwt
     private final DecryptFacade decryptFacade;
     private final KeyManagementFacade keyManagementFacade;
     private final JwtManagementFacade jwtManagementFacade;
-    private final TlsManagementFacade tlsManagementFacade;
     private final EncryptValidator encryptValidator;
     private final JwtManagementValidator jwtManagementValidator;
     private final DecryptValidator decryptValidator;
@@ -158,29 +160,5 @@ public class Controller implements EncryptAPI, DecryptAPI, KeyManagementAPI, Jwt
         final String clientName = (null != principal) ? principal.getName() : "anonymous-client";
         LOGGER.debug("Resolved client name: '{}'", clientName);
         return clientName;
-    }
-
-    /**
-     * Handles CSR signing requests.
-     *
-     * @param signCsrRequest the request containing the CSR to be signed
-     * @return a response entity containing the signed CSR
-     */
-    // TODO delete after new implementation of mtls
-    @Override
-    public final ResponseEntity<SignCsrResponse> signCsrPost(final SignCsrRequest signCsrRequest) {
-        LOGGER.info("Received CSR signing request");
-        return this.tlsManagementFacade.signCsr(signCsrRequest);
-    }
-
-    /**
-     * Retrieves the root CA certificate.
-     *
-     * @return a response entity containing the root CA certificate
-     */
-    @Override
-    public final ResponseEntity<GetRootCaCertResponse> rootCaGet() {
-        LOGGER.info("Root CA certificate requested");
-        return this.tlsManagementFacade.getRootCaCert();
     }
 }

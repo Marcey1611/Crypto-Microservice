@@ -86,6 +86,14 @@ public class KeyStoreLoader {
         }
     }
 
+    /**
+     * Creates an InternalServerErrorException with the provided error code, context, and exception.
+     *
+     * @param errorCode the error code for the exception
+     * @param context   the context in which the error occurred
+     * @param exception the original exception that caused the error
+     * @return a new InternalServerErrorException with the specified details
+     */
     private InternalServerErrorException createException(final ErrorCode errorCode, final String context, final Exception exception) {
         final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
         errorDetailBuilder.withContext(context);

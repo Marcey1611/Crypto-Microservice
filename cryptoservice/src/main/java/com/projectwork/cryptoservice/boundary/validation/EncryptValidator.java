@@ -3,8 +3,6 @@ package com.projectwork.cryptoservice.boundary.validation;
 import com.projectwork.cryptoservice.businesslogic.keymanagement.KeyStoreHelper;
 import com.projectwork.cryptoservice.entity.models.encrypt.EncryptRequest;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
@@ -31,9 +29,9 @@ public class EncryptValidator {
     public final void validateEncryptRequest(final EncryptRequest request) {
         final SecretKey key = this.keyStoreHelper.getKey("jwt-signing-key");
         final String plainText = request.getPlainText();
-        this.validationService.validateText(plainText, "plainText", PLAIN_TEXT_MAX_LENGTH, true);
+        this.validationService.validateText(plainText, FieldName.PLAIN_TEXT, PLAIN_TEXT_MAX_LENGTH, true);
         final String jwt = request.getJwt();
-        this.validationService.validateText(jwt, "jwt", JWT_MAX_LENGTH, false);
+        this.validationService.validateText(jwt, FieldName.JWT, JWT_MAX_LENGTH, false);
         this.validationService.validateJwt(jwt, key);
     }
 }

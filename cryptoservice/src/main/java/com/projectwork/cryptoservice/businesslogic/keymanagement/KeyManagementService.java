@@ -30,7 +30,6 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @Service
 public class KeyManagementService {
-    // OWASP [106] Key Management Policy & Process
 
     private static final Logger LOGGER = LoggerFactory.getLogger(KeyManagementService.class);
     private static final int KEY_SIZE = 256;
@@ -44,9 +43,6 @@ public class KeyManagementService {
      * 
      * @param generateKeyModel the model containing parameters for key generation
      * @return An object of GenerateKeyResultModel
-     * SecureCodingPractices:
-     * - OWASP [104] Secure Random Number Generation for Key and Alias
-     * - OWASP [101] JWT generation and signing (done on server-side)
      */
     public final GenerateKeyResultModel generateKey(final GenerateKeyModel generateKeyModel) {
         final String clientName = generateKeyModel.getClientName();

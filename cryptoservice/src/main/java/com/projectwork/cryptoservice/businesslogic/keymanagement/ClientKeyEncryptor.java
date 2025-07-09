@@ -16,11 +16,22 @@ import java.security.InvalidKeyException;
 import java.security.InvalidParameterException;
 import java.security.NoSuchAlgorithmException;
 
+/**
+ * ClientKeyEncryptor is a utility class for encrypting and decrypting client keys using a master key.
+ * It uses AES wrapping for secure key management.
+ */
 @Component
 public class ClientKeyEncryptor {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ClientKeyEncryptor.class);
 
+    /**
+     * Encrypts a client key using the provided master key.
+     *
+     * @param clientKey the client key to encrypt
+     * @param masterKey the master key used for encryption
+     * @return the encrypted client key as a byte array
+     */
     public final byte[] encrypt(final SecretKey clientKey, final SecretKey masterKey) {
         LOGGER.debug("Encrypting client key with master key (AES wrap)");
 
@@ -41,6 +52,13 @@ public class ClientKeyEncryptor {
         }
     }
 
+    /**
+     * Decrypts an encrypted client key using the provided master key.
+     *
+     * @param encryptedKey the encrypted client key as a byte array
+     * @param masterKey    the master key used for decryption
+     * @return the decrypted client key as a SecretKey
+     */
     public final SecretKey decrypt(final byte[] encryptedKey, final SecretKey masterKey) {
         LOGGER.debug("Decrypting client key with master key (AES unwrap)");
 
@@ -61,6 +79,14 @@ public class ClientKeyEncryptor {
         }
     }
 
+    /**
+     * Creates an InternalServerErrorException with the provided error code, context, and exception.
+     *
+     * @param errorCode the error code for the exception
+     * @param context   additional context for the error
+     * @param exception the original exception that caused the error
+     * @return a new InternalServerErrorException with the specified details
+     */
     private InternalServerErrorException createException(final ErrorCode errorCode, final String context, final Exception exception) {
         final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
         errorDetailBuilder.withContext(context);

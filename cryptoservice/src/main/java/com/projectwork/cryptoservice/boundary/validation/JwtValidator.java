@@ -4,6 +4,7 @@ import com.projectwork.cryptoservice.errorhandling.exceptions.BadRequestExceptio
 import com.projectwork.cryptoservice.errorhandling.util.ErrorCode;
 import com.projectwork.cryptoservice.errorhandling.util.ErrorDetail;
 import com.projectwork.cryptoservice.errorhandling.util.ErrorDetailBuilder;
+import com.projectwork.cryptoservice.errorhandling.util.ErrorHandler;
 import io.jsonwebtoken.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -24,6 +25,8 @@ public class JwtValidator {
 
     private static final Pattern JWT_PATTERN = Pattern.compile("^[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+$");
 
+    private final ErrorHandler errorHandler;
+
     /**
      * Validates the format of a JWT.
      *
@@ -34,11 +37,8 @@ public class JwtValidator {
         final Matcher matcher = JWT_PATTERN.matcher(jwt);
         if (!matcher.matches()) {
             final ErrorCode errorCode = ErrorCode.INVALID_JWT;
-            final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
-            errorDetailBuilder.withContext("While validating JWT pattern.");
-            final ErrorDetail errorDetail = errorDetailBuilder.build();
-            errorDetail.logError();
-            throw new BadRequestException(errorDetail);
+            final String context = "While validating JWT pattern.";
+            throw this.errorHandler.handleValidationError(errorCode, context);
         }
     }
 
@@ -56,11 +56,9 @@ public class JwtValidator {
             return build.parseClaimsJws(jwt);
         } catch (final JwtException exception) {
             final ErrorCode errorCode = ErrorCode.INVALID_JWT;
-            final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
-            errorDetailBuilder.withContext("While validating JWT signature.");
-            final ErrorDetail errorDetail = errorDetailBuilder.build();
-            errorDetail.logError();
-            throw new BadRequestException(errorDetail);
+            final String context = "While validating JWT signature.";
+            throw this.errorHandler.handleValidationError(errorCode, context);
+
         }
     }
 
@@ -73,11 +71,8 @@ public class JwtValidator {
     public final void validateExpiration(final Date expiration) {
         if (null == expiration || expiration.before(new Date())) {
             final ErrorCode errorCode = ErrorCode.EXPIRED_JWT;
-            final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
-            errorDetailBuilder.withContext("While validating JWT expiration date.");
-            final ErrorDetail errorDetail = errorDetailBuilder.build();
-            errorDetail.logError();
-            throw new BadRequestException(errorDetail);
+            final String context = "While validating JWT expiration date.";
+            throw this.errorHandler.handleValidationError(errorCode, context);
         }
     }
 }

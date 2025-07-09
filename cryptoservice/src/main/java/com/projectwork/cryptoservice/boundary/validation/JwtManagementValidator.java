@@ -25,6 +25,6 @@ public class JwtManagementValidator {
      */
     public final void validateGenerateJwtRequest(final GenerateJwtRequest request) {
         final String issuedTo = request.getIssuedTo();
-        this.validationService.validateText(issuedTo, "issuedTo", ISSUED_TO_MAX_LENGTH, false);
+        this.validationService.validateText(issuedTo, FieldName.IISUED_TO, ISSUED_TO_MAX_LENGTH, false);
     }
 }
