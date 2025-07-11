@@ -1,7 +1,5 @@
 package com.projectwork.cryptoservice.entity.factory;
 
-import org.springframework.stereotype.Component;
-
 import com.projectwork.cryptoservice.entity.models.decrypt.DecryptModel;
 import com.projectwork.cryptoservice.entity.models.decrypt.DecryptRequest;
 import com.projectwork.cryptoservice.entity.models.encrypt.EncryptModel;
@@ -9,8 +7,7 @@ import com.projectwork.cryptoservice.entity.models.encrypt.EncryptRequest;
 import com.projectwork.cryptoservice.entity.models.jwtmanagement.GenerateJwtModel;
 import com.projectwork.cryptoservice.entity.models.jwtmanagement.GenerateJwtRequest;
 import com.projectwork.cryptoservice.entity.models.keymanagement.GenerateKeyModel;
-import com.projectwork.cryptoservice.entity.models.tlsmanagement.SignCsrModel;
-import com.projectwork.cryptoservice.entity.models.tlsmanagement.SignCsrRequest;
+import org.springframework.stereotype.Component;
 
 /**
  * ModelsFactory class that creates instances of various models used in the cryptographic service.
@@ -65,18 +62,5 @@ public class ModelsFactory {
     public final GenerateJwtModel buildGenerateJwtModel(final GenerateJwtRequest generateJwtRequest, final String clientName) {
         final String issuedTo = generateJwtRequest.getIssuedTo();
         return new GenerateJwtModel(issuedTo, clientName);
-    }
-
-    // TODO delete after new implementation of mtls
-    /**
-     * Builds a SignCsrModel instance based on the provided SignCsrRequest.
-     *
-     * @param signCsrRequest the request containing the CSR PEM and client name
-     * @return a new SignCsrModel instance
-     */
-    public final SignCsrModel buildSignCsrModel(final SignCsrRequest signCsrRequest) {
-        final String csrPem = signCsrRequest.getCsrPem();
-        final String clientName = signCsrRequest.getClientName();
-        return new SignCsrModel(csrPem, clientName);
     }
 }

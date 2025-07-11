@@ -32,7 +32,6 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(ApiException.class)
     public final ResponseEntity<ErrorResponse> handleApiException(final ApiException exception) {
-        //TODO logging System.out.println(exception);
         final ErrorDetail error = exception.getError();
         final String code = error.getCode();
         final String userMsg = error.getUserMsg();
@@ -51,15 +50,17 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(Exception.class)
     public final ResponseEntity<ErrorResponse> handleUnhandled(final Exception exception) {
+        final String message = exception.getMessage();
+        LOGGER.error("Unhandled exception occurred: {}", message, exception);
+
         final ErrorCode errorCode = ErrorCode.UNEXPECTED_ERROR;
         final ErrorDetailBuilder builder = errorCode.builder();
         final ErrorDetail error = builder.build();
-        //TODO logging System.out.println(exception);
         final String code = error.getCode();
         final String userMsg = error.getUserMsg();
         return new ResponseEntity<>(
-            new ErrorResponse(code, userMsg),
-            HttpStatus.INTERNAL_SERVER_ERROR
+                new ErrorResponse(code, userMsg),
+                HttpStatus.INTERNAL_SERVER_ERROR
         );
     }
 }

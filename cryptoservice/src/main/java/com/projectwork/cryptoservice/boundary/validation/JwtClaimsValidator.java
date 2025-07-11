@@ -2,12 +2,8 @@ package com.projectwork.cryptoservice.boundary.validation;
 
 import com.projectwork.cryptoservice.errorhandling.exceptions.BadRequestException;
 import com.projectwork.cryptoservice.errorhandling.util.ErrorCode;
-import com.projectwork.cryptoservice.errorhandling.util.ErrorDetail;
-import com.projectwork.cryptoservice.errorhandling.util.ErrorDetailBuilder;
-import com.projectwork.cryptoservice.logging.CustomLogger;
+import com.projectwork.cryptoservice.errorhandling.util.ErrorHandler;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 /**
@@ -18,11 +14,12 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class JwtClaimsValidator {
 
-    private final CustomLogger customLogger;
 
     private static final int MAX_LENGTH = 64;
+
     private final FieldValidator fieldValidator;
     private final EncodingValidator encodingValidator;
+    private final ErrorHandler errorHandler;
 
     /**
      * Validates the algorithm specified in the JWT header.
@@ -31,17 +28,13 @@ public class JwtClaimsValidator {
      * @throws BadRequestException if the algorithm is invalid or insecure.
      */
     public final void validateAlgorithmFromHeader(final String alg) {
-        this.fieldValidator.validateNotBlank(alg, "algorithm (header)");
-        this.fieldValidator.validateMaxLength(alg, MAX_LENGTH, "algorithm (header)");
-        this.encodingValidator.validateNoUnicodeEscapes(alg, "algorithm (header)");
-        this.fieldValidator.validateWhitelist(alg, "algorithm (header)");
+        this.fieldValidator.validateNotBlank(alg, FieldName.ALGORITHM_HEADER);
+        this.fieldValidator.validateMaxLength(alg, MAX_LENGTH, FieldName.ALGORITHM_HEADER);
+        this.encodingValidator.validateNoUnicodeEscapes(alg, FieldName.ALGORITHM_HEADER);
+        this.fieldValidator.validateWhitelist(alg, FieldName.ALGORITHM_HEADER);
 
         if ("none".equalsIgnoreCase(alg)) {
-            final ErrorCode errorCode = ErrorCode.INSECURE_JWT_ALGO;
-            final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
-            final ErrorDetail errorDetail = errorDetailBuilder.build();
-            this.customLogger.logValidationError(errorDetail);
-            throw new BadRequestException(errorDetail);
+            throw this.errorHandler.handleError(ErrorCode.INSECURE_JWT_ALGO, "While validating JWT algorithm from header.");
         }
     }
 
@@ -52,10 +45,10 @@ public class JwtClaimsValidator {
      * @throws BadRequestException if the alias is blank, too long, contains Unicode escapes, or is not whitelisted.
      */
     public final void validateKeyAlias(final String alias) {
-        this.fieldValidator.validateNotBlank(alias, "keyAlias");
-        this.fieldValidator.validateMaxLength(alias, MAX_LENGTH, "keyAlias");
-        this.encodingValidator.validateNoUnicodeEscapes(alias, "keyAlias");
-        this.fieldValidator.validateWhitelist(alias, "keyAlias");
+        this.fieldValidator.validateNotBlank(alias, FieldName.KEY_ALIAS);
+        this.fieldValidator.validateMaxLength(alias, MAX_LENGTH, FieldName.KEY_ALIAS);
+        this.encodingValidator.validateNoUnicodeEscapes(alias, FieldName.KEY_ALIAS);
+        this.fieldValidator.validateWhitelist(alias, FieldName.KEY_ALIAS);
     }
 }
 

@@ -1,13 +1,10 @@
 package com.projectwork.cryptoservice.entity.factory;
 
-import org.springframework.stereotype.Component;
-
 import com.projectwork.cryptoservice.entity.models.decrypt.DecryptResultModel;
 import com.projectwork.cryptoservice.entity.models.encrypt.EncryptResultModel;
 import com.projectwork.cryptoservice.entity.models.jwtmanagement.GenerateJwtResultModel;
 import com.projectwork.cryptoservice.entity.models.keymanagement.GenerateKeyResultModel;
-import com.projectwork.cryptoservice.entity.models.tlsmanagement.GetRootCaCertResultModel;
-import com.projectwork.cryptoservice.entity.models.tlsmanagement.SignCsrResultModel;
+import org.springframework.stereotype.Component;
 
 /**
  * ResultModelsFactory class that creates instances of result models used in the cryptographic service.
@@ -54,27 +51,5 @@ public class ResultModelsFactory {
      */
     public final DecryptResultModel buildDecryptResultModel(final String plainText) {
         return new DecryptResultModel(plainText);
-    }
-
-    // TODO delete after new implementation of mtls
-    /**
-     * Builds a SignCsrResultModel instance with the specified PEM certificate.
-     *
-     * @param pemCert the PEM formatted certificate to be included in the result model
-     * @return a new SignCsrResultModel instance
-     */
-    public final SignCsrResultModel buildSignCsrResultModel(final String pemCert) {
-        return new SignCsrResultModel(pemCert);
-    }
-
-    // TODO delete after new implementation of mtls#
-    /**
-     * Builds a GetRootCaCertResultModel instance with the specified root CA certificate.
-     *
-     * @param rootCaCert the root CA certificate to be included in the result model
-     * @return a new GetRootCaCertResultModel instance
-     */
-    public final GetRootCaCertResultModel buildGetRootCaCertResultModel(final String rootCaCert) {
-        return new GetRootCaCertResultModel(rootCaCert);
     }
 }

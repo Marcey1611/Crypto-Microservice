@@ -3,8 +3,6 @@ package com.projectwork.cryptoservice.boundary.validation;
 import com.projectwork.cryptoservice.businesslogic.keymanagement.KeyStoreHelper;
 import com.projectwork.cryptoservice.entity.models.decrypt.DecryptRequest;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
@@ -17,7 +15,6 @@ import javax.crypto.SecretKey;
 @RequiredArgsConstructor
 public class DecryptValidator {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(DecryptValidator.class);
     private static final int JWT_MAX_LENGTH = 4096;
     private static final int CIPHER_TEXT_MAX_LENGTH = 2048;
 
@@ -32,9 +29,9 @@ public class DecryptValidator {
     public final void validateDecryptRequest(final DecryptRequest request) {
         final SecretKey key = this.keyStoreHelper.getKey("jwt-signing-key");
         final String cipherText = request.getCipherText();
-        this.validationService.validateTextWithoutWhitelist(cipherText, "cipherText", CIPHER_TEXT_MAX_LENGTH);
+        this.validationService.validateTextWithoutWhitelist(cipherText, FieldName.CIPHER_TEXT, CIPHER_TEXT_MAX_LENGTH);
         final String jwt = request.getJwt();
-        this.validationService.validateText(jwt, "jwt", JWT_MAX_LENGTH, false);
+        this.validationService.validateText(jwt, FieldName.JWT, JWT_MAX_LENGTH, false);
         this.validationService.validateJwt(jwt, key);
     }
 }

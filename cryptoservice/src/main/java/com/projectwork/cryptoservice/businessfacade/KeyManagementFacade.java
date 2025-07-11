@@ -1,18 +1,14 @@
 package com.projectwork.cryptoservice.businessfacade;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Service;
-
 import com.projectwork.cryptoservice.businesslogic.keymanagement.KeyManagementService;
 import com.projectwork.cryptoservice.entity.factory.ModelsFactory;
 import com.projectwork.cryptoservice.entity.factory.ResponseFactory;
 import com.projectwork.cryptoservice.entity.models.keymanagement.GenerateKeyModel;
 import com.projectwork.cryptoservice.entity.models.keymanagement.GenerateKeyResponse;
 import com.projectwork.cryptoservice.entity.models.keymanagement.GenerateKeyResultModel;
-
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
 
 /**
  * KeyManagementFacade class that handles the key generation process.
@@ -21,8 +17,6 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @Service
 public class KeyManagementFacade {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(KeyManagementFacade.class);
 
     private final KeyManagementService keyManagementService;
     private final ModelsFactory modelsFactory;

@@ -1,33 +1,20 @@
 package com.projectwork.cryptoservice.businesslogic.keymanagement;
 
-import java.security.InvalidParameterException;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
-
-import javax.crypto.KeyGenerator;
-import javax.crypto.SecretKey;
-
-import com.projectwork.cryptoservice.errorhandling.util.ErrorDetail;
-import com.projectwork.cryptoservice.errorhandling.util.ErrorDetailBuilder;
+import com.projectwork.cryptoservice.errorhandling.util.ErrorCode;
+import com.projectwork.cryptoservice.errorhandling.util.ErrorHandler;
+import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import com.projectwork.cryptoservice.errorhandling.exceptions.InternalServerErrorException;
-import com.projectwork.cryptoservice.errorhandling.util.ErrorCode;
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
+import java.security.*;
 
-import jakarta.annotation.PostConstruct;
-import lombok.RequiredArgsConstructor;
-
-//TODO maybe refactoring too complex (methods)
 /**
- * KeyStoreInitializer is responsible for initializing the KeyStore with necessary keys
- * SecureCodingPractices
- * - OWASP [101] Crypto operations (key gen) on trusted server
- * - OWASP [104] Secure Random for all key generations
- * - OWASP [106] Key management initialization (ensures master and signing keys)
+ * KeyStoreInitializer is responsible for initializing the KeyStore with necessary keys.
+ * It checks for the existence of specific keys and generates them if they are missing.
  */
 @RequiredArgsConstructor
 @Component
@@ -38,154 +25,143 @@ public class KeyStoreInitializer {
 
     private final KeyStoreHelper keyStoreHelper;
     private final KeyStoreLoader keyStoreLoader;
+    private final ErrorHandler errorHandler;
 
-    // OWASP [102] Ensuring master secrets (master-key & jwt-signing-key) are protected and initialized
     /**
-     * Initializes the KeyStore with a JWT signing key and a master key if they do not already exist.
-     * This method is called after the application context is initialized.
-     * SecureCodingPractices:
-     * - OWASP [101] Crypto operations (key gen) on trusted server
-     * - OWASP [104] Secure Random for all key generations
-     * - OWASP [106] Key management initialization (ensures master and signing keys)
+     * Initializes the KeyStore by checking for the existence of the JWT signing key and master key.
+     * If they do not exist, it generates them.
      */
     @PostConstruct
     public final void initKeyStore() {
+        LOGGER.info("Initializing KeyStore...");
+
         if (this.checkContainsAlias("jwt-signing-key")) {
-            //TODO Logging System.out.println("Keystore enthält keinen JWT-Signing-Key. Neuer Key wird generiert...");
+            LOGGER.info("JWT signing key not found in KeyStore – generating new one...");
             this.initJwtSigningKey();
-            //TODO logging System.out.println("JWT-Signing-Key erfolgreich im Keystore gespeichert!");
+            LOGGER.info("JWT signing key successfully initialized.");
         } else {
-            //TODO logging System.out.println("JWT-Signing-Key bereits im Keystore vorhanden.");
+            LOGGER.info("JWT signing key already exists – skipping initialization.");
         }
-        
+
         if (this.checkContainsAlias("master-key")) {
-            //TODO logging System.out.println("Keystore enthält keinen Master-Key. Neuer Key wird generiert...");
+            LOGGER.info("Master key not found in KeyStore – generating new one...");
             this.initMasterKey();
-            //TODO logging System.out.println("Master-Key erfolgreich im KeyStore gespeichert.");
+            LOGGER.info("Master key successfully initialized.");
         } else {
-            //TODO logging System.out.println("Master-Key bereits im KeyStore vorhanden.");
+            LOGGER.info("Master key already exists – skipping initialization.");
         }
     }
 
     /**
-     * Checks if the KeyStore contains an alias.
+     * Checks if the KeyStore contains a specific alias.
      *
      * @param alias the alias to check
-     * @return true if the alias exists, false otherwise
-     * SecureCodingPractices:
-     * - OWASP [106] Key management initialization (ensures master and signing keys)
+     * @return true if the alias is missing, false otherwise
      */
     private boolean checkContainsAlias(final String alias) {
         final KeyStore keystore = this.keyStoreLoader.load();
 
         try {
-            return !keystore.containsAlias(alias);
+            final boolean missing = !keystore.containsAlias(alias);
+            LOGGER.debug("Checked KeyStore for alias '{}': missing={}", alias, missing);
+            return missing;
         } catch (final KeyStoreException exception) {
-            final ErrorCode errorCode = ErrorCode.KEYSTORE_NOT_INITIALIZED;
-            final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
-            final String context = String.format(
-                    "While checking if alias '%s' exists in the keystore.",
-                    alias
+            final String context = String.format("While checking if alias '%s' exists in the keystore.", alias);
+            throw this.errorHandler.handleError(
+                    ErrorCode.KEYSTORE_NOT_INITIALIZED,
+                    context,
+                    exception
             );
-            errorDetailBuilder.withContext(context);
-            errorDetailBuilder.withException(exception);
-            final ErrorDetail errorDetail = errorDetailBuilder.build();
-            throw new InternalServerErrorException(errorDetail);
         }
     }
 
     /**
-     * Initializes the JWT signing key in the KeyStore.
-     * 
-     * @throws InternalServerErrorException if there is an error during key generation or storage
-     * SecureCodingPractices:
-     * - OWASP 104 Secure Random Number Generation: Key generation uses SecureRandom.getInstanceStrong() as cryptographical secure random source
+     * Initializes the JWT signing key and stores it in the KeyStore.
+     * If the key already exists, it skips the initialization.
      */
     private void initJwtSigningKey() {
         final SecureRandom secureRandom;
         try {
             secureRandom = SecureRandom.getInstanceStrong();
+            LOGGER.debug("SecureRandom instance for JWT signing key initialized.");
         } catch (final NoSuchAlgorithmException exception) {
-            final ErrorCode errorCode = ErrorCode.JWT_SECURE_RANDOM_FAILED;
-            final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
-            errorDetailBuilder.withContext("While creating SecureRandom instance for generating JWT signing key.");
-            errorDetailBuilder.withException(exception);
-            final ErrorDetail errorDetail = errorDetailBuilder.build();
-            throw new InternalServerErrorException(errorDetail);
+            throw this.errorHandler.handleError(
+                    ErrorCode.JWT_SECURE_RANDOM_FAILED,
+                    "While creating SecureRandom instance for generating JWT signing key.",
+                    exception
+            );
         }
-    
+
         final KeyGenerator keyGen;
         try {
             keyGen = KeyGenerator.getInstance("HmacSHA256");
+            LOGGER.debug("KeyGenerator for JWT signing key initialized with HmacSHA256.");
         } catch (final NoSuchAlgorithmException exception) {
-            final ErrorCode errorCode = ErrorCode.JWT_KEYGEN_INIT_FAILED;
-            final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
-            errorDetailBuilder.withContext("While creating KeyGenerator for JWT signing key.");
-            errorDetailBuilder.withException(exception);
-            final ErrorDetail errorDetail = errorDetailBuilder.build();
-            throw new InternalServerErrorException(errorDetail);
+            throw this.errorHandler.handleError(
+                    ErrorCode.JWT_KEYGEN_INIT_FAILED,
+                    "While creating KeyGenerator for JWT signing key.",
+                    exception
+            );
         }
-    
+
         try {
             keyGen.init(KEY_SIZE, secureRandom);
+            LOGGER.debug("KeyGenerator initialized with secure random and key size {} for JWT signing key.", KEY_SIZE);
         } catch (final InvalidParameterException exception) {
-            final ErrorCode errorCode = ErrorCode.JWT_KEYGEN_INIT_PARAMS_INVALID;
-            final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
-            errorDetailBuilder.withContext("While initializing KeyGenerator with SecureRandom for JWT signing key.");
-            errorDetailBuilder.withException(exception);
-            final ErrorDetail errorDetail = errorDetailBuilder.build();
-            throw new InternalServerErrorException(errorDetail);
+            throw this.errorHandler.handleError(
+                    ErrorCode.JWT_KEYGEN_INIT_PARAMS_INVALID,
+                    "While initializing KeyGenerator with SecureRandom for JWT signing key.",
+                    exception
+            );
         }
-    
+
         final SecretKey signingKey = keyGen.generateKey();
-        this.keyStoreHelper.storeKey("jwt-signing-key", signingKey); // Fehlerbehandlung findet dort statt
+        LOGGER.debug("JWT signing key generated.");
+        this.keyStoreHelper.storeKey("jwt-signing-key", signingKey);
     }
-    
 
     /**
-     * 
-     * @throws InternalServerErrorException if there is an error during master key generation or storage
-     * SecureCodingPractices:
-     * - OWASP 104 Secure Random Number Generation: Key generation uses SecureRandom.getInstanceStrong() as cryptographical secure random source
+     * Initializes the master key and stores it in the KeyStore.
+     * If the key already exists, it skips the initialization.
      */
     private void initMasterKey() {
         final SecureRandom secureRandom;
         try {
             secureRandom = SecureRandom.getInstanceStrong();
+            LOGGER.debug("SecureRandom instance for master key initialized.");
         } catch (final NoSuchAlgorithmException exception) {
-            final ErrorCode errorCode = ErrorCode.MASTER_KEY_SECURE_RANDOM_FAILED;
-            final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
-            errorDetailBuilder.withContext("While creating SecureRandom for master key generation.");
-            errorDetailBuilder.withException(exception);
-            final ErrorDetail errorDetail = errorDetailBuilder.build();
-            throw new InternalServerErrorException(errorDetail);
+            throw this.errorHandler.handleError(
+                    ErrorCode.MASTER_KEY_SECURE_RANDOM_FAILED,
+                    "While creating SecureRandom for master key generation.",
+                    exception
+            );
         }
-    
+
         final KeyGenerator keyGen;
         try {
             keyGen = KeyGenerator.getInstance("AES");
+            LOGGER.debug("KeyGenerator for master key initialized with AES.");
         } catch (final NoSuchAlgorithmException exception) {
-            final ErrorCode errorCode = ErrorCode.MASTER_KEYGEN_INIT_FAILED;
-            final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
-            errorDetailBuilder.withContext("While creating KeyGenerator for master key.");
-            errorDetailBuilder.withException(exception);
-            final ErrorDetail errorDetail = errorDetailBuilder.build();
-            throw new InternalServerErrorException(errorDetail);
+            throw this.errorHandler.handleError(
+                    ErrorCode.MASTER_KEYGEN_INIT_FAILED,
+                    "While creating KeyGenerator for master key.",
+                    exception
+            );
         }
-    
+
         try {
             keyGen.init(KEY_SIZE, secureRandom);
+            LOGGER.debug("KeyGenerator initialized with secure random and key size {} for master key.", KEY_SIZE);
         } catch (final InvalidParameterException exception) {
-            final ErrorCode errorCode = ErrorCode.MASTER_KEYGEN_PARAMS_INVALID;
-            final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
-            errorDetailBuilder.withContext("While initializing KeyGenerator with SecureRandom for master key.");
-            errorDetailBuilder.withException(exception);
-            final ErrorDetail errorDetail = errorDetailBuilder.build();
-            throw new InternalServerErrorException(errorDetail);
+            throw this.errorHandler.handleError(
+                    ErrorCode.MASTER_KEYGEN_PARAMS_INVALID,
+                    "While initializing KeyGenerator with SecureRandom for master key.",
+                    exception
+            );
         }
-    
+
         final SecretKey masterKey = keyGen.generateKey();
-        this.keyStoreHelper.storeKey("master-key", masterKey); // eigene Fehlerbehandlung dort
+        LOGGER.debug("Master key generated.");
+        this.keyStoreHelper.storeKey("master-key", masterKey);
     }
-    
 }

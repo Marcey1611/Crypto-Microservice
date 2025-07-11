@@ -41,6 +41,11 @@ keytool -importcert \
 
 KEYSTORE_PASSWORD=CryptoMicroservice2025! KEYSTORE_PATH=src/main/resources/keystore/keystore.jks mvn spring-boot:run
 
+$env:KEYSTORE_PASSWORD = "CryptoMicroservice2025!"
+$env:KEYSTORE_PATH = "src/main/resources/keystore/keystore.jks"
+mvn spring-boot:run
+
+
 # Erstellung tls dateien:
 
 ## "openssl req -x509 -sha256 -days 3650 -newkey rsa:4096 -keyout rootCA.key -out rootCA.crt"

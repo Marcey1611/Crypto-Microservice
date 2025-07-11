@@ -1,11 +1,9 @@
 package com.projectwork.cryptoservice.boundary.security;
 
+import org.springframework.stereotype.Component;
+
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
 
 /**
  * KnownClientStore is a component that maintains a set of known clients.
@@ -13,8 +11,6 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class KnownClientStore {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(KnownClientStore.class);
 
     private final Set<String> knownClients = ConcurrentHashMap.newKeySet();
 

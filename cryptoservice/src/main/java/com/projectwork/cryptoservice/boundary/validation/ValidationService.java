@@ -4,8 +4,6 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.JwsHeader;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
@@ -18,8 +16,6 @@ import java.util.Date;
 @Service
 @RequiredArgsConstructor
 public class ValidationService {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(ValidationService.class);
 
     private final FieldValidator fieldValidator;
     private final EncodingValidator encodingValidator;
@@ -36,7 +32,7 @@ public class ValidationService {
      * @param maxLength  the maximum allowed length of the text
      * @param extended   whether to use an extended whitelist for validation
      */
-    public final void validateText(final String text, final String name, final int maxLength, final boolean extended) {
+    public final void validateText(final String text, final FieldName name, final int maxLength, final boolean extended) {
         this.fieldValidator.validateNotBlank(text, name);
         this.fieldValidator.validateMaxLength(text, maxLength, name);
         this.encodingValidator.validateNoUnicodeEscapes(text, name);
@@ -56,7 +52,7 @@ public class ValidationService {
      * @param name      the name of the field for error reporting
      * @param maxLength the maximum allowed length of the text
      */
-    public void validateTextWithoutWhitelist(final String text, final String name, final int maxLength) {
+    public void validateTextWithoutWhitelist(final String text, final FieldName name, final int maxLength) {
         this.fieldValidator.validateNotBlank(text, name);
         this.fieldValidator.validateMaxLength(text, maxLength, name);
         this.encodingValidator.validateNoUnicodeEscapes(text, name);

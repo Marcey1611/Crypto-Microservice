@@ -1,25 +1,31 @@
 package com.projectwork.cryptoservice.errorhandling.util;
 
+import lombok.Getter;
 import org.slf4j.event.Level;
 
-
+/**
+ * Enum representing various error codes used in the application.
+ * Each error code has a unique identifier, a user-friendly message,
+ * and a log level indicating the severity of the error.
+ */
+@Getter
 public enum ErrorCode {
     //400
     FIELD_BLANK(
         "400.001", 
-        "Field %s must not be blank", 
+        "Field %s must not be blank",
         Level.ERROR
     ),
 
     FIELD_TOO_LONG(
         "400.002", 
-        "Field %s is too long", 
+        "Field %s is too long",
         Level.ERROR
     ),
     
     INVALID_ENCODING(
         "400.003", 
-        "Field %s has invalid encoding", 
+        "Field %s has invalid encoding",
         Level.ERROR
     ),
     
@@ -86,6 +92,11 @@ public enum ErrorCode {
     CLIENT_KEY_ALIAS_MISMATCH_CLIENT_NAME(
         "400.017",
         "Client key alias does not match the client name.",
+        Level.ERROR
+    ),
+    UNKNOWN_CLIENT(
+        "400.018",
+        "Unknown client '%s'. Client is not registered.",
         Level.ERROR
     ),
     
@@ -279,25 +290,52 @@ public enum ErrorCode {
 
     DECRYPTION_FAILED(
         "500.014",
-        "Failed to decrypt cipher text.",
+        "Internal server error",
+        "Failed to decrypt data",
         Level.ERROR
     ),
 
     ENCRYPTION_FAILED(
-        "400.018",
-        "Encryption failed.",
+        "500.018",
+        "Internal server error",
+        "Failed to encrypt data",
         Level.ERROR
     ),
 
-    ;
+    JWT_GENERATION_FAILED(
+        "500.036",
+        "Internal server error",
+        "JWT creation failed for client %s",
+        Level.ERROR
+    ),
 
-    // gute idee wenn erst in einem kurzen satz was passiert ist und dann iwie halt Reason: oder so und danach halt wo und in welchem kontext das passiert ist und dann halt die exception mit stacktrace...
+    JWT_KEYALIAS_EXTRACTION_FAILED(
+            "500.036",
+            "Internal server error",
+            "JWT KeyAlias extraction failed",
+            Level.ERROR
+    ),
+
+    JWT_ISSUEDTO_EXTRACTION_FAILED(
+            "500.036",
+            "Internal server error",
+            "JWT KeyAlias extraction failed",
+            Level.ERROR
+    );
+
 
     private final String code;
     private final String userMsg;
     private final String logHeadline;
     private final Level logLevel;
 
+    /**
+     * Constructor for ErrorCode enum.
+     *
+     * @param code       the unique error code
+     * @param userMsg    the user-friendly message associated with the error
+     * @param logLevel   the logging level for this error
+     */
     ErrorCode(final String code, final String userMsg, final Level logLevel) {
         this.code = code;
         this.userMsg = userMsg;
@@ -305,13 +343,14 @@ public enum ErrorCode {
         this.logLevel = logLevel;
     }
 
-    ErrorCode(final String code, final String userMsg, final String logHeadline) {
-        this.code = code;
-        this.userMsg = userMsg;
-        this.logHeadline = logHeadline;
-        this.logLevel = Level.ERROR;
-    }
-
+    /**
+     * Constructor for ErrorCode enum with a log level and headline.
+     *
+     * @param code         the unique error code
+     * @param userMsg      the user-friendly message associated with the error
+     * @param logHeadline  the headline for logging purposes
+     * @param logLevel     the logging level for this error
+     */
     ErrorCode(final String code, final String userMsg, final String logHeadline, final Level logLevel) {
         this.code = code;
         this.userMsg = userMsg;
@@ -319,18 +358,11 @@ public enum ErrorCode {
         this.logLevel = logLevel;
     }
 
-    ErrorCode(final String code, final String userMsg) {
-        this.code = code;
-        this.userMsg = userMsg;
-        this.logHeadline = userMsg;
-        this.logLevel = Level.ERROR;
-    }
-
-    public String getCode() {return code;}
-    public String getUserMsg() {return userMsg;}
-    public String getLogHeadline() {return logHeadline;}
-    public Level getLogLevel() {return logLevel;}
-
+    /**
+     * Returns a builder for creating an ErrorDetail object based on this error code.
+     *
+     * @return an ErrorDetailBuilder instance
+     */
     public ErrorDetailBuilder builder() {
         return new ErrorDetailBuilder(this);
     }
