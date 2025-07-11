@@ -34,9 +34,7 @@ public class JwtClaimsValidator {
         this.fieldValidator.validateWhitelist(alg, FieldName.ALGORITHM_HEADER);
 
         if ("none".equalsIgnoreCase(alg)) {
-            final ErrorCode errorCode = ErrorCode.INSECURE_JWT_ALGO;
-            final String context = "While validating JWT algorithm from header.";
-            throw this.errorHandler.handleValidationError(errorCode, context);
+            throw this.errorHandler.handleError(ErrorCode.INSECURE_JWT_ALGO, "While validating JWT algorithm from header.");
         }
     }
 

@@ -1,25 +1,21 @@
 package com.projectwork.cryptoservice.businesslogic.keymanagement;
 
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
-import java.util.Base64;
-
-import javax.crypto.KeyGenerator;
-import javax.crypto.SecretKey;
-
-import com.projectwork.cryptoservice.errorhandling.util.ErrorDetail;
-import com.projectwork.cryptoservice.errorhandling.util.ErrorDetailBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
-
 import com.projectwork.cryptoservice.entity.factory.ResultModelsFactory;
 import com.projectwork.cryptoservice.entity.models.keymanagement.GenerateKeyModel;
 import com.projectwork.cryptoservice.entity.models.keymanagement.GenerateKeyResultModel;
 import com.projectwork.cryptoservice.errorhandling.exceptions.InternalServerErrorException;
 import com.projectwork.cryptoservice.errorhandling.util.ErrorCode;
-
+import com.projectwork.cryptoservice.errorhandling.util.ErrorHandler;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.util.Base64;
 
 /**
  * Key Management Service implementation: handles the key management of the service.
@@ -37,6 +33,7 @@ public class KeyManagementService {
     private final KeyStoreHelper keyStoreHelper;
     private final ResultModelsFactory resultModelsFactory;
     private final ClientKeyRegistry clientKeyRegistry;
+    private final ErrorHandler errorHandler;
 
     /**
      * Generates a secure client key, 
@@ -82,26 +79,22 @@ public class KeyManagementService {
         try {
             secureRandom = SecureRandom.getInstanceStrong();
         } catch (final NoSuchAlgorithmException exception) {
-            final ErrorCode errorCode = ErrorCode.AES_KEYGEN_SECURE_RANDOM_FAILED;
-            final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
-            errorDetailBuilder.withContext("While generating a random client key.");
-            errorDetailBuilder.withException(exception);
-            final ErrorDetail errorDetail = errorDetailBuilder.build();
-            errorDetail.logError();
-            throw new InternalServerErrorException(errorDetail);
+            throw this.errorHandler.handleError(
+                    ErrorCode.AES_KEYGEN_SECURE_RANDOM_FAILED,
+            "While generating a random client key.",
+                    exception
+            );
         }
     
         final KeyGenerator keyGen;
         try {
             keyGen = KeyGenerator.getInstance("AES");
         } catch (final NoSuchAlgorithmException exception) {
-            final ErrorCode errorCode = ErrorCode.AES_KEYGEN_INIT_FAILED;
-            final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
-            errorDetailBuilder.withContext("While preparing AES key generator for client key creation.");
-            errorDetailBuilder.withException(exception);
-            final ErrorDetail errorDetail = errorDetailBuilder.build();
-            errorDetail.logErrorWithException();
-            throw new InternalServerErrorException(errorDetail);
+            throw this.errorHandler.handleError(
+                    ErrorCode.AES_KEYGEN_INIT_FAILED,
+                    "While preparing AES key generator for client key creation.",
+                    exception
+            );
         }
 
         keyGen.init(KEY_SIZE, secureRandom);
@@ -119,13 +112,11 @@ public class KeyManagementService {
         try {
             secureRandom = SecureRandom.getInstanceStrong();
         } catch (final NoSuchAlgorithmException exception) {
-            final ErrorCode errorCode = ErrorCode.AES_KEYGEN_SECURE_RANDOM_FAILED;
-            final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
-            errorDetailBuilder.withContext("While generating a random client key alias.");
-            errorDetailBuilder.withException(exception);
-            final ErrorDetail errorDetail = errorDetailBuilder.build();
-            errorDetail.logErrorWithException();
-            throw new InternalServerErrorException(errorDetail);
+            throw this.errorHandler.handleError(
+                    ErrorCode.AES_KEYGEN_SECURE_RANDOM_FAILED,
+                    "While generating a random client key alias.",
+                    exception
+            );
         }
         final byte[] randomBytes = new byte[16];
         secureRandom.nextBytes(randomBytes);

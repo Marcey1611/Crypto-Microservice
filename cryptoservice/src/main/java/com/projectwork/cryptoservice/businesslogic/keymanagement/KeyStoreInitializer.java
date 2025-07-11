@@ -1,25 +1,16 @@
 package com.projectwork.cryptoservice.businesslogic.keymanagement;
 
-import java.security.InvalidParameterException;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
-
-import javax.crypto.KeyGenerator;
-import javax.crypto.SecretKey;
-
-import com.projectwork.cryptoservice.errorhandling.util.ErrorDetail;
-import com.projectwork.cryptoservice.errorhandling.util.ErrorDetailBuilder;
+import com.projectwork.cryptoservice.errorhandling.util.ErrorCode;
+import com.projectwork.cryptoservice.errorhandling.util.ErrorHandler;
+import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import com.projectwork.cryptoservice.errorhandling.exceptions.InternalServerErrorException;
-import com.projectwork.cryptoservice.errorhandling.util.ErrorCode;
-
-import jakarta.annotation.PostConstruct;
-import lombok.RequiredArgsConstructor;
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
+import java.security.*;
 
 /**
  * KeyStoreInitializer is responsible for initializing the KeyStore with necessary keys.
@@ -34,6 +25,7 @@ public class KeyStoreInitializer {
 
     private final KeyStoreHelper keyStoreHelper;
     private final KeyStoreLoader keyStoreLoader;
+    private final ErrorHandler errorHandler;
 
     /**
      * Initializes the KeyStore by checking for the existence of the JWT signing key and master key.
@@ -74,14 +66,12 @@ public class KeyStoreInitializer {
             LOGGER.debug("Checked KeyStore for alias '{}': missing={}", alias, missing);
             return missing;
         } catch (final KeyStoreException exception) {
-            final ErrorCode errorCode = ErrorCode.KEYSTORE_NOT_INITIALIZED;
-            final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
             final String context = String.format("While checking if alias '%s' exists in the keystore.", alias);
-            errorDetailBuilder.withContext(context);
-            errorDetailBuilder.withException(exception);
-            final ErrorDetail errorDetail = errorDetailBuilder.build();
-            errorDetail.logErrorWithException();
-            throw new InternalServerErrorException(errorDetail);
+            throw this.errorHandler.handleError(
+                    ErrorCode.KEYSTORE_NOT_INITIALIZED,
+                    context,
+                    exception
+            );
         }
     }
 
@@ -95,13 +85,11 @@ public class KeyStoreInitializer {
             secureRandom = SecureRandom.getInstanceStrong();
             LOGGER.debug("SecureRandom instance for JWT signing key initialized.");
         } catch (final NoSuchAlgorithmException exception) {
-            final ErrorCode errorCode = ErrorCode.JWT_SECURE_RANDOM_FAILED;
-            final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
-            errorDetailBuilder.withContext("While creating SecureRandom instance for generating JWT signing key.");
-            errorDetailBuilder.withException(exception);
-            final ErrorDetail errorDetail = errorDetailBuilder.build();
-            errorDetail.logErrorWithException();
-            throw new InternalServerErrorException(errorDetail);
+            throw this.errorHandler.handleError(
+                    ErrorCode.JWT_SECURE_RANDOM_FAILED,
+                    "While creating SecureRandom instance for generating JWT signing key.",
+                    exception
+            );
         }
 
         final KeyGenerator keyGen;
@@ -109,26 +97,22 @@ public class KeyStoreInitializer {
             keyGen = KeyGenerator.getInstance("HmacSHA256");
             LOGGER.debug("KeyGenerator for JWT signing key initialized with HmacSHA256.");
         } catch (final NoSuchAlgorithmException exception) {
-            final ErrorCode errorCode = ErrorCode.JWT_KEYGEN_INIT_FAILED;
-            final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
-            errorDetailBuilder.withContext("While creating KeyGenerator for JWT signing key.");
-            errorDetailBuilder.withException(exception);
-            final ErrorDetail errorDetail = errorDetailBuilder.build();
-            errorDetail.logErrorWithException();
-            throw new InternalServerErrorException(errorDetail);
+            throw this.errorHandler.handleError(
+                    ErrorCode.JWT_KEYGEN_INIT_FAILED,
+                    "While creating KeyGenerator for JWT signing key.",
+                    exception
+            );
         }
 
         try {
             keyGen.init(KEY_SIZE, secureRandom);
             LOGGER.debug("KeyGenerator initialized with secure random and key size {} for JWT signing key.", KEY_SIZE);
         } catch (final InvalidParameterException exception) {
-            final ErrorCode errorCode = ErrorCode.JWT_KEYGEN_INIT_PARAMS_INVALID;
-            final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
-            errorDetailBuilder.withContext("While initializing KeyGenerator with SecureRandom for JWT signing key.");
-            errorDetailBuilder.withException(exception);
-            final ErrorDetail errorDetail = errorDetailBuilder.build();
-            errorDetail.logErrorWithException();
-            throw new InternalServerErrorException(errorDetail);
+            throw this.errorHandler.handleError(
+                    ErrorCode.JWT_KEYGEN_INIT_PARAMS_INVALID,
+                    "While initializing KeyGenerator with SecureRandom for JWT signing key.",
+                    exception
+            );
         }
 
         final SecretKey signingKey = keyGen.generateKey();
@@ -146,13 +130,11 @@ public class KeyStoreInitializer {
             secureRandom = SecureRandom.getInstanceStrong();
             LOGGER.debug("SecureRandom instance for master key initialized.");
         } catch (final NoSuchAlgorithmException exception) {
-            final ErrorCode errorCode = ErrorCode.MASTER_KEY_SECURE_RANDOM_FAILED;
-            final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
-            errorDetailBuilder.withContext("While creating SecureRandom for master key generation.");
-            errorDetailBuilder.withException(exception);
-            final ErrorDetail errorDetail = errorDetailBuilder.build();
-            errorDetail.logErrorWithException();
-            throw new InternalServerErrorException(errorDetail);
+            throw this.errorHandler.handleError(
+                    ErrorCode.MASTER_KEY_SECURE_RANDOM_FAILED,
+                    "While creating SecureRandom for master key generation.",
+                    exception
+            );
         }
 
         final KeyGenerator keyGen;
@@ -160,26 +142,22 @@ public class KeyStoreInitializer {
             keyGen = KeyGenerator.getInstance("AES");
             LOGGER.debug("KeyGenerator for master key initialized with AES.");
         } catch (final NoSuchAlgorithmException exception) {
-            final ErrorCode errorCode = ErrorCode.MASTER_KEYGEN_INIT_FAILED;
-            final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
-            errorDetailBuilder.withContext("While creating KeyGenerator for master key.");
-            errorDetailBuilder.withException(exception);
-            final ErrorDetail errorDetail = errorDetailBuilder.build();
-            errorDetail.logErrorWithException();
-            throw new InternalServerErrorException(errorDetail);
+            throw this.errorHandler.handleError(
+                    ErrorCode.MASTER_KEYGEN_INIT_FAILED,
+                    "While creating KeyGenerator for master key.",
+                    exception
+            );
         }
 
         try {
             keyGen.init(KEY_SIZE, secureRandom);
             LOGGER.debug("KeyGenerator initialized with secure random and key size {} for master key.", KEY_SIZE);
         } catch (final InvalidParameterException exception) {
-            final ErrorCode errorCode = ErrorCode.MASTER_KEYGEN_PARAMS_INVALID;
-            final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
-            errorDetailBuilder.withContext("While initializing KeyGenerator with SecureRandom for master key.");
-            errorDetailBuilder.withException(exception);
-            final ErrorDetail errorDetail = errorDetailBuilder.build();
-            errorDetail.logErrorWithException();
-            throw new InternalServerErrorException(errorDetail);
+            throw this.errorHandler.handleError(
+                    ErrorCode.MASTER_KEYGEN_PARAMS_INVALID,
+                    "While initializing KeyGenerator with SecureRandom for master key.",
+                    exception
+            );
         }
 
         final SecretKey masterKey = keyGen.generateKey();

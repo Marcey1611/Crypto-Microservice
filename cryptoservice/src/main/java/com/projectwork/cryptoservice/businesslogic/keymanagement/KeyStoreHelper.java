@@ -1,9 +1,7 @@
 package com.projectwork.cryptoservice.businesslogic.keymanagement;
 
-import com.projectwork.cryptoservice.errorhandling.exceptions.InternalServerErrorException;
 import com.projectwork.cryptoservice.errorhandling.util.ErrorCode;
-import com.projectwork.cryptoservice.errorhandling.util.ErrorDetail;
-import com.projectwork.cryptoservice.errorhandling.util.ErrorDetailBuilder;
+import com.projectwork.cryptoservice.errorhandling.util.ErrorHandler;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +30,7 @@ public class KeyStoreHelper {
     private final KeyStoreLoader loader;
     private final MasterKeyService masterKeyService;
     private final ClientKeyEncryptor encryptor;
+    private final ErrorHandler errorHandler;
 
     /**
      * Stores a client key in the keystore under the specified alias.
@@ -104,21 +103,19 @@ public class KeyStoreHelper {
             ks.setEntry(alias, entry, protection);
             LOGGER.debug("Wrapped key stored successfully under alias '{}'", alias);
         } catch (final KeyStoreException exception) {
-            final ErrorCode errorCode = ErrorCode.SETTING_KEYSTORE_ENTRY_FAILED;
-            final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
             final String context = String.format("Storing encrypted key under alias: '%s'", alias);
-            errorDetailBuilder.withContext(context);
-            errorDetailBuilder.withLogMsgFormatted(alias);
-            errorDetailBuilder.withException(exception);
-            final ErrorDetail errorDetail = errorDetailBuilder.build();
-            errorDetail.logErrorWithException();
-            throw new InternalServerErrorException(errorDetail);
+            throw this.errorHandler.handleError(
+                    ErrorCode.SETTING_KEYSTORE_ENTRY_FAILED,
+                    alias,
+                    context,
+                    exception
+            );
         } finally {
             Arrays.fill(password, '\0');
         }
     }
 
-/**
+    /**
      * Retrieves a SecretKey from the KeyStore using the specified alias.
      * It uses the keystore password from the environment variable "KEYSTORE_PASSWORD".
      *
@@ -134,15 +131,13 @@ public class KeyStoreHelper {
             LOGGER.debug("Accessing KeyStore entry for alias '{}'", alias);
             return (SecretKey) ks.getKey(alias, password);
         } catch (final KeyStoreException | NoSuchAlgorithmException | UnrecoverableKeyException exception) {
-            final ErrorCode errorCode = ErrorCode.KEYSTORE_KEY_ACCESS_FAILED;
-            final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
             final String context = String.format("Retrieving key under alias: '%s' from keystore.", alias);
-            errorDetailBuilder.withContext(context);
-            errorDetailBuilder.withLogMsgFormatted(alias);
-            errorDetailBuilder.withException(exception);
-            final ErrorDetail errorDetail = errorDetailBuilder.build();
-            errorDetail.logErrorWithException();
-            throw new InternalServerErrorException(errorDetail);
+            throw this.errorHandler.handleError(
+                    ErrorCode.KEYSTORE_KEY_ACCESS_FAILED,
+                    alias,
+                    context,
+                    exception
+            );
         } finally {
             Arrays.fill(password, '\0');
         }

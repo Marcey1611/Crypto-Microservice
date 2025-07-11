@@ -1,9 +1,7 @@
 package com.projectwork.cryptoservice.businesslogic.keymanagement;
 
-import com.projectwork.cryptoservice.errorhandling.exceptions.InternalServerErrorException;
 import com.projectwork.cryptoservice.errorhandling.util.ErrorCode;
-import com.projectwork.cryptoservice.errorhandling.util.ErrorDetail;
-import com.projectwork.cryptoservice.errorhandling.util.ErrorDetailBuilder;
+import com.projectwork.cryptoservice.errorhandling.util.ErrorHandler;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,6 +29,7 @@ public class KeyCleanupTask {
     private final ClientKeyRegistry clientKeyRegistry;
     private final KeyExpirationChecker expirationChecker;
     private final KeyStoreLoader keyStoreLoader;
+    private final ErrorHandler errorHandler;
 
     /**
      * Scheduled method that runs every hour to clean up expired keys.
@@ -86,13 +85,11 @@ public class KeyCleanupTask {
         try {
             return keystore.aliases();
         } catch (final KeyStoreException exception) {
-            final ErrorCode errorCode = ErrorCode.KEYSTORE_NOT_INITIALIZED;
-            final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
-            errorDetailBuilder.withContext("While loading aliases in cleanup task.");
-            errorDetailBuilder.withException(exception);
-            final ErrorDetail errorDetail = errorDetailBuilder.build();
-            errorDetail.logErrorWithException();
-            throw new InternalServerErrorException(errorDetail);
+            throw this.errorHandler.handleError(
+                    ErrorCode.KEYSTORE_NOT_INITIALIZED,
+            "While loading aliases in cleanup task.",
+                    exception
+            );
         }
     }
 
@@ -120,13 +117,12 @@ public class KeyCleanupTask {
                 this.clientKeyRegistry.removeClientByKeyAlias(alias);
                 LOGGER.info("Deleted expired key '{}'", alias);
             } catch (final KeyStoreException exception) {
-                final ErrorCode errorCode = ErrorCode.DELETING_KEYSTORE_ENTRY_FAILED;
-                final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
-                errorDetailBuilder.withContext("While deleting key for alias: " + alias);
-                errorDetailBuilder.withException(exception);
-                final ErrorDetail errorDetail = errorDetailBuilder.build();
-                errorDetail.logErrorWithException();
-                throw new InternalServerErrorException(errorDetail);
+                final String context = String.format("While deleting key for alias: %s", alias);
+                throw this.errorHandler.handleError(
+                        ErrorCode.DELETING_KEYSTORE_ENTRY_FAILED,
+                        context,
+                        exception
+                );
             }
         }
     }

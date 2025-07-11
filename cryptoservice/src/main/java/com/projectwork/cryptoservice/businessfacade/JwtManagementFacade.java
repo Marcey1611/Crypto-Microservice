@@ -1,10 +1,5 @@
 package com.projectwork.cryptoservice.businessfacade;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Service;
-
 import com.projectwork.cryptoservice.businesslogic.jwtmanagement.JwtManagementService;
 import com.projectwork.cryptoservice.entity.factory.ModelsFactory;
 import com.projectwork.cryptoservice.entity.factory.ResponseFactory;
@@ -12,8 +7,9 @@ import com.projectwork.cryptoservice.entity.models.jwtmanagement.GenerateJwtMode
 import com.projectwork.cryptoservice.entity.models.jwtmanagement.GenerateJwtRequest;
 import com.projectwork.cryptoservice.entity.models.jwtmanagement.GenerateJwtResponse;
 import com.projectwork.cryptoservice.entity.models.jwtmanagement.GenerateJwtResultModel;
-
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
 
 /**
  * JwtManagementFacade class that handles the JWT generation process.
@@ -22,8 +18,6 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @Service
 public class JwtManagementFacade {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(JwtManagementFacade.class);
 
     private final JwtManagementService jwtManagementService;
     private final ModelsFactory modelsFactory;

@@ -2,8 +2,6 @@ package com.projectwork.cryptoservice.boundary.validation;
 
 import com.projectwork.cryptoservice.errorhandling.exceptions.BadRequestException;
 import com.projectwork.cryptoservice.errorhandling.util.ErrorCode;
-import com.projectwork.cryptoservice.errorhandling.util.ErrorDetail;
-import com.projectwork.cryptoservice.errorhandling.util.ErrorDetailBuilder;
 import com.projectwork.cryptoservice.errorhandling.util.ErrorHandler;
 import io.jsonwebtoken.*;
 import lombok.RequiredArgsConstructor;
@@ -36,9 +34,7 @@ public class JwtValidator {
     public final void validateJwtPattern(final String jwt) {
         final Matcher matcher = JWT_PATTERN.matcher(jwt);
         if (!matcher.matches()) {
-            final ErrorCode errorCode = ErrorCode.INVALID_JWT;
-            final String context = "While validating JWT pattern.";
-            throw this.errorHandler.handleValidationError(errorCode, context);
+            throw this.errorHandler.handleError(ErrorCode.INVALID_JWT, "While validating JWT pattern.");
         }
     }
 
@@ -55,9 +51,7 @@ public class JwtValidator {
             final JwtParser build = Jwts.parserBuilder().setSigningKey(key).build();
             return build.parseClaimsJws(jwt);
         } catch (final JwtException exception) {
-            final ErrorCode errorCode = ErrorCode.INVALID_JWT;
-            final String context = "While validating JWT signature.";
-            throw this.errorHandler.handleValidationError(errorCode, context);
+            throw this.errorHandler.handleError(ErrorCode.INVALID_JWT, "While validating JWT signature.");
 
         }
     }
@@ -70,9 +64,7 @@ public class JwtValidator {
      */
     public final void validateExpiration(final Date expiration) {
         if (null == expiration || expiration.before(new Date())) {
-            final ErrorCode errorCode = ErrorCode.EXPIRED_JWT;
-            final String context = "While validating JWT expiration date.";
-            throw this.errorHandler.handleValidationError(errorCode, context);
+            throw this.errorHandler.handleError(ErrorCode.EXPIRED_JWT, "While validating JWT expiration date.");
         }
     }
 }

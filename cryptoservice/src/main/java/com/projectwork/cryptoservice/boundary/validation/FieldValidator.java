@@ -33,7 +33,7 @@ public class FieldValidator {
         if (null == field || field.isBlank()) {
             final String fieldName = name.getValue();
             final String context = String.format("Field '%s' is blank", fieldName);
-            throw this.errorHandler.handleValidationError(ErrorCode.FIELD_BLANK, fieldName, context);
+            throw this.errorHandler.handleError(context, fieldName, ErrorCode.FIELD_BLANK);
         }
     }
 
@@ -49,7 +49,7 @@ public class FieldValidator {
         if (field.length() > maxLength) {
             final String fieldName = name.getValue();
             final String context = String.format("Field %s exceeds maximum allowed length of %s characters.", fieldName, maxLength);
-            throw this.errorHandler.handleValidationError(ErrorCode.FIELD_TOO_LONG, fieldName, context);
+            throw this.errorHandler.handleError(context, fieldName, ErrorCode.FIELD_TOO_LONG);
         }
     }
 
@@ -65,7 +65,7 @@ public class FieldValidator {
         if (!matcher.matches()) {
             final String fieldName = name.getValue();
             final String context = String.format("While validating field: %s against whitelist.", fieldName);
-            throw this.errorHandler.handleValidationError(ErrorCode.ILLEGAL_CHARS, fieldName, context);
+            throw this.errorHandler.handleError(context, fieldName, ErrorCode.ILLEGAL_CHARS);
         }
     }
 
@@ -81,7 +81,7 @@ public class FieldValidator {
         if (!matcher.matches()) {
             final String fieldName = name.getValue();
             final String context = String.format("While validating field: %s against extended whitelist.", fieldName);
-            throw this.errorHandler.handleValidationError(ErrorCode.ILLEGAL_CHARS, fieldName, context);
+            throw this.errorHandler.handleError(context, fieldName, ErrorCode.ILLEGAL_CHARS);
         }
     }
 }

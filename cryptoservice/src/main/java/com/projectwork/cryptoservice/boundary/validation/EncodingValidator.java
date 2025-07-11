@@ -26,7 +26,7 @@ public class EncodingValidator {
         if (field.contains("\\u")) {
             final String fieldName = name.getValue();
             final String context = String.format("While validating field: %s for Unicode escape sequences.", fieldName);
-            throw this.errorHandler.handleValidationError(ErrorCode.INVALID_ENCODING, context, context);
+            throw this.errorHandler.handleError(context, fieldName, ErrorCode.INVALID_ENCODING);
         }
     }
 }

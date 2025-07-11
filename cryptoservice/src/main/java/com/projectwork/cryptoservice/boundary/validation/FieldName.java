@@ -12,7 +12,7 @@ public enum FieldName {
     CIPHER_TEXT("cipherText"),
     JWT("jwt"),
     PLAIN_TEXT("plainText"),
-    IISUED_TO("issuedTo"),
+    ISSUED_TO("issuedTo"),
     ALGORITHM_HEADER("algorithm (header)"),
     KEY_ALIAS("keyAlias");
 

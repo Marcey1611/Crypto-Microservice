@@ -9,6 +9,7 @@ import com.projectwork.cryptoservice.errorhandling.exceptions.InternalServerErro
 import com.projectwork.cryptoservice.errorhandling.util.ErrorCode;
 import com.projectwork.cryptoservice.errorhandling.util.ErrorDetail;
 import com.projectwork.cryptoservice.errorhandling.util.ErrorDetailBuilder;
+import com.projectwork.cryptoservice.errorhandling.util.ErrorHandler;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -34,6 +35,7 @@ public class JwtManagementService {
     private final ResultModelsFactory resultModelsFactory;
     private final KeyStoreHelper keyStoreHelper;
     private final ClientKeyRegistry clientKeyRegistry;
+    private final ErrorHandler errorHandler;
 
     /**
      * Generates a JWT based on the provided GenerateJwtModel.
@@ -67,14 +69,13 @@ public class JwtManagementService {
                     .signWith(jwtSigningKey, SignatureAlgorithm.HS256)
                     .compact();
         } catch (final JwtException | IllegalArgumentException | SecurityException exception) {
-            final ErrorCode errorCode = ErrorCode.JWT_GENERATION_FAILED;
-            final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
-            errorDetailBuilder.withLogMsgFormatted(clientName);
-            errorDetailBuilder.withContext("While generating JWT for client: " + clientName);
-            errorDetailBuilder.withException(exception);
-            final ErrorDetail errorDetail = errorDetailBuilder.build();
-            errorDetail.logErrorWithException();
-            throw new InternalServerErrorException(errorDetail);
+            final String context = String.format("While generating JWT for client: %s", clientName);
+            throw this.errorHandler.handleError(
+                    ErrorCode.JWT_GENERATION_FAILED,
+                    clientName,
+                    context,
+                    exception
+            );
         }
 
         LOGGER.info("JWT successfully generated for client '{}'", clientName);
@@ -103,13 +104,11 @@ public class JwtManagementService {
 
 
         } catch (final JwtException | IllegalArgumentException exception) {
-            final ErrorCode errorCode = ErrorCode.JWT_KEYALIAS_EXTRACTION_FAILED;
-            final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
-            errorDetailBuilder.withContext("While extracting keyAlias from JWT");
-            errorDetailBuilder.withException(exception);
-            final ErrorDetail errorDetail = errorDetailBuilder.build();
-            errorDetail.logErrorWithException();
-            throw new InternalServerErrorException(errorDetail);
+            throw this.errorHandler.handleError(
+                    ErrorCode.JWT_KEYALIAS_EXTRACTION_FAILED,
+                    "While extracting keyAlias from JWT",
+                    exception
+            );
         }
 
         LOGGER.debug("Extracted keyAlias: '{}'", keyAlias);
@@ -139,13 +138,11 @@ public class JwtManagementService {
 
 
         } catch (final JwtException | IllegalArgumentException exception) {
-            final ErrorCode errorCode = ErrorCode.JWT_ISSUEDTO_EXTRACTION_FAILED;
-            final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
-            errorDetailBuilder.withContext("While extracting issued to from JWT");
-            errorDetailBuilder.withException(exception);
-            final ErrorDetail errorDetail = errorDetailBuilder.build();
-            errorDetail.logErrorWithException();
-            throw new InternalServerErrorException(errorDetail);
+            throw this.errorHandler.handleError(
+                    ErrorCode.JWT_ISSUEDTO_EXTRACTION_FAILED,
+                    "While extracting issuedTo from JWT",
+                    exception
+            );
         }
 
         LOGGER.debug("Extracted issuedTo: '{}'", issuedTo);

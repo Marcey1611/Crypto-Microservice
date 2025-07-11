@@ -23,6 +23,7 @@ import com.projectwork.cryptoservice.errorhandling.exceptions.BadRequestExceptio
 import com.projectwork.cryptoservice.errorhandling.util.ErrorCode;
 import com.projectwork.cryptoservice.errorhandling.util.ErrorDetail;
 import com.projectwork.cryptoservice.errorhandling.util.ErrorDetailBuilder;
+import com.projectwork.cryptoservice.errorhandling.util.ErrorHandler;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,6 +50,7 @@ public class Controller implements EncryptAPI, DecryptAPI, KeyManagementAPI, Jwt
     private final JwtManagementValidator jwtManagementValidator;
     private final DecryptValidator decryptValidator;
     private final ClientKeyRegistry clientKeyRegistry;
+    private final ErrorHandler errorHandler;
 
     /**
      * Handles encryption requests.
@@ -134,17 +136,13 @@ public class Controller implements EncryptAPI, DecryptAPI, KeyManagementAPI, Jwt
      * @param clientName the name of the client to check
      * @throws BadRequestException if the client does not exist
      */
-    // TODO update after new implementation of mtls
     private void checkClientNameExists(final String clientName) {
         if (!this.clientKeyRegistry.hasClient(clientName)) {
-            final ErrorCode errorCode = ErrorCode.CLIENT_NOT_FOUND;
-            final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
-            errorDetailBuilder.withUserMsgFormatted(clientName);
-            errorDetailBuilder.withLogMsgFormatted(clientName);
-            errorDetailBuilder.withContext("While checking if client exists in the registry.");
-            final ErrorDetail errorDetail = errorDetailBuilder.build();
-            errorDetail.logError();
-            throw new BadRequestException(errorDetail);
+            throw this.errorHandler.handleError(
+                    "While checking if client exists in the registry.",
+                    clientName,
+                    ErrorCode.CLIENT_NOT_FOUND
+            );
         }
         LOGGER.debug("Client '{}' found in registry", clientName);
     }
@@ -155,7 +153,6 @@ public class Controller implements EncryptAPI, DecryptAPI, KeyManagementAPI, Jwt
      * @param principal the authenticated user principal
      * @return the name of the client
      */
-    // TODO update after new implementation of mtls
     private String resolveClientName(final Principal principal) {
         final String clientName = (null != principal) ? principal.getName() : "anonymous-client";
         LOGGER.debug("Resolved client name: '{}'", clientName);

@@ -1,9 +1,7 @@
 package com.projectwork.cryptoservice.businesslogic.keymanagement;
 
-import com.projectwork.cryptoservice.errorhandling.exceptions.InternalServerErrorException;
 import com.projectwork.cryptoservice.errorhandling.util.ErrorCode;
-import com.projectwork.cryptoservice.errorhandling.util.ErrorDetail;
-import com.projectwork.cryptoservice.errorhandling.util.ErrorDetailBuilder;
+import com.projectwork.cryptoservice.errorhandling.util.ErrorHandler;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,6 +31,7 @@ public class MasterKeyRotationTask {
 
     private final KeyStoreLoader keyStoreLoader;
     private final MasterKeyService masterKeyService;
+    private final ErrorHandler errorHandler;
 
     /**
      * Scheduled method that runs every 24 hours to rotate the master key.
@@ -80,7 +79,11 @@ public class MasterKeyRotationTask {
             keyGen.init(KEY_SIZE, secureRandom);
             return keyGen.generateKey();
         } catch (final NoSuchAlgorithmException | InvalidParameterException exception) {
-            throw this.handleException(ErrorCode.MASTER_KEYGEN_INIT_FAILED, exception, null, "generating new master key");
+            throw this.errorHandler.handleError(
+                ErrorCode.MASTER_KEYGEN_INIT_FAILED,
+                "While generating new master key.",
+                exception
+            );
         }
     }
 
@@ -102,7 +105,11 @@ public class MasterKeyRotationTask {
             }
             return clientKeyAliases;
         } catch (final KeyStoreException exception) {
-            throw this.handleException(ErrorCode.KEYSTORE_NOT_INITIALIZED, exception, null, "retrieving aliases from keystore");
+            throw this.errorHandler.handleError(
+                ErrorCode.KEYSTORE_NOT_INITIALIZED,
+                "While retrieving client key aliases from keystore.",
+                exception
+            );
         }
     }
 
@@ -147,7 +154,12 @@ public class MasterKeyRotationTask {
             return (SecretKey) unwrapCipher.unwrap(encoded, "AES", Cipher.SECRET_KEY);
         } catch (final NoSuchPaddingException | InvalidKeyException | NoSuchAlgorithmException |
                        UnrecoverableEntryException | KeyStoreException exception) {
-            throw this.handleException(ErrorCode.CLIENT_KEY_UNWRAP_FAILED, exception, clientAlias, "unwrapping client key");
+            final String context = String.format("While unwrapping client key for alias: %s", clientAlias);
+            throw this.errorHandler.handleError(
+                ErrorCode.CLIENT_KEY_UNWRAP_FAILED,
+                context,
+                exception
+            );
         }
     }
 
@@ -165,7 +177,11 @@ public class MasterKeyRotationTask {
             return wrapCipher.wrap(unwrappedClientKey);
         } catch (final InvalidKeyException | IllegalBlockSizeException | NoSuchAlgorithmException |
                        NoSuchPaddingException exception) {
-            throw this.handleException(ErrorCode.AES_KEY_WRAP_FAILED, exception, null, "wrapping client key");
+            throw this.errorHandler.handleError(
+                ErrorCode.AES_KEY_WRAP_FAILED,
+        "While wrapping client key with new master key using AES cipher.",
+                exception
+            );
         }
     }
 
@@ -184,7 +200,12 @@ public class MasterKeyRotationTask {
             keystore.setEntry(clientAlias, newEntry, new PasswordProtection(passwordChars));
             LOGGER.info("Successfully rewrapped and stored client key '{}'", clientAlias);
         } catch (final KeyStoreException exception) {
-            throw this.handleException(ErrorCode.SETTING_KEYSTORE_ENTRY_FAILED, exception, clientAlias, "storing rewrapped key");
+            final String context = String.format("While storing rewrapped key for client alias: %s", clientAlias);
+            throw this.errorHandler.handleError(
+                ErrorCode.SETTING_KEYSTORE_ENTRY_FAILED,
+                context,
+                exception
+            );
         }
     }
 
@@ -201,27 +222,13 @@ public class MasterKeyRotationTask {
             keystore.setEntry("master-key", newMasterEntry, new PasswordProtection(passwordChars));
             LOGGER.info("New master key successfully stored in keystore");
         } catch (final KeyStoreException exception) {
-            throw this.handleException(ErrorCode.SETTING_KEYSTORE_ENTRY_FAILED, exception, "master-key", "storing new master key");
+            throw this.errorHandler.handleError(
+                ErrorCode.SETTING_KEYSTORE_ENTRY_FAILED,
+        "While storing new master key in keystore.",
+                exception
+            );
         } finally {
             Arrays.fill(passwordChars, '\0'); // OWASP [199]
         }
-    }
-
-    /**
-     * Handles exceptions by creating an InternalServerErrorException with the provided error code, exception, context, and action.
-     *
-     * @param errorCode the error code for the exception
-     * @param exception the original exception that caused the error
-     * @param context   additional context information for the error
-     * @param action    the action being performed when the error occurred
-     * @return a new InternalServerErrorException with the specified details
-     */
-    private InternalServerErrorException handleException(final ErrorCode errorCode, final Exception exception, final String context, final String action) {
-        final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
-        errorDetailBuilder.withContext("While " + action + (null != context ? " for alias '" + context + "'" : "") + ".");
-        errorDetailBuilder.withException(exception);
-        final ErrorDetail errorDetail = errorDetailBuilder.build();
-        errorDetail.logErrorWithException();
-        return new InternalServerErrorException(errorDetail);
     }
 }

@@ -2,8 +2,8 @@ package com.projectwork.cryptoservice.businesslogic.keymanagement;
 
 import com.projectwork.cryptoservice.errorhandling.exceptions.InternalServerErrorException;
 import com.projectwork.cryptoservice.errorhandling.util.ErrorCode;
-import com.projectwork.cryptoservice.errorhandling.util.ErrorDetail;
-import com.projectwork.cryptoservice.errorhandling.util.ErrorDetailBuilder;
+import com.projectwork.cryptoservice.errorhandling.util.ErrorHandler;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -24,9 +24,12 @@ import java.util.Arrays;
  * - OWASP [194] Carefully handle sensitive data (keystore password), wiping char arrays after use
  */
 @Component
+@RequiredArgsConstructor
 public class MasterKeyService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MasterKeyService.class);
+
+    private final ErrorHandler errorHandler;
 
     /**
      * Retrieves the master key from the provided KeyStore.
@@ -44,26 +47,22 @@ public class MasterKeyService {
         try {
             final SecretKey masterKey = (SecretKey) keystore.getKey("master-key", passwordChars);
             if (null == masterKey) {
-                final ErrorCode errorCode = ErrorCode.MASTER_KEY_MISSING;
-                final ErrorDetailBuilder builder = errorCode.builder();
-                builder.withContext("Master key is missing in keystore.");
-                final ErrorDetail errorDetail = builder.build();
-                errorDetail.logErrorWithException();
-                throw new InternalServerErrorException(errorDetail);
+                throw this.errorHandler.handleError(
+                        ErrorCode.MASTER_KEY_MISSING,
+                        "Master key is missing in keystore."
+                );
             }
 
             LOGGER.info("Master key successfully retrieved from KeyStore");
             return masterKey;
 
         } catch (final KeyStoreException | NoSuchAlgorithmException | UnrecoverableKeyException exception) {
-            final ErrorCode errorCode = ErrorCode.KEYSTORE_KEY_ACCESS_FAILED;
-            final ErrorDetailBuilder builder = errorCode.builder();
-            builder.withContext("Error accessing master key from keystore.");
-            builder.withLogMsgFormatted("master-key");
-            builder.withException(exception);
-            final ErrorDetail errorDetail = builder.build();
-            errorDetail.logErrorWithException();
-            throw new InternalServerErrorException(errorDetail);
+            throw this.errorHandler.handleError(
+                    ErrorCode.KEYSTORE_KEY_ACCESS_FAILED,
+                    "master-key",
+                    "Error accessing master key from keystore.",
+                    exception
+            );
         } finally {
             Arrays.fill(passwordChars, '\0'); // OWASP [194]
         }

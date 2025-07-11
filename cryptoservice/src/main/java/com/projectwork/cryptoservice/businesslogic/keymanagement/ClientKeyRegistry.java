@@ -1,20 +1,17 @@
 package com.projectwork.cryptoservice.businesslogic.keymanagement;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
-import com.projectwork.cryptoservice.errorhandling.util.ErrorDetail;
-import com.projectwork.cryptoservice.errorhandling.util.ErrorDetailBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
-
 import com.projectwork.cryptoservice.entity.factory.ClientKeyDataFactory;
 import com.projectwork.cryptoservice.entity.models.keymanagement.ClientKeyData;
 import com.projectwork.cryptoservice.errorhandling.exceptions.BadRequestException;
 import com.projectwork.cryptoservice.errorhandling.util.ErrorCode;
-
+import com.projectwork.cryptoservice.errorhandling.util.ErrorHandler;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * ClientKeyRegistry class that manages the registration and retrieval of client keys.
@@ -29,6 +26,7 @@ public class ClientKeyRegistry {
 
     private final ClientKeyDataFactory clientKeyDataFactory;
     private final Map<String, ClientKeyData> clientKeyDataMap = new ConcurrentHashMap<>();
+    private final ErrorHandler errorHandler;
 
     /**
      * Checks if a client with the given name exists in the registry.
@@ -113,13 +111,11 @@ public class ClientKeyRegistry {
     public final void updateIvForClient(final String clientName, final byte[] iv) {
         final ClientKeyData data = this.clientKeyDataMap.get(clientName);
         if (null == data) {
-            final ErrorCode errorCode = ErrorCode.CLIENT_NOT_FOUND;
-            final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
-            errorDetailBuilder.withUserMsgFormatted(clientName);
-            errorDetailBuilder.withContext("While trying to update IV for client.");
-            final ErrorDetail errorDetail = errorDetailBuilder.build();
-            errorDetail.logErrorWithException();
-            throw new BadRequestException(errorDetail);
+            throw this.errorHandler.handleError(
+                ErrorCode.CLIENT_NOT_FOUND,
+                clientName,
+        "While trying to update IV for client."
+            );
         }
         data.setIv(iv);
         this.clientKeyDataMap.put(clientName, data);

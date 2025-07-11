@@ -1,9 +1,7 @@
 package com.projectwork.cryptoservice.businesslogic.keymanagement;
 
-import com.projectwork.cryptoservice.errorhandling.exceptions.InternalServerErrorException;
 import com.projectwork.cryptoservice.errorhandling.util.ErrorCode;
-import com.projectwork.cryptoservice.errorhandling.util.ErrorDetail;
-import com.projectwork.cryptoservice.errorhandling.util.ErrorDetailBuilder;
+import com.projectwork.cryptoservice.errorhandling.util.ErrorHandler;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,6 +29,8 @@ public class KeyExpirationChecker {
     private static final Logger LOGGER = LoggerFactory.getLogger(KeyExpirationChecker.class);
     private static final long EXPIRATION_TIME_MILLIS = TimeUnit.HOURS.toMillis(1);
     private static final String ENV_KEYSTORE_PASSWORD = "KEYSTORE_PASSWORD";
+
+    private final ErrorHandler errorHandler;
 
     /**
      * Checks if the key with the given alias in the provided keystore is expired.
@@ -73,13 +73,12 @@ public class KeyExpirationChecker {
         try {
             return keystore.getEntry(alias, protection);
         } catch (final KeyStoreException | NoSuchAlgorithmException | UnrecoverableEntryException exception) {
-            final ErrorCode errorCode = ErrorCode.GETTING_KEYSTORE_ENTRY_FAILED;
-            final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
-            errorDetailBuilder.withContext("While getting entry for alias: " + alias);
-            errorDetailBuilder.withException(exception);
-            final ErrorDetail errorDetail = errorDetailBuilder.build();
-            errorDetail.logErrorWithException();
-            throw new InternalServerErrorException(errorDetail);
+            final String context = "While getting entry for alias: " + alias;
+            throw this.errorHandler.handleError(
+                    ErrorCode.GETTING_KEYSTORE_ENTRY_FAILED,
+                    context,
+                    exception
+            );
         } finally {
             this.destroyProtection(protection, alias);
         }
@@ -96,13 +95,12 @@ public class KeyExpirationChecker {
         try {
             return keystore.getCreationDate(alias);
         } catch (final KeyStoreException exception) {
-            final ErrorCode errorCode = ErrorCode.KEYSTORE_NOT_INITIALIZED;
-            final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
-            errorDetailBuilder.withContext("While getting creation date for alias: " + alias);
-            errorDetailBuilder.withException(exception);
-            final ErrorDetail errorDetail = errorDetailBuilder.build();
-            errorDetail.logErrorWithException();
-            throw new InternalServerErrorException(errorDetail);
+            final String context = "While getting creation date for alias: " + alias;
+            throw this.errorHandler.handleError(
+                    ErrorCode.KEYSTORE_NOT_INITIALIZED,
+                    context,
+                    exception
+            );
         }
     }
 
@@ -117,13 +115,12 @@ public class KeyExpirationChecker {
         try {
             protection.destroy();
         } catch (final DestroyFailedException exception) {
-            final ErrorCode errorCode = ErrorCode.PASSWORD_DESTROY_FAILED;
-            final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
-            errorDetailBuilder.withContext("While destroying protection for alias: " + alias);
-            errorDetailBuilder.withException(exception);
-            final ErrorDetail errorDetail = errorDetailBuilder.build();
-            errorDetail.logErrorWithException();
-            throw new InternalServerErrorException(errorDetail);
+            final String context = "While destroying protection for alias: " + alias;
+            throw this.errorHandler.handleError(
+                    ErrorCode.PASSWORD_DESTROY_FAILED,
+                    context,
+                    exception
+            );
         }
     }
 }
