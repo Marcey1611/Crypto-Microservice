@@ -1,4 +1,4 @@
-package com.projectwork.cryptoservice.businesslogic;
+package com.projectwork.cryptoservice.businesslogic.cryptography;
 
 import com.projectwork.cryptoservice.businesslogic.jwtmanagement.JwtManagementService;
 import com.projectwork.cryptoservice.businesslogic.keymanagement.ClientKeyRegistry;
@@ -40,6 +40,7 @@ public class DecryptService {
     private final ClientKeyRegistry clientKeyRegistry;
     private final ResultModelsFactory resultModelsFactory;
     private final ErrorHandler errorHandler;
+    private final CryptoUtility cryptoUtility;
 
     /**
      * Decrypts a cipher text for a given client.
@@ -50,19 +51,13 @@ public class DecryptService {
     public final DecryptResultModel decrypt(final DecryptModel decryptModel, final String clientName) {
         LOGGER.info("Starting decryption for client '{}'.", clientName);
 
-        validateClientName(decryptModel, clientName);
-
-        final String keyAlias = extractKeyAlias(decryptModel);
-
-        final SecretKey clientKey = retrieveClientKey(keyAlias);
-
-        final String clientNameFromKeyAlias = mapKeyAliasToClientName(keyAlias);
-
-        final byte[] iv = retrieveIvForClient(clientNameFromKeyAlias);
-
+        this.validateClientName(decryptModel, clientName);
+        final String keyAlias = this.extractKeyAlias(decryptModel);
+        final SecretKey clientKey = this.retrieveClientKey(keyAlias);
+        final String clientNameFromKeyAlias = this.mapKeyAliasToClientName(keyAlias);
+        final byte[] iv = this.retrieveIvForClient(clientNameFromKeyAlias);
         final String cipherText = decryptModel.getCipherText();
-        final String plainText = processDecryption(iv, clientKey, cipherText);
-
+        final String plainText = this.processDecryption(iv, clientKey, cipherText);
         LOGGER.info("Decryption completed for client '{}'.", clientName);
         return this.resultModelsFactory.buildDecryptResultModel(plainText);
     }
@@ -163,67 +158,11 @@ public class DecryptService {
      * @return The decrypted plain text.
      */
     private String processDecryption(final byte[] iv, final SecretKey clientKey, final String cipherText) {
-        final Cipher cipher = createCipherInstance();
-        final GCMParameterSpec gcmParameterSpec = createGCMParameterSpec(iv);
-        initializeCipher(cipher, clientKey, gcmParameterSpec);
-        final byte[] cipherTextBytes = decodeCipherText(cipherText);
-        return decryptCipherText(cipher, cipherTextBytes);
-    }
-
-    /**
-     * Creates a Cipher instance for AES-GCM decryption.
-     * @return The Cipher instance.
-     */
-    private Cipher createCipherInstance() {
-        try {
-            final Cipher cipher = Cipher.getInstance(ENCRYPTION_ALGORITHM);
-            LOGGER.debug("Cipher instance created with algorithm '{}'.", ENCRYPTION_ALGORITHM);
-            return cipher;
-        } catch (final NoSuchAlgorithmException | NoSuchPaddingException exception) {
-            throw this.errorHandler.handleError(
-                ErrorCode.AES_CIPHER_INSTANCE_FAILED,
-                "While creating Cipher instance for decryption.",
-                exception
-            );
-        }
-    }
-
-    /**
-     * Creates a GCMParameterSpec for decryption.
-     * @param iv The initialization vector.
-     * @return The GCMParameterSpec instance.
-     */
-    private GCMParameterSpec createGCMParameterSpec(final byte[] iv) {
-        try {
-            final GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(GCM_TAG_LENGTH, iv);
-            LOGGER.debug("GCMParameterSpec created with tag length {}.", GCM_TAG_LENGTH);
-            return gcmParameterSpec;
-        } catch (final IllegalArgumentException exception) {
-            throw this.errorHandler.handleError(
-                ErrorCode.INVALID_GCM_PARAMETERS,
-                "While constructing GCMParameterSpec for decryption.",
-                exception
-            );
-        }
-    }
-
-    /**
-     * Initializes the Cipher for decryption mode.
-     * @param cipher The Cipher instance.
-     * @param clientKey The secret key.
-     * @param gcmParameterSpec The GCM parameters.
-     */
-    private void initializeCipher(final Cipher cipher, final SecretKey clientKey, final GCMParameterSpec gcmParameterSpec) {
-        try {
-            cipher.init(Cipher.DECRYPT_MODE, clientKey, gcmParameterSpec);
-            LOGGER.debug("Cipher initialized for decryption mode.");
-        } catch (final InvalidKeyException | InvalidAlgorithmParameterException | InvalidParameterException exception) {
-            throw this.errorHandler.handleError(
-                ErrorCode.AES_CIPHER_INIT_FAILED,
-                "While initializing Cipher for decryption with client key and GCM parameters.",
-                exception
-            );
-        }
+        final Cipher cipher = this.cryptoUtility.createCipher();
+        final GCMParameterSpec gcmParameterSpec = this.cryptoUtility.createGCMParameterSpec(iv);
+        this.cryptoUtility.initCipher(cipher, clientKey, gcmParameterSpec, Cipher.DECRYPT_MODE);
+        final byte[] cipherTextBytes = this.decodeCipherText(cipherText);
+        return this.decryptCipherText(cipher, cipherTextBytes);
     }
 
     /**
