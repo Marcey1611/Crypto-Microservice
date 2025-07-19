@@ -33,22 +33,22 @@ public class KeyStoreHelper {
     private final ErrorHandler errorHandler;
 
     /**
-     * Stores a client key in the keystore under the specified alias.
+     * Stores a client key in the keystore under the specified keyAlias.
      *
-     * @param alias      the alias under which the key will be stored
+     * @param keyAlias      the keyAlias under which the key will be stored
      * @param clientKey  the client key to be stored
      */
-    public final void storeKey(final String alias, final SecretKey clientKey) {
-        LOGGER.debug("Storing key for alias '{}'", alias);
+    public final void storeKey(final String keyAlias, final SecretKey clientKey) {
+        LOGGER.debug("Storing key for keyAlias '{}'", keyAlias);
 
-        final KeyStore ks = this.loader.load();
-        final SecretKey masterKey = this.masterKeyService.retrieveMasterKey(ks);
-        final byte[] encrypted = this.encryptor.encrypt(clientKey, masterKey);
+        final KeyStore keystore = this.loader.load();
+        final SecretKey masterKey = this.masterKeyService.retrieveMasterKey(keystore);
+        final byte[] encryptedKey = this.encryptor.encrypt(clientKey, masterKey);
 
-        this.storeWrappedKey(ks, alias, encrypted);
-        this.loader.save(ks);
+        this.storeWrappedKey(keystore, keyAlias, encryptedKey);
+        this.loader.save(keystore);
 
-        LOGGER.info("Key stored and saved in keystore for alias '{}'", alias);
+        LOGGER.info("Key stored and saved in keystore for keyAlias '{}'", keyAlias);
     }
 
     /**

@@ -1,0 +1,113 @@
+@startuml
+title Sequenzdiagramm für /generate-key
+
+' Color scheme:
+' #CCE5FF → API & Controller
+' #F9D5E5 → Parts of Validation
+' #DFFFD6 → Services
+' #B7F0DC → Facades
+' #FFE5B4 → Factories
+' #E0E0E0 → Helpers/Utilities
+' #FADBD8 → Registries
+
+actor Client
+participant KeyManagementAPI #CCE5FF
+participant Controller #CCE5FF
+participant KeyManagementFacade #B7F0DC
+participant ModelsFactory #FFE5B4
+participant KeyManagementService #DFFFD6
+participant ClientKeyRegistry #FADBD8
+participant KeyStoreHelper #E0E0E0
+participant KeyStoreLoader #E0E0E0
+participant MasterKeyService #DFFFD6
+participant ClientKeyEncryptor #E0E0E0
+participant ClientKeyDataFactory #FFE5B4
+participant ResultModelsFactory #FFE5B4
+participant ResponseFactory #FFE5B4
+
+Client -> KeyManagementAPI : POST /generate-key
+activate KeyManagementAPI
+
+KeyManagementAPI -> Controller : generateKeyPost(principal)
+activate Controller
+
+Controller -> Controller : resolveClientName(principal)
+
+Controller -> KeyManagementFacade : generateKey(clientName)
+activate KeyManagementFacade
+
+KeyManagementFacade -> ModelsFactory : buildGenerateKeyModel(clientName)
+activate ModelsFactory
+ModelsFactory --> KeyManagementFacade : GenerateKeyModel
+deactivate ModelsFactory
+
+KeyManagementFacade -> KeyManagementService : generateKey(GenerateKeyModel)
+activate KeyManagementService
+
+KeyManagementService -> ClientKeyRegistry : hasClient(clientName)
+activate ClientKeyRegistry
+ClientKeyRegistry --> KeyManagementService : boolean
+deactivate ClientKeyRegistry
+
+KeyManagementService -> KeyManagementService : generateRandomKey()
+KeyManagementService -> KeyManagementService : generateRandomKeyAlias()
+
+KeyManagementService -> KeyStoreHelper : storeKey(keyAlias, key)
+activate KeyStoreHelper
+
+KeyStoreHelper -> KeyStoreLoader : load()
+activate KeyStoreLoader
+KeyStoreLoader --> KeyStoreHelper : KeyStore
+deactivate KeyStoreLoader
+
+KeyStoreHelper -> MasterKeyService : retrieveMasterKey(keystore)
+activate MasterKeyService
+MasterKeyService --> KeyStoreHelper : SecretKey
+deactivate MasterKeyService
+
+KeyStoreHelper -> ClientKeyEncryptor : encrypt(clientKey, masterKey)
+activate ClientKeyEncryptor
+ClientKeyEncryptor --> KeyStoreHelper : byte[]
+deactivate ClientKeyEncryptor
+
+KeyStoreHelper -> KeyStoreHelper : storeWrappedKey(keystore, keyAlias, encryptedKey)
+
+KeyStoreHelper -> KeyStoreLoader : save(keystore)
+
+KeyStoreHelper --> KeyManagementService : void
+deactivate KeyStoreHelper
+
+KeyManagementService -> ClientKeyRegistry : registerClientKey(clientName, keyAlias)
+activate ClientKeyRegistry
+
+ClientKeyRegistry -> ClientKeyDataFactory : buildClientKeyData(keyAlias, null)
+activate ClientKeyDataFactory
+ClientKeyDataFactory --> ClientKeyRegistry : ClientKeyData
+deactivate ClientKeyDataFactory
+
+ClientKeyRegistry --> KeyManagementService : void
+deactivate ClientKeyRegistry
+
+KeyManagementService -> ResultModelsFactory : buildGenerateKeyResultModel(message)
+activate ResultModelsFactory
+ResultModelsFactory --> KeyManagementService : GenerateKeyResultModel
+deactivate ResultModelsFactory
+
+KeyManagementService --> KeyManagementFacade : GenerateKeyResultModel
+deactivate KeyManagementService
+
+KeyManagementFacade -> ResponseFactory : buildGenerateKeyResponse(resultModel)
+activate ResponseFactory
+ResponseFactory --> KeyManagementFacade : ResponseEntity<GenerateKeyResponse>
+deactivate ResponseFactory
+
+KeyManagementFacade --> Controller : ResponseEntity<GenerateKeyResponse>
+deactivate KeyManagementFacade
+
+Controller --> KeyManagementAPI : ResponseEntity<GenerateKeyResponse>
+deactivate Controller
+
+KeyManagementAPI --> Client : ResponseEntity<GenerateKeyResponse>
+deactivate KeyManagementAPI
+
+@enduml
