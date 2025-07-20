@@ -173,6 +173,8 @@ public class DecryptService {
      * Decodes the cipher text from Base64 encoding.
      * @param cipherText The Base64 encoded cipher text.
      * @return The decoded cipher text bytes.
+     *
+     * SCP103
      */
     private byte[] decodeCipherText(final String cipherText) {
         try {
@@ -194,6 +196,8 @@ public class DecryptService {
      * @param cipher The Cipher instance.
      * @param cipherTextBytes The cipher text bytes.
      * @return The decrypted plain text.
+     *
+     * SCP103
      */
     private String decryptCipherText(final Cipher cipher, final byte[] cipherTextBytes) {
         try {

@@ -85,6 +85,8 @@ public class KeyStoreInitializer {
     /**
      * Initializes the JWT signing key and stores it in the KeyStore.
      * If the key already exists, it skips the initialization.
+     *
+     * SCP104
      */
     private void initJwtSigningKey() {
         final SecureRandom secureRandom;
@@ -123,13 +125,16 @@ public class KeyStoreInitializer {
         }
 
         final SecretKey signingKey = keyGen.generateKey();
+        final byte[] signingKeyBytes = signingKey.getEncoded();
         LOGGER.debug("JWT signing key generated.");
-        this.keyStoreHelper.storeKey("jwt-signing-key", signingKey, this.masterKeystorePath, this.masterKeystorePassword);
+        this.keyStoreHelper.storeKey("jwt-signing-key", signingKeyBytes, this.masterKeystorePath, this.masterKeystorePassword);
     }
 
     /**
      * Initializes the master key and stores it in the KeyStore.
      * If the key already exists, it skips the initialization.
+     *
+     * SCP104
      */
     private void initMasterKey() {
         final SecureRandom secureRandom;
@@ -168,7 +173,8 @@ public class KeyStoreInitializer {
         }
 
         final SecretKey masterKey = keyGen.generateKey();
+        final byte[] masterKeyBytes = masterKey.getEncoded();
         LOGGER.debug("Master key generated.");
-        this.keyStoreHelper.storeKey("master-key", masterKey, this.masterKeystorePath, this.masterKeystorePassword);
+        this.keyStoreHelper.storeKey("master-key", masterKeyBytes, this.masterKeystorePath, this.masterKeystorePassword);
     }
 }

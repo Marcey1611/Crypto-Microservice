@@ -33,19 +33,40 @@ public class KeyStoreHelper {
     private final ErrorHandler errorHandler;
 
     /**
+     * Stores a key in the master-keystore under the specified keyAlias.
+     *
+     * @param keyAlias      the keyAlias under which the key will be stored
+     * @param key  the client key to be stored
+     *
+     * SCP106 (Key storage) -> setKeystoreEntry
+     */
+    public final void storeKey(final String keyAlias, final byte[] key, final String keystorePath, final String keystorePassword) {
+        LOGGER.debug("Storing key for keyAlias '{}'", keyAlias);
+
+        final KeyStore keystore = this.loader.load(keystorePath, keystorePassword);
+
+        this.setKeystoreEntry(keystore, keyAlias, key, keystorePassword);
+        this.loader.save(keystore, keystorePath, keystorePassword);
+
+        LOGGER.info("Key stored and saved in keystore for keyAlias '{}'", keyAlias);
+    }
+
+    /**
      * Stores a client key in the keystore under the specified keyAlias.
      *
      * @param keyAlias      the keyAlias under which the key will be stored
      * @param clientKey  the client key to be stored
+     *
+     * SCP106 (Key storage) -> setKeystoreEntry
      */
-    public final void storeKey(final String keyAlias, final SecretKey clientKey, final String keystorePath, final String keystorePassword) {
+    public final void storeClientKey(final String keyAlias, final SecretKey clientKey, final String keystorePath, final String keystorePassword) {
         LOGGER.debug("Storing key for keyAlias '{}'", keyAlias);
 
         final KeyStore keystore = this.loader.load(keystorePath, keystorePassword);
         final SecretKey masterKey = this.masterKeyService.retrieveMasterKey();
         final byte[] encryptedKey = this.encryptor.encrypt(clientKey, masterKey);
 
-        this.storeWrappedKey(keystore, keyAlias, encryptedKey, keystorePassword);
+        this.setKeystoreEntry(keystore, keyAlias, encryptedKey, keystorePassword);
         this.loader.save(keystore, keystorePath, keystorePassword);
 
         LOGGER.info("Key stored and saved in keystore for keyAlias '{}'", keyAlias);
@@ -89,20 +110,22 @@ public class KeyStoreHelper {
      *
      * @param ks        the KeyStore instance where the key will be stored
      * @param alias     the alias under which the key will be stored
-     * @param encrypted the encrypted key to be stored
+     * @param key the key key to be stored
+     *
+     * SCP106 (Key storage)
      */
-    private void storeWrappedKey(final KeyStore ks, final String alias, final byte[] encrypted, final String keystorePassword) {
+    private void setKeystoreEntry(final KeyStore ks, final String alias, final byte[] key, final String keystorePassword) {
         final char[] password = keystorePassword.toCharArray();
 
         try {
             LOGGER.debug("Storing wrapped key in keystore under alias '{}'", alias);
-            final SecretKeySpec encryptedKeySpec = new SecretKeySpec(encrypted, "AES");
+            final SecretKeySpec encryptedKeySpec = new SecretKeySpec(key, "AES");
             final SecretKeyEntry entry = new SecretKeyEntry(encryptedKeySpec);
             final ProtectionParameter protection = new PasswordProtection(password);
             ks.setEntry(alias, entry, protection);
             LOGGER.debug("Wrapped key stored successfully under alias '{}'", alias);
         } catch (final KeyStoreException exception) {
-            final String context = String.format("Storing encrypted key under alias: '%s'", alias);
+            final String context = String.format("Storing key key under alias: '%s'", alias);
             throw this.errorHandler.handleError(
                     ErrorCode.SETTING_KEYSTORE_ENTRY_FAILED,
                     alias,

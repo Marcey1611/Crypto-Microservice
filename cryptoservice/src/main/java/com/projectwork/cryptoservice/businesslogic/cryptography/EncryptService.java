@@ -126,6 +126,8 @@ public class EncryptService {
      * @param cipher The Cipher instance.
      * @param plainText The plain text to encrypt.
      * @return The encrypted data bytes.
+     *
+     * SCP103
      */
     private byte[] encryptData(final Cipher cipher, final String plainText) {
         try {
@@ -155,6 +157,9 @@ public class EncryptService {
     /**
      * Generates an initialization vector (IV) for AES-GCM.
      * @return The generated IV.
+     *
+     * SCP104
+     * SCP103
      */
     private byte[] generateIV() {
         final SecureRandom secureRandom;

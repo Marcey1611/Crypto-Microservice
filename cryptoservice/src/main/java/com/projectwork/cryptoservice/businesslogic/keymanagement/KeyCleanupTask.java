@@ -18,6 +18,8 @@ import java.util.List;
 /**
  * KeyCleanupTask is a scheduled task that periodically checks for expired keys in the keystore
  * and removes them, ensuring that the keystore remains clean and does not contain outdated keys.
+ *
+ * SCP106 (Key cleanup (deletion of expired keys)) -> KeyExpirationChecker
  */
 @RequiredArgsConstructor
 @Component

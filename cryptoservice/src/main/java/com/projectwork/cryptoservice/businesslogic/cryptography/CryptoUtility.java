@@ -29,6 +29,8 @@ public class CryptoUtility {
     /**
      * Creates a Cipher instance for AES-GCM encryption.
      * @return The Cipher instance.
+     *
+     * SCP103
      */
     public final Cipher createCipher() {
         try {
@@ -48,6 +50,8 @@ public class CryptoUtility {
      * Creates a GCMParameterSpec for encryption.
      * @param iv The initialization vector.
      * @return The GCMParameterSpec instance.
+     *
+     * SCP103
      */
     public final GCMParameterSpec createGCMParameterSpec(final byte[] iv) {
         try {
@@ -68,6 +72,8 @@ public class CryptoUtility {
      * @param cipher The Cipher instance.
      * @param clientKey The secret key.
      * @param gcmParameterSpec The GCM parameters.
+     *
+     * SCP103
      */
     public final void initCipher(final Cipher cipher, final SecretKey clientKey, final GCMParameterSpec gcmParameterSpec, int opmode) {
         try {

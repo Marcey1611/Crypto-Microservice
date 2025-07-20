@@ -22,6 +22,8 @@ import java.util.List;
 /**
  * MasterKeyRotationTask is a scheduled task that rotates the master key in the keystore.
  * It rewraps all client keys with the new master key and updates the keystore accordingly.
+ *
+ * SCP106 (Key rotation)
  */
 @RequiredArgsConstructor
 @Component
@@ -75,6 +77,8 @@ public class MasterKeyRotationTask {
      * Generates a new master key using a secure random generator.
      *
      * @return the newly generated SecretKey
+     *
+     * SCP104
      */
     private SecretKey generateNewMasterKey() {
         try {
