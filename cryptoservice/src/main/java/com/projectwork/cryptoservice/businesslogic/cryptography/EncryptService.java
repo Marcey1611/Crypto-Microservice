@@ -11,6 +11,7 @@ import com.projectwork.cryptoservice.errorhandling.util.ErrorHandler;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.*;
@@ -37,6 +38,12 @@ public class EncryptService {
     private final ResultModelsFactory resultModelsFactory;
     private final ErrorHandler errorHandler;
     private final CryptoUtility cryptoUtility;
+
+    @Value("${client.keystore.path}")
+    private String clientKeystorePath;
+
+    @Value("${client.keystore.password}")
+    private String clientKeystorePassword;
 
     /**
      * Encrypts a plain text for a given client.
@@ -85,7 +92,7 @@ public class EncryptService {
      * @return The SecretKey for the client.
      */
     private SecretKey getClientKey(final String keyAlias) {
-        final SecretKey clientKey = this.keyStoreHelper.getClientKey(keyAlias);
+        final SecretKey clientKey = this.keyStoreHelper.getClientKey(keyAlias, this.clientKeystorePath, this.clientKeystorePassword);
         if (null == clientKey) {
             final String context = String.format(
                     "While retrieving client key for alias '%s'.",

@@ -5,6 +5,7 @@ import com.projectwork.cryptoservice.errorhandling.util.ErrorHandler;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -23,13 +24,17 @@ import java.util.List;
 public class KeyCleanupTask {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(KeyCleanupTask.class);
-    private static final String MASTER_KEY_ALIAS = "master-key";
-    private static final String JWT_SIGNING_KEY_ALIAS = "jwt-signing-key";
 
     private final ClientKeyRegistry clientKeyRegistry;
     private final KeyExpirationChecker expirationChecker;
     private final KeyStoreLoader keyStoreLoader;
     private final ErrorHandler errorHandler;
+
+    @Value("${client.keystore.path}")
+    private String clientKeystorePath;
+
+    @Value("${client.keystore.password}")
+    private String clientKeystorePassword;
 
     /**
      * Scheduled method that runs every hour to clean up expired keys.
@@ -45,11 +50,11 @@ public class KeyCleanupTask {
      */
     public final void cleanupExpiredKeys() {
         LOGGER.debug("Starting manual cleanup of expired keys");
-        final KeyStore keystore = this.keyStoreLoader.load();
+        final KeyStore keystore = this.keyStoreLoader.load(this.clientKeystorePath, this.clientKeystorePassword);
         final List<String> expiredAliases = this.findExpiredAliases(keystore);
         LOGGER.info("Found {} expired keys", expiredAliases.size());
         this.deleteExpiredKeys(keystore, expiredAliases);
-        this.keyStoreLoader.save(keystore);
+        this.keyStoreLoader.save(keystore, this.clientKeystorePath, this.clientKeystorePassword);
         LOGGER.info("Key cleanup task completed successfully");
     }
 
@@ -65,8 +70,7 @@ public class KeyCleanupTask {
         final Enumeration<String> aliases = this.getAliases(keystore);
         while (aliases.hasMoreElements()) {
             final String alias = aliases.nextElement();
-            if (this.isReservedAlias(alias)) continue;
-            if (this.expirationChecker.isExpired(keystore, alias)) {
+            if (this.expirationChecker.isExpired(keystore, alias, this.clientKeystorePassword)) {
                 LOGGER.debug("Key with alias '{}' is expired", alias);
                 expired.add(alias);
             }
@@ -91,16 +95,6 @@ public class KeyCleanupTask {
                     exception
             );
         }
-    }
-
-    /**
-     * Checks if the provided alias is a reserved alias that should not be deleted.
-     *
-     * @param alias the alias to check
-     * @return true if the alias is reserved, false otherwise
-     */
-    private boolean isReservedAlias(final String alias) {
-        return MASTER_KEY_ALIAS.equals(alias) || JWT_SIGNING_KEY_ALIAS.equals(alias);
     }
 
     /**

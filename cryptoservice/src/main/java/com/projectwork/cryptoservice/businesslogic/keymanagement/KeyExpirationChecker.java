@@ -32,9 +32,6 @@ public class KeyExpirationChecker {
 
     private final ErrorHandler errorHandler;
 
-    @Value("${keystore.password}")
-    private String KEYSTORE_PASSWORD;
-
     /**
      * Checks if the key with the given alias in the provided keystore is expired.
      * A key is considered expired if it was created more than 1 hour ago.
@@ -43,9 +40,9 @@ public class KeyExpirationChecker {
      * @param alias    the alias of the key to check
      * @return true if the key is expired, false otherwise
      */
-    public final boolean isExpired(final KeyStore keystore, final String alias) {
+    public final boolean isExpired(final KeyStore keystore, final String alias, final String keystorePassword) {
         LOGGER.debug("Checking expiration status for alias '{}'", alias);
-        final KeyStore.Entry entry = this.getEntry(keystore, alias);
+        final KeyStore.Entry entry = this.getEntry(keystore, alias, keystorePassword);
         if (!(entry instanceof KeyStore.SecretKeyEntry)) {
             LOGGER.debug("Alias '{}' is not a SecretKeyEntry – skipping expiration check", alias);
             return false;
@@ -65,8 +62,8 @@ public class KeyExpirationChecker {
      * @param alias    the alias of the key to retrieve
      * @return the KeyStore.Entry for the specified alias
      */
-    private KeyStore.Entry getEntry(final KeyStore keystore, final String alias) {
-        final char[] passwordChars = Optional.ofNullable(this.KEYSTORE_PASSWORD)
+    private KeyStore.Entry getEntry(final KeyStore keystore, final String alias, final String keystorePassword) {
+        final char[] passwordChars = Optional.ofNullable(keystorePassword)
                 .map(String::toCharArray)
                 .orElse(new char[0]);
         final PasswordProtection protection = new PasswordProtection(passwordChars);

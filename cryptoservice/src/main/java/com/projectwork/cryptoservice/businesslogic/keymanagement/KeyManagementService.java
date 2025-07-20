@@ -9,6 +9,7 @@ import com.projectwork.cryptoservice.errorhandling.util.ErrorHandler;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.KeyGenerator;
@@ -35,6 +36,12 @@ public class KeyManagementService {
     private final ClientKeyRegistry clientKeyRegistry;
     private final ErrorHandler errorHandler;
 
+    @Value("${client.keystore.path}")
+    private String clientKeystorePath;
+
+    @Value("${client.keystore.password}")
+    private String clientKeystorePassword;
+
     /**
      * Generates a secure client key, 
      * 
@@ -58,7 +65,7 @@ public class KeyManagementService {
         final String keyAlias = this.generateRandomKeyAlias();
         LOGGER.debug("Random key alias generated for client '{}': {}", clientName, keyAlias);
 
-        this.keyStoreHelper.storeKey(keyAlias, aesKey);
+        this.keyStoreHelper.storeKey(keyAlias, aesKey, this.clientKeystorePath, this.clientKeystorePassword);
         LOGGER.info("Key stored in KeyStore for client '{}', alias '{}'", clientName, keyAlias);
 
         this.clientKeyRegistry.registerClientKey(clientName, keyAlias);

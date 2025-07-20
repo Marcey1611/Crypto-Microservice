@@ -27,6 +27,7 @@ import com.projectwork.cryptoservice.errorhandling.util.ErrorHandler;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -52,6 +53,12 @@ public class Controller implements EncryptAPI, DecryptAPI, KeyManagementAPI, Jwt
     private final ClientKeyRegistry clientKeyRegistry;
     private final ErrorHandler errorHandler;
 
+    @Value("${master.keystore.path}")
+    private String masterKeystorePath;
+
+    @Value("${master.keystore.password}")
+    private String masterKeystorePassword;
+
     /**
      * Handles encryption requests.
      *
@@ -65,7 +72,7 @@ public class Controller implements EncryptAPI, DecryptAPI, KeyManagementAPI, Jwt
         LOGGER.info("Received encrypt request for client '{}'", clientName);
         this.checkClientNameExists(clientName);
 
-        this.encryptValidator.validateEncryptRequest(encryptRequest);
+        this.encryptValidator.validateEncryptRequest(encryptRequest, this.masterKeystorePath, this.masterKeystorePassword);
         LOGGER.debug("Encrypt request validated for client '{}'", clientName);
 
         final ResponseEntity<EncryptResponse> response = this.encryptFacade.processEncryption(encryptRequest, clientName);
@@ -86,7 +93,7 @@ public class Controller implements EncryptAPI, DecryptAPI, KeyManagementAPI, Jwt
         LOGGER.info("Received decrypt request for client '{}'", clientName);
         this.checkClientNameExists(clientName);
 
-        this.decryptValidator.validateDecryptRequest(decryptRequest);
+        this.decryptValidator.validateDecryptRequest(decryptRequest, this.masterKeystorePath, this.masterKeystorePassword);
         LOGGER.debug("Decrypt request validated for client '{}'", clientName);
 
         final ResponseEntity<DecryptResponse> response = this.decryptFacade.processDecryption(decryptRequest, clientName);

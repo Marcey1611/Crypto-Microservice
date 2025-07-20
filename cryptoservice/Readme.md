@@ -233,3 +233,25 @@ curl -v -k \
 
 # für Doku:
 „Der Crypto-Service verarbeitet alle Krypto-Operationen serverseitig, um eine zentrale Kontrolle und sichere Schlüsselverwaltung zu garantieren. Dies ist in vielen realen Anwendungen effizient genug, z. B. in Webservices, Banken oder Cloud-Systemen. In Performance-kritischen Szenarien könnten dezentrale Schlüssel und lokale Ver- und Entschlüsselung in Betracht gezogen werden – auf Kosten der zentralen Kontrolle und Sicherheit.“
+
+master keystore password: "PzDXe4in3qG7LWvSgwLp0JG3Snm7UxT5kFVuG1ey3h7hyp9IVL"
+- path: "src/main/resources/keystore/master-keystore.p12"
+- 
+client keystore password: "P095NxN4cROz0IaWF8105KB6oVYNXKg2q4JqhSKf6zMawsT2Lr"
+- path: "src/main/resources/keystore/client-keystore.p12"
+
+
+keytool -genseckey -alias master-key -keyalg AES -keysize 256 -storetype PKCS12 -keystore master-keystore.p12 -storepass PzDXe4in3qG7LWvSgwLp0JG3Snm7UxT5kFVuG1ey3h7hyp9IVL
+
+keytool -genseckey -alias jwt-signing-key -keyalg HmacSHA256 -keysize 256 -storetype PKCS12 -keystore master-keystore.p12 -storepass PzDXe4in3qG7LWvSgwLp0JG3Snm7UxT5kFVuG1ey3h7hyp9IVL
+
+
+keytool -genseckey -alias test1234 -keyalg AES -keysize 256 -storetype PKCS12 -keystore client-keystore.p12 -storepass P095NxN4cROz0IaWF8105KB6oVYNXKg2q4JqhSKf6zMawsT2Lr
+
+
+
+$env:MASTER_KEYSTORE_PASSWORD = "PzDXe4in3qG7LWvSgwLp0JG3Snm7UxT5kFVuG1ey3h7hyp9IVL"
+$env:MASTER_KEYSTORE_PATH = "src/main/resources/keystore/master-keystore.p12"
+
+$env:CLIENT_KEYSTORE_PASSWORD = "P095NxN4cROz0IaWF8105KB6oVYNXKg2q4JqhSKf6zMawsT2Lr"
+$env:CLIENT_KEYSTORE_PATH = "src/main/resources/keystore/client-keystore.p12"

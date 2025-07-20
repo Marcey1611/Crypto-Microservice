@@ -26,8 +26,8 @@ public class DecryptValidator {
      *
      * @param request the DecryptRequest containing the cipher text and JWT
      */
-    public final void validateDecryptRequest(final DecryptRequest request) {
-        final SecretKey key = this.keyStoreHelper.getKey("jwt-signing-key");
+    public final void validateDecryptRequest(final DecryptRequest request, final String keystorePath, final String keystorePassword) {
+        final SecretKey key = this.keyStoreHelper.getKey("jwt-signing-key", keystorePath, keystorePassword);
         final String cipherText = request.getCipherText();
         this.validationService.validateTextWithoutWhitelist(cipherText, FieldName.CIPHER_TEXT, CIPHER_TEXT_MAX_LENGTH);
         final String jwt = request.getJwt();

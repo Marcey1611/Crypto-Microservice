@@ -28,12 +28,6 @@ import java.util.Arrays;
 public class KeyStoreLoader {
     private static final Logger LOGGER = LoggerFactory.getLogger(KeyStoreLoader.class);
 
-    @Value("${keystore.path")
-    private String KEYSTORE_PATH;
-
-    @Value("${keystore.password}")
-    private String KEYSTORE_PASSWORD;
-
     private final ErrorHandler errorHandler;
 
     /**
@@ -42,9 +36,9 @@ public class KeyStoreLoader {
      * @return the loaded KeyStore instance
      * @throws InternalServerErrorException if there is an error loading the keystore
      */
-    public KeyStore load() {
-        final File keystoreFile = new File(KEYSTORE_PATH);
-        final char[] passwordChars = KEYSTORE_PASSWORD.toCharArray();
+    public KeyStore load(final String path, final String password) {
+        final File keystoreFile = new File(path);
+        final char[] passwordChars = password.toCharArray();
         final String absolutePath = keystoreFile.getAbsolutePath();
 
         LOGGER.debug("Attempting to load keystore from path '{}'", absolutePath);
@@ -85,9 +79,9 @@ public class KeyStoreLoader {
      * @param keystore the KeyStore instance to save
      * @throws InternalServerErrorException if there is an error saving the keystore
      */
-    public void save(final KeyStore keystore) {
-        final File keystoreFile = new File(KEYSTORE_PATH);
-        final char[] passwordChars = KEYSTORE_PASSWORD.toCharArray();
+    public void save(final KeyStore keystore, final String path, final String password) {
+        final File keystoreFile = new File(path);
+        final char[] passwordChars = password.toCharArray();
         final String absolutePath = keystoreFile.getAbsolutePath();
 
         LOGGER.debug("Attempting to save keystore to path '{}'", absolutePath);

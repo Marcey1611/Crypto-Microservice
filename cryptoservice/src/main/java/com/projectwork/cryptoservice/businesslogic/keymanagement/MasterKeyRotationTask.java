@@ -34,8 +34,17 @@ public class MasterKeyRotationTask {
     private final MasterKeyService masterKeyService;
     private final ErrorHandler errorHandler;
 
-    @Value("${keystore.password}")
-    private String KEYSTORE_PASSWORD;
+    @Value("${master.keystore.path}")
+    private String masterKeystorePath;
+
+    @Value("${master.keystore.password}")
+    private String masterKeystorePassword;
+
+    @Value("${client.keystore.path}")
+    private String clientKeystorePath;
+
+    @Value("${client.keystore.password}")
+    private String clientKeystorePassword;
 
     /**
      * Scheduled method that runs every 24 hours to rotate the master key.
@@ -45,17 +54,19 @@ public class MasterKeyRotationTask {
     public final void rotateMasterKey() {
         LOGGER.info("Starting scheduled master key rotation process");
 
-        final KeyStore keystore = this.keyStoreLoader.load();
-        final char[] passwordChars = this.KEYSTORE_PASSWORD.toCharArray();
+        final KeyStore masterKeystore = this.keyStoreLoader.load(this.masterKeystorePath, this.masterKeystorePassword);
+        final KeyStore clientKeystore = this.keyStoreLoader.load(this.clientKeystorePath, this.clientKeystorePassword);
+        final char[] masterKeystorePasswordChars = this.masterKeystorePassword.toCharArray();
+        final char[] clientKeystorePasswordChars = this.clientKeystorePassword.toCharArray();
 
-        final SecretKey oldMasterKey = this.masterKeyService.retrieveMasterKey(keystore);
+        final SecretKey oldMasterKey = this.masterKeyService.retrieveMasterKey();
         final SecretKey newMasterKey = this.generateNewMasterKey();
+        final List<String> clientKeyAliases = this.getClientKeyAliases(clientKeystore);
+        this.rewrapClientKeys(clientKeystore, oldMasterKey, newMasterKey, clientKeyAliases, clientKeystorePasswordChars);
+        this.storeNewMasterKey(masterKeystore, newMasterKey, masterKeystorePasswordChars);
 
-        final List<String> clientKeyAliases = this.getClientKeyAliases(keystore);
-        this.rewrapClientKeys(keystore, oldMasterKey, newMasterKey, clientKeyAliases, passwordChars);
-
-        this.storeNewMasterKey(keystore, newMasterKey, passwordChars);
-        this.keyStoreLoader.save(keystore);
+        this.keyStoreLoader.save(masterKeystore, this.masterKeystorePath, this.masterKeystorePassword);
+        this.keyStoreLoader.save(clientKeystore, this.clientKeystorePath, this.clientKeystorePassword);
 
         LOGGER.info("Master key rotation process completed successfully");
     }

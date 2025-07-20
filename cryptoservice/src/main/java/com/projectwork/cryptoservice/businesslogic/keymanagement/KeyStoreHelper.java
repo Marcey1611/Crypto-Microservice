@@ -5,7 +5,6 @@ import com.projectwork.cryptoservice.errorhandling.util.ErrorHandler;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
@@ -33,24 +32,21 @@ public class KeyStoreHelper {
     private final ClientKeyEncryptor encryptor;
     private final ErrorHandler errorHandler;
 
-    @Value("${keystore.password}")
-    private String KEYSTORE_PASSWORD;
-
     /**
      * Stores a client key in the keystore under the specified keyAlias.
      *
      * @param keyAlias      the keyAlias under which the key will be stored
      * @param clientKey  the client key to be stored
      */
-    public final void storeKey(final String keyAlias, final SecretKey clientKey) {
+    public final void storeKey(final String keyAlias, final SecretKey clientKey, final String keystorePath, final String keystorePassword) {
         LOGGER.debug("Storing key for keyAlias '{}'", keyAlias);
 
-        final KeyStore keystore = this.loader.load();
-        final SecretKey masterKey = this.masterKeyService.retrieveMasterKey(keystore);
+        final KeyStore keystore = this.loader.load(keystorePath, keystorePassword);
+        final SecretKey masterKey = this.masterKeyService.retrieveMasterKey();
         final byte[] encryptedKey = this.encryptor.encrypt(clientKey, masterKey);
 
-        this.storeWrappedKey(keystore, keyAlias, encryptedKey);
-        this.loader.save(keystore);
+        this.storeWrappedKey(keystore, keyAlias, encryptedKey, keystorePassword);
+        this.loader.save(keystore, keystorePath, keystorePassword);
 
         LOGGER.info("Key stored and saved in keystore for keyAlias '{}'", keyAlias);
     }
@@ -61,12 +57,12 @@ public class KeyStoreHelper {
      * @param alias the alias of the key to retrieve
      * @return the decrypted client key
      */
-    public final SecretKey getClientKey(final String alias) {
+    public final SecretKey getClientKey(final String alias, final String keystorePath, final String keystorePassword) {
         LOGGER.debug("Retrieving and decrypting client key for alias '{}'", alias);
 
-        final KeyStore ks = this.loader.load();
-        final SecretKey masterKey = this.masterKeyService.retrieveMasterKey(ks);
-        final SecretKey encryptedKey = this.getKey(ks, alias);
+        final KeyStore keystore = this.loader.load(keystorePath, keystorePassword);
+        final SecretKey masterKey = this.masterKeyService.retrieveMasterKey();
+        final SecretKey encryptedKey = this.getKey(keystore, alias, keystorePassword);
         final byte[] encoded = encryptedKey.getEncoded();
         final SecretKey decrypted = this.encryptor.decrypt(encoded, masterKey);
 
@@ -80,10 +76,10 @@ public class KeyStoreHelper {
      * @param alias the alias of the key to retrieve
      * @return the raw SecretKey associated with the alias
      */
-    public final SecretKey getKey(final String alias) {
+    public final SecretKey getKey(final String alias, final String keystorePath, final String keystorePassword) {
         LOGGER.debug("Retrieving key (raw) for alias '{}'", alias);
-        final KeyStore keyStore = this.loader.load();
-        final SecretKey key = this.getKey(keyStore, alias);
+        final KeyStore keyStore = this.loader.load(keystorePath, keystorePassword);
+        final SecretKey key = this.getKey(keyStore, alias, keystorePassword);
         LOGGER.info("Key successfully retrieved for alias '{}'", alias);
         return key;
     }
@@ -95,8 +91,8 @@ public class KeyStoreHelper {
      * @param alias     the alias under which the key will be stored
      * @param encrypted the encrypted key to be stored
      */
-    private void storeWrappedKey(final KeyStore ks, final String alias, final byte[] encrypted) {
-        final char[] password = this.KEYSTORE_PASSWORD.toCharArray();
+    private void storeWrappedKey(final KeyStore ks, final String alias, final byte[] encrypted, final String keystorePassword) {
+        final char[] password = keystorePassword.toCharArray();
 
         try {
             LOGGER.debug("Storing wrapped key in keystore under alias '{}'", alias);
@@ -126,8 +122,8 @@ public class KeyStoreHelper {
      * @param alias the alias of the key to retrieve
      * @return the SecretKey associated with the specified alias
      */
-    private SecretKey getKey(final KeyStore ks, final String alias) {
-        final char[] password = this.KEYSTORE_PASSWORD.toCharArray();
+    private SecretKey getKey(final KeyStore ks, final String alias, final String keystorePassword) {
+        final char[] password = keystorePassword.toCharArray();
 
         try {
             LOGGER.debug("Accessing KeyStore entry for alias '{}'", alias);

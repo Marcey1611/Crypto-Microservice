@@ -6,6 +6,7 @@ import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.KeyGenerator;
@@ -26,6 +27,12 @@ public class KeyStoreInitializer {
     private final KeyStoreHelper keyStoreHelper;
     private final KeyStoreLoader keyStoreLoader;
     private final ErrorHandler errorHandler;
+
+    @Value("${master.keystore.path}")
+    private String masterKeystorePath;
+
+    @Value("${master.keystore.password}")
+    private String masterKeystorePassword;
 
     /**
      * Initializes the KeyStore by checking for the existence of the JWT signing key and master key.
@@ -59,7 +66,7 @@ public class KeyStoreInitializer {
      * @return true if the alias is missing, false otherwise
      */
     private boolean checkContainsAlias(final String alias) {
-        final KeyStore keystore = this.keyStoreLoader.load();
+        final KeyStore keystore = this.keyStoreLoader.load(this.masterKeystorePath, this.masterKeystorePassword);
 
         try {
             final boolean missing = !keystore.containsAlias(alias);
@@ -117,7 +124,7 @@ public class KeyStoreInitializer {
 
         final SecretKey signingKey = keyGen.generateKey();
         LOGGER.debug("JWT signing key generated.");
-        this.keyStoreHelper.storeKey("jwt-signing-key", signingKey);
+        this.keyStoreHelper.storeKey("jwt-signing-key", signingKey, this.masterKeystorePath, this.masterKeystorePassword);
     }
 
     /**
@@ -162,6 +169,6 @@ public class KeyStoreInitializer {
 
         final SecretKey masterKey = keyGen.generateKey();
         LOGGER.debug("Master key generated.");
-        this.keyStoreHelper.storeKey("master-key", masterKey);
+        this.keyStoreHelper.storeKey("master-key", masterKey, this.masterKeystorePath, this.masterKeystorePassword);
     }
 }

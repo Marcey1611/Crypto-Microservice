@@ -31,21 +31,24 @@ public class MasterKeyService {
     private static final Logger LOGGER = LoggerFactory.getLogger(MasterKeyService.class);
 
     private final ErrorHandler errorHandler;
+    private final KeyStoreLoader loader;
 
-    @Value("${keystore.password}")
-    private String KEYSTORE_PASSWORD;
+    @Value("${master.keystore.path}")
+    private String masterKeystorePath;
+
+    @Value("${master.keystore.password}")
+    private String masterKeystorePassword;
 
     /**
      * Retrieves the master key from the provided KeyStore.
      *
-     * @param keystore the KeyStore instance from which to retrieve the master key
      * @return the retrieved SecretKey representing the master key
      * @throws InternalServerErrorException if there is an error accessing the master key
      */
-    public final SecretKey retrieveMasterKey(final KeyStore keystore) {
+    public final SecretKey retrieveMasterKey() {
         LOGGER.debug("Retrieving master key from KeyStore");
-
-        final char[] passwordChars = KEYSTORE_PASSWORD.toCharArray();
+        final KeyStore keystore = this.loader.load(this.masterKeystorePath, this.masterKeystorePassword);
+        final char[] passwordChars = this.masterKeystorePassword.toCharArray();
 
         try {
             final SecretKey masterKey = (SecretKey) keystore.getKey("master-key", passwordChars);

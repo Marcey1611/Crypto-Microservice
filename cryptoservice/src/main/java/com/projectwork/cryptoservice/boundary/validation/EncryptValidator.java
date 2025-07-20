@@ -26,8 +26,8 @@ public class EncryptValidator {
      *
      * @param request the EncryptRequest containing the plain text and JWT
      */
-    public final void validateEncryptRequest(final EncryptRequest request) {
-        final SecretKey key = this.keyStoreHelper.getKey("jwt-signing-key");
+    public final void validateEncryptRequest(final EncryptRequest request, final String keystorePath, final String keystorePassword) {
+        final SecretKey key = this.keyStoreHelper.getKey("jwt-signing-key", keystorePath, keystorePassword);
         final String plainText = request.getPlainText();
         this.validationService.validateText(plainText, FieldName.PLAIN_TEXT, PLAIN_TEXT_MAX_LENGTH, true);
         final String jwt = request.getJwt();
