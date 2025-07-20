@@ -5,6 +5,7 @@ import com.projectwork.cryptoservice.errorhandling.util.ErrorHandler;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -33,6 +34,9 @@ public class MasterKeyRotationTask {
     private final MasterKeyService masterKeyService;
     private final ErrorHandler errorHandler;
 
+    @Value("${keystore.password}")
+    private String KEYSTORE_PASSWORD;
+
     /**
      * Scheduled method that runs every 24 hours to rotate the master key.
      * It generates a new master key, rewraps all client keys, and updates the keystore.
@@ -42,7 +46,7 @@ public class MasterKeyRotationTask {
         LOGGER.info("Starting scheduled master key rotation process");
 
         final KeyStore keystore = this.keyStoreLoader.load();
-        final char[] passwordChars = this.getPassword();
+        final char[] passwordChars = this.KEYSTORE_PASSWORD.toCharArray();
 
         final SecretKey oldMasterKey = this.masterKeyService.retrieveMasterKey(keystore);
         final SecretKey newMasterKey = this.generateNewMasterKey();
@@ -54,17 +58,6 @@ public class MasterKeyRotationTask {
         this.keyStoreLoader.save(keystore);
 
         LOGGER.info("Master key rotation process completed successfully");
-    }
-
-    /**
-     * Retrieves the keystore password from the environment variable.
-     * This method is used to access the keystore securely.
-     *
-     * @return the keystore password as a char array
-     */
-    private char[] getPassword() {
-        final String keystorePassword = System.getenv("KEYSTORE_PASSWORD");
-        return keystorePassword.toCharArray();
     }
 
     /**

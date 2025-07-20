@@ -6,6 +6,7 @@ import com.projectwork.cryptoservice.errorhandling.util.ErrorHandler;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -26,8 +27,12 @@ import java.util.Arrays;
 @RequiredArgsConstructor
 public class KeyStoreLoader {
     private static final Logger LOGGER = LoggerFactory.getLogger(KeyStoreLoader.class);
-    private static final String KEYSTORE_PATH = System.getenv("KEYSTORE_PATH");
-    private static final String KEYSTORE_PASSWORD = System.getenv("KEYSTORE_PASSWORD");
+
+    @Value("${keystore.path")
+    private String KEYSTORE_PATH;
+
+    @Value("${keystore.password}")
+    private String KEYSTORE_PASSWORD;
 
     private final ErrorHandler errorHandler;
 

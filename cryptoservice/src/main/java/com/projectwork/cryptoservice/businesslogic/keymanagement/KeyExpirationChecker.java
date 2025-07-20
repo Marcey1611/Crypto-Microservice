@@ -5,6 +5,7 @@ import com.projectwork.cryptoservice.errorhandling.util.ErrorHandler;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.security.auth.DestroyFailedException;
@@ -28,9 +29,11 @@ public class KeyExpirationChecker {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(KeyExpirationChecker.class);
     private static final long EXPIRATION_TIME_MILLIS = TimeUnit.HOURS.toMillis(1);
-    private static final String ENV_KEYSTORE_PASSWORD = "KEYSTORE_PASSWORD";
 
     private final ErrorHandler errorHandler;
+
+    @Value("${keystore.password}")
+    private String KEYSTORE_PASSWORD;
 
     /**
      * Checks if the key with the given alias in the provided keystore is expired.
@@ -63,8 +66,7 @@ public class KeyExpirationChecker {
      * @return the KeyStore.Entry for the specified alias
      */
     private KeyStore.Entry getEntry(final KeyStore keystore, final String alias) {
-        final String envKeystorePassword = System.getenv(ENV_KEYSTORE_PASSWORD);
-        final char[] passwordChars = Optional.ofNullable(envKeystorePassword)
+        final char[] passwordChars = Optional.ofNullable(this.KEYSTORE_PASSWORD)
                 .map(String::toCharArray)
                 .orElse(new char[0]);
         final PasswordProtection protection = new PasswordProtection(passwordChars);

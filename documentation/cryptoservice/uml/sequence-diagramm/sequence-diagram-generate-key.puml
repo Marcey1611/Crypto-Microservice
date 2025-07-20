@@ -1,6 +1,9 @@
 @startuml
 title Sequenzdiagramm für /generate-key
 
+'TODO Finish after checking and implementing secure coding practices
+
+
 ' Color scheme:
 ' #CCE5FF → API & Controller
 ' #F9D5E5 → Parts of Validation

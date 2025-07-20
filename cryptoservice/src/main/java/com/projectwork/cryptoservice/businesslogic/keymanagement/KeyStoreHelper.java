@@ -5,6 +5,7 @@ import com.projectwork.cryptoservice.errorhandling.util.ErrorHandler;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
@@ -31,6 +32,9 @@ public class KeyStoreHelper {
     private final MasterKeyService masterKeyService;
     private final ClientKeyEncryptor encryptor;
     private final ErrorHandler errorHandler;
+
+    @Value("${keystore.password}")
+    private String KEYSTORE_PASSWORD;
 
     /**
      * Stores a client key in the keystore under the specified keyAlias.
@@ -92,8 +96,7 @@ public class KeyStoreHelper {
      * @param encrypted the encrypted key to be stored
      */
     private void storeWrappedKey(final KeyStore ks, final String alias, final byte[] encrypted) {
-        final String keystorePassword = System.getenv("KEYSTORE_PASSWORD");
-        final char[] password = keystorePassword.toCharArray();
+        final char[] password = this.KEYSTORE_PASSWORD.toCharArray();
 
         try {
             LOGGER.debug("Storing wrapped key in keystore under alias '{}'", alias);
@@ -124,8 +127,7 @@ public class KeyStoreHelper {
      * @return the SecretKey associated with the specified alias
      */
     private SecretKey getKey(final KeyStore ks, final String alias) {
-        final String keystorePassword = System.getenv("KEYSTORE_PASSWORD");
-        final char[] password = keystorePassword.toCharArray();
+        final char[] password = this.KEYSTORE_PASSWORD.toCharArray();
 
         try {
             LOGGER.debug("Accessing KeyStore entry for alias '{}'", alias);

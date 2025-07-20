@@ -6,6 +6,7 @@ import com.projectwork.cryptoservice.errorhandling.util.ErrorHandler;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
@@ -31,6 +32,9 @@ public class MasterKeyService {
 
     private final ErrorHandler errorHandler;
 
+    @Value("${keystore.password}")
+    private String KEYSTORE_PASSWORD;
+
     /**
      * Retrieves the master key from the provided KeyStore.
      *
@@ -41,8 +45,7 @@ public class MasterKeyService {
     public final SecretKey retrieveMasterKey(final KeyStore keystore) {
         LOGGER.debug("Retrieving master key from KeyStore");
 
-        final String password = System.getenv("KEYSTORE_PASSWORD");
-        final char[] passwordChars = password.toCharArray();
+        final char[] passwordChars = KEYSTORE_PASSWORD.toCharArray();
 
         try {
             final SecretKey masterKey = (SecretKey) keystore.getKey("master-key", passwordChars);
