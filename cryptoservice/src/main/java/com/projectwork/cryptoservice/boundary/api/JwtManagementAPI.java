@@ -26,5 +26,5 @@ public interface JwtManagementAPI {
      * @return a ResponseEntity containing the GenerateJwtResponse with the generated JWT
      */
     @RequestMapping("/jwt/generate")
-    ResponseEntity<GenerateJwtResponse> generateJwtPost(@Valid @RequestBody final GenerateJwtRequest generateJwtRequest, final Principal principal);
+    ResponseEntity<GenerateJwtResponse> generateJwtPost(@RequestBody final GenerateJwtRequest generateJwtRequest, final Principal principal);
 }

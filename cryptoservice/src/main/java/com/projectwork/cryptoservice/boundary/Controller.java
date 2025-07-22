@@ -4,9 +4,7 @@ import com.projectwork.cryptoservice.boundary.api.DecryptAPI;
 import com.projectwork.cryptoservice.boundary.api.EncryptAPI;
 import com.projectwork.cryptoservice.boundary.api.JwtManagementAPI;
 import com.projectwork.cryptoservice.boundary.api.KeyManagementAPI;
-import com.projectwork.cryptoservice.boundary.validation.DecryptValidator;
-import com.projectwork.cryptoservice.boundary.validation.EncryptValidator;
-import com.projectwork.cryptoservice.boundary.validation.JwtManagementValidator;
+import com.projectwork.cryptoservice.boundary.validation.ValidationService;
 import com.projectwork.cryptoservice.businessfacade.DecryptFacade;
 import com.projectwork.cryptoservice.businessfacade.EncryptFacade;
 import com.projectwork.cryptoservice.businessfacade.JwtManagementFacade;
@@ -21,8 +19,6 @@ import com.projectwork.cryptoservice.entity.models.jwtmanagement.GenerateJwtResp
 import com.projectwork.cryptoservice.entity.models.keymanagement.GenerateKeyResponse;
 import com.projectwork.cryptoservice.errorhandling.exceptions.BadRequestException;
 import com.projectwork.cryptoservice.errorhandling.util.ErrorCode;
-import com.projectwork.cryptoservice.errorhandling.util.ErrorDetail;
-import com.projectwork.cryptoservice.errorhandling.util.ErrorDetailBuilder;
 import com.projectwork.cryptoservice.errorhandling.util.ErrorHandler;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -47,11 +43,9 @@ public class Controller implements EncryptAPI, DecryptAPI, KeyManagementAPI, Jwt
     private final DecryptFacade decryptFacade;
     private final KeyManagementFacade keyManagementFacade;
     private final JwtManagementFacade jwtManagementFacade;
-    private final EncryptValidator encryptValidator;
-    private final JwtManagementValidator jwtManagementValidator;
-    private final DecryptValidator decryptValidator;
     private final ClientKeyRegistry clientKeyRegistry;
     private final ErrorHandler errorHandler;
+    private final ValidationService validationService;
 
     @Value("${master.keystore.path}")
     private String masterKeystorePath;
@@ -72,7 +66,7 @@ public class Controller implements EncryptAPI, DecryptAPI, KeyManagementAPI, Jwt
         LOGGER.info("Received encrypt request for client '{}'", clientName);
         this.checkClientNameExists(clientName);
 
-        this.encryptValidator.validateEncryptRequest(encryptRequest, this.masterKeystorePath, this.masterKeystorePassword);
+        this.validationService.validateEncryptRequest(encryptRequest, this.masterKeystorePath, this.masterKeystorePassword);
         LOGGER.debug("Encrypt request validated for client '{}'", clientName);
 
         final ResponseEntity<EncryptResponse> response = this.encryptFacade.processEncryption(encryptRequest, clientName);
@@ -93,7 +87,7 @@ public class Controller implements EncryptAPI, DecryptAPI, KeyManagementAPI, Jwt
         LOGGER.info("Received decrypt request for client '{}'", clientName);
         this.checkClientNameExists(clientName);
 
-        this.decryptValidator.validateDecryptRequest(decryptRequest, this.masterKeystorePath, this.masterKeystorePassword);
+        this.validationService.validateDecryptRequest(decryptRequest, this.masterKeystorePath, this.masterKeystorePassword);
         LOGGER.debug("Decrypt request validated for client '{}'", clientName);
 
         final ResponseEntity<DecryptResponse> response = this.decryptFacade.processDecryption(decryptRequest, clientName);
@@ -129,7 +123,7 @@ public class Controller implements EncryptAPI, DecryptAPI, KeyManagementAPI, Jwt
         LOGGER.info("JWT generation requested by client '{}'", clientName);
         this.checkClientNameExists(clientName);
 
-        this.jwtManagementValidator.validateGenerateJwtRequest(generateJwtRequest);
+        this.validationService.validateGenerateJwtRequest(generateJwtRequest);
         LOGGER.debug("JWT request validated for client '{}'", clientName);
 
         final ResponseEntity<GenerateJwtResponse> response = this.jwtManagementFacade.generateJwt(generateJwtRequest, clientName);
