@@ -87,8 +87,8 @@ public class JwtValidator {
         this.lengthValidator.validateLength(algorithm, maxLength, FieldName.ALGORITHM_HEADER);
         this.asciiValidator.validateAscii(algorithm, FieldName.ALGORITHM_HEADER);
         this.charsetValidator.validateCharset(algorithm, FieldName.ALGORITHM_HEADER);
-        this.whitelistValidator.validateWhitelist(algorithm, FieldName.ALGORITHM_HEADER, false);
         this.controlCharValidator.validateControlChars(algorithm, FieldName.ALGORITHM_HEADER);
+        this.whitelistValidator.validateWhitelist(algorithm, FieldName.ALGORITHM_HEADER, false);
 
         if ("none".equalsIgnoreCase(algorithm)) {
             throw this.errorHandler.handleError(ErrorCode.INSECURE_JWT_ALGO, "While validating JWT algorithm from header.");
@@ -106,7 +106,7 @@ public class JwtValidator {
         this.lengthValidator.validateLength(alias, maxLength, FieldName.KEY_ALIAS);
         this.asciiValidator.validateAscii(alias, FieldName.KEY_ALIAS);
         this.charsetValidator.validateCharset(alias, FieldName.KEY_ALIAS);
-        this.whitelistValidator.validateWhitelist(alias, FieldName.KEY_ALIAS, false);
         this.controlCharValidator.validateControlChars(alias, FieldName.KEY_ALIAS);
+        this.whitelistValidator.validateWhitelist(alias, FieldName.KEY_ALIAS, false);
     }
 }

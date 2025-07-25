@@ -1,0 +1,61 @@
+@startuml
+
+interface DataRecord {
+    + String getLabel()
+    + int getSpread()
+}
+
+interface DataParser<T extends DataRecord> {
+    + List<T> parseLines(List<String> lines)
+}
+
+class CsvReader {
+    + List<String> readFile(String path)
+}
+
+class DataAnalyzer<T extends DataRecord> {
+    + T findWithSmallestSpread(List<T> records)
+}
+
+class ApplicationRunner {
+    - CsvReader csvReader
+    - DataParser parser
+    - DataAnalyzer analyzer
+    + void run(String filepath)
+}
+
+class WeatherDataRecord implements DataRecord {
+    - int day
+    - int maxTemp
+    - int minTemp
+    + String getLabel()
+    + int getDiff()
+}
+
+class WeatherDataParser implements DataParser<WeatherDataRecord> {
+    + List<WeatherDataRecord> parseLines(List<String> lines)
+}
+
+class FootballDataRecord implements DataRecord {
+    - String teamName
+    - int goals
+    - int goalsAllowed
+    + String getLabel()
+    + int getDiff()
+}
+
+class FootballDataParser implements DataParser<FootballDataRecord> {
+    + List<FootballDataRecord> parseLines(List<String> lines)
+}
+
+DataRecord <|.. WeatherDataRecord
+DataRecord <|.. FootballDataRecord
+
+DataParser <|.. WeatherDataParser
+DataParser <|.. FootballDataParser
+
+ApplicationRunner --> CsvReader
+ApplicationRunner --> DataParser
+ApplicationRunner --> DataAnalyzer
+
+@enduml

@@ -118,6 +118,12 @@ public enum ErrorCode {
         "Invalid input.",
         Level.ERROR
     ),
+
+    INVALID_BASE64(
+        "400.019",
+        "Invalid input.",
+        Level.ERROR
+    ),
     
     //500
     UNEXPECTED_ERROR(

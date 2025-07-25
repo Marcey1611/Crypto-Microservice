@@ -38,6 +38,7 @@ public class ValidationService {
     private final NullOrBlankValidator nullOrBlankValidator;
     private final WhitelistValidator whitelistValidator;
     private final JwtValidator jwtValidator;
+    private final Base64Validator base64Validator;
 
     /**
      * Validates the GenerateJwtRequest for JWT generation.
@@ -51,8 +52,8 @@ public class ValidationService {
         this.lengthValidator.validateLength(issuedTo, ISSUED_TO_MAX_LENGTH, FieldName.ISSUED_TO);
         this.asciiValidator.validateAscii(issuedTo, FieldName.ISSUED_TO);
         this.charsetValidator.validateCharset(issuedTo, FieldName.ISSUED_TO);
-        this.whitelistValidator.validateWhitelist(issuedTo, FieldName.ISSUED_TO, false);
         this.controlCharValidator.validateControlChars(issuedTo, FieldName.ISSUED_TO);
+        this.whitelistValidator.validateWhitelist(issuedTo, FieldName.ISSUED_TO, false);
     }
 
     /**
@@ -71,8 +72,8 @@ public class ValidationService {
         this.lengthValidator.validateLength(plainText, PLAIN_TEXT_MAX_LENGTH, FieldName.PLAIN_TEXT);
         this.asciiValidator.validateAscii(plainText, FieldName.PLAIN_TEXT);
         this.charsetValidator.validateCharset(plainText, FieldName.PLAIN_TEXT);
-        this.whitelistValidator.validateWhitelist(plainText, FieldName.PLAIN_TEXT, true);
         this.controlCharValidator.validateControlChars(plainText, FieldName.PLAIN_TEXT);
+        this.whitelistValidator.validateWhitelist(plainText, FieldName.PLAIN_TEXT, true);
 
         this.validateJwt(jwt, key);
     }
@@ -94,6 +95,7 @@ public class ValidationService {
         this.asciiValidator.validateAscii(cipherText, FieldName.CIPHER_TEXT);
         this.charsetValidator.validateCharset(cipherText, FieldName.CIPHER_TEXT);
         this.controlCharValidator.validateControlChars(cipherText, FieldName.CIPHER_TEXT);
+        this.base64Validator.validateBase64(cipherText, FieldName.CIPHER_TEXT);
 
         this.validateJwt(jwt, key);
     }
@@ -109,8 +111,8 @@ public class ValidationService {
         this.lengthValidator.validateLength(jwt, JWT_MAX_LENGTH, FieldName.JWT);
         this.asciiValidator.validateAscii(jwt, FieldName.JWT);
         this.charsetValidator.validateCharset(jwt, FieldName.JWT);
-        this.whitelistValidator.validateWhitelist(jwt, FieldName.JWT, false);
         this.controlCharValidator.validateControlChars(jwt, FieldName.JWT);
+        this.whitelistValidator.validateWhitelist(jwt, FieldName.JWT, false);
 
         this.jwtValidator.validateJwtPattern(jwt);
         final Jws<Claims> parsed = this.jwtValidator.validateSignature(jwt, key);
