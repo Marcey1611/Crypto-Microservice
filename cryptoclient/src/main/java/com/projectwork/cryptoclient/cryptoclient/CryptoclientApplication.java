@@ -22,19 +22,19 @@ public class CryptoclientApplication {
 	public static void main(String[] args) throws JsonMappingException, JsonProcessingException {
 		final ConfigurableApplicationContext context = SpringApplication.run(CryptoclientApplication.class, args);
 
-        // Client 1: für Key, JWT und Encrypt
+        // Beide Clients haben nun eigene Keystores (optional, hier der gleiche)
         CryptoClient client1 = new CryptoClient(
-            null,
-            "../cryptoclient/src/main/resources/tls/truststore.jks",
-            "CryptoMicroservice2025!"
+                "src/main/resources/tls/client1-keystore.p12",
+                "src/main/resources/tls/client1-truststore.p12",
+                "changeit"
         );
 
-        // Client 2: nur für Decrypt
         CryptoClient client2 = new CryptoClient(
-            null,
-            "../cryptoclient/src/main/resources/tls/truststore.jks",
-            "CryptoMicroservice2025!"
+                "src/main/resources/tls/client1-keystore.p12",
+                "src/main/resources/tls/client1-truststore.p12",
+                "changeit"
         );
+
 
         final String message = generateFullAsciiString();
 

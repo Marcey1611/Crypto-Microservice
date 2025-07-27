@@ -154,6 +154,7 @@ public class Controller implements EncryptAPI, DecryptAPI, KeyManagementAPI, Jwt
      * @return the name of the client
      */
     private String resolveClientName(final Principal principal) {
+        System.out.println(principal.getName());
         final String clientName = (null != principal) ? principal.getName() : "anonymous-client";
         LOGGER.debug("Resolved client name: '{}'", clientName);
         return clientName;
