@@ -31,7 +31,3 @@ build/
 
 ### VS Code ###
 .vscode/
-
-### Ca ###
-src/main/resources/ca/root_ca.key
-
