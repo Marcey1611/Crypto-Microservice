@@ -84,7 +84,7 @@ public class Controller implements EncryptAPI, DecryptAPI, KeyManagementAPI, Jwt
     public final ResponseEntity<DecryptResponse> decryptPost(final DecryptRequest decryptRequest, final Principal principal) {
         final String clientName = this.resolveClientName(principal);
         LOGGER.info("Received decrypt request for client '{}'", clientName);
-        this.checkClientNameExists(clientName);
+        //this.checkClientNameExists(clientName);
 
         this.decryptValidator.validateDecryptRequest(decryptRequest);
         LOGGER.debug("Decrypt request validated for client '{}'", clientName);

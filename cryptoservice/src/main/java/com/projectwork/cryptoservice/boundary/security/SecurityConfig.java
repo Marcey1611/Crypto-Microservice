@@ -1,14 +1,14 @@
 package com.projectwork.cryptoservice.boundary.security;
 
+import jakarta.servlet.Filter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.preauth.x509.X509AuthenticationFilter;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Security configuration for the CryptoService application.
@@ -19,36 +19,27 @@ import org.slf4j.LoggerFactory;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(SecurityConfig.class);
+    private final DynamicUserDetailsService userDetailsService;
+    private final KnownClientStore knownClientStore;
 
-    private final DynamicUserDetailsService dynamicUserDetailsService;
-
-    /**
-     * Configures the security filter chain for the application.
-     * This method defines which endpoints are accessible and applies security rules.
-     *
-     * @param http the HttpSecurity object to configure
-     * @return the configured SecurityFilterChain
-     * @throws Exception if an error occurs during configuration
-     */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        LOGGER.info("SecurityFilterChain for CryptoService initialized.");
-
         http
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/crypto/keys/generate").authenticated() // <-- wichtig!
-                        .requestMatchers("/crypto/jwt/generate").permitAll()
-                        .requestMatchers("/crypto/encrypt").permitAll()
-                        .requestMatchers("/crypto/decrypt").authenticated()
-                        .anyRequest().denyAll()
+                        .anyRequest().authenticated() // Baseline: alles nur mit Auth
                 )
                 .x509(x509 -> x509
-                        .subjectPrincipalRegex("CN=(.*?)(?:,|$)") // <-- CN aus dem Zertifikat extrahieren
-                        .userDetailsService(dynamicUserDetailsService) // <-- dein Custom-Service
+                        .subjectPrincipalRegex("CN=(.*?)(?:,|$)")
+                        .userDetailsService(userDetailsService)
                 )
+                .addFilterAfter(clientAccessFilter(), X509AuthenticationFilter.class)
                 .csrf(csrf -> csrf.disable());
 
         return http.build();
+    }
+
+    @Bean
+    public Filter clientAccessFilter() {
+        return new ClientAccessControlFilter(knownClientStore);
     }
 }

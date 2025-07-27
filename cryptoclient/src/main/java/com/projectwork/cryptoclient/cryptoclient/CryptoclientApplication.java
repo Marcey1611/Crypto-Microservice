@@ -30,8 +30,8 @@ public class CryptoclientApplication {
         );
 
         CryptoClient client2 = new CryptoClient(
-                "src/main/resources/tls/client1-keystore.p12",
-                "src/main/resources/tls/client1-truststore.p12",
+                "src/main/resources/tls/client2-keystore.p12",
+                "src/main/resources/tls/client2-truststore.p12",
                 "changeit"
         );
 
@@ -40,16 +40,16 @@ public class CryptoclientApplication {
 
         System.out.println("");
         System.out.println("------------------------------Client 1 to Client 2------------------------------");
-        testClientToClient(client1, client2, message, "anonymous-client");
+        testClientToClient(client1, client2, message, "client2");
         System.out.println("");
         System.out.println("------------------------------Client 2 to Client 1------------------------------");
-        testClientToClient(client2, client1, message, "anonymous-client");
+        testClientToClient(client2, client1, message, "client1");
         System.out.println("");
         System.out.println("------------------------------Client 1 to Client 1------------------------------");
-        testClientToClient(client1, client1, message, "anonymous-client");
+        testClientToClient(client1, client1, message, "client1");
         System.out.println("");
         System.out.println("------------------------------Client 2 to Client 2------------------------------");
-        testClientToClient(client2, client2, message, "anonymous-client");
+        testClientToClient(client2, client2, message, "client2");
         System.out.println("");  
 
         final int exitCode = SpringApplication.exit(context, () -> 0);
