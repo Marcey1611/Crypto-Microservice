@@ -22,7 +22,9 @@ import java.util.Base64;
 
 /**
  * Service for encrypting texts using AES-GCM.
- * Handles key management, IV generation, and error handling for encryption operations.
+ *
+ * SCPs:
+ *  - [101] All cryptographic functions used to protect secrets from the application user must be implemented on a trusted system (e.g., the server)
  */
 @RequiredArgsConstructor
 @Service

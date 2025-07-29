@@ -16,6 +16,12 @@ import java.security.InvalidKeyException;
 import java.security.InvalidParameterException;
 import java.security.NoSuchAlgorithmException;
 
+/**
+ * Utility class for cryptographic operations, specifically AES-GCM encryption.
+ *
+ * SCPs:
+ * - [101] All cryptographic functions used to protect secrets from the application user must be implemented on a trusted system (e.g., the server)
+ */
 @Service
 @RequiredArgsConstructor
 public class CryptoUtility {

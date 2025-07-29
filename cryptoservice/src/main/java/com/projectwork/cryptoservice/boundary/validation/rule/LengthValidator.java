@@ -6,6 +6,14 @@ import com.projectwork.cryptoservice.errorhandling.util.ErrorHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+/**
+ * LengthValidator class that validates the length of a given input string.
+ * It throws an error if the input exceeds the specified maximum length.
+ *
+ * SCPs:
+ * - [6] All validation failures should result in input rejection
+ * - [13] Validate data length
+ */
 @Component
 @RequiredArgsConstructor
 public class LengthValidator {

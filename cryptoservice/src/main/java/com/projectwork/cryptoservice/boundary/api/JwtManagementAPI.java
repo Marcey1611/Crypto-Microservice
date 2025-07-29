@@ -14,6 +14,9 @@ import jakarta.validation.Valid;
 
 /** * API for managing JWTs (JSON Web Tokens).
  * This interface defines the endpoint for generating JWTs.
+ *
+ * SCPs:
+ *  - [4] Specify proper character sets, such as UTF-8, for all sources of input
  */
 @RequestMapping("/crypto")
 public interface JwtManagementAPI {

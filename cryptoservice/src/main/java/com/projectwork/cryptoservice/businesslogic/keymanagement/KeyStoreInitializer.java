@@ -11,11 +11,15 @@ import org.springframework.stereotype.Component;
 
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
+import java.io.File;
 import java.security.*;
 
 /**
  * KeyStoreInitializer is responsible for initializing the KeyStore with necessary keys.
  * It checks for the existence of specific keys and generates them if they are missing.
+ *
+ * SCPs:
+ * - [80] Deny all access if the application cannot access its security configuration information
  */
 @RequiredArgsConstructor
 @Component
@@ -34,6 +38,12 @@ public class KeyStoreInitializer {
     @Value("${master.keystore.password}")
     private String masterKeystorePassword;
 
+    @Value("${client.keystore.path}")
+    private String clientKeystorePath;
+
+    @Value("${client.keystore.password}")
+    private String clientKeystorePassword;
+
     /**
      * Initializes the KeyStore by checking for the existence of the JWT signing key and master key.
      * If they do not exist, it generates them.
@@ -41,6 +51,10 @@ public class KeyStoreInitializer {
     @PostConstruct
     public final void initKeyStore() {
         LOGGER.info("Initializing KeyStore...");
+
+        final KeyStore masterKeystore = this.validateAccessToKeyStore(this.masterKeystorePath, this.masterKeystorePassword);
+        this.validateMasterKeyStoreNotEmpty(masterKeystore, this.masterKeystorePath);
+        this.validateAccessToKeyStore(this.clientKeystorePath, this.clientKeystorePassword);
 
         if (this.checkContainsAlias("jwt-signing-key")) {
             LOGGER.info("JWT signing key not found in KeyStore – generating new one...");
@@ -176,5 +190,67 @@ public class KeyStoreInitializer {
         final byte[] masterKeyBytes = masterKey.getEncoded();
         LOGGER.debug("Master key generated.");
         this.keyStoreHelper.storeKey("master-key", masterKeyBytes, this.masterKeystorePath, this.masterKeystorePassword);
+    }
+
+    private void validateFileExists(final String path) {
+        final File file = new File(path);
+        if (!file.exists()) {
+            LOGGER.error("KeyStore file at '{}' does not exist. Application will terminate!", path);
+            System.exit(1);
+        }
+    }
+
+    /**
+     * Validates access to the KeyStore by loading it from the specified path and password.
+     * If the KeyStore cannot be loaded, it logs an error and terminates the application.
+     *
+     * @param path     the path to the KeyStore
+     * @param password the password for the KeyStore
+     * @return the loaded KeyStore
+     */
+    private KeyStore validateAccessToKeyStore(final String path, final String password) {
+        final File file = new File(path);
+        if (!file.exists()) {
+            final String context = String.format("KeyStore file at '%s' does not exist.", path);
+            throw this.errorHandler.handleError(
+                    context,
+                    ErrorCode.KEYSTORE_ACCESS_FAILED
+            );
+        }
+
+        try {
+            return this.keyStoreLoader.load(path, password);
+        } catch (final Exception exception) {
+            LOGGER.error("Failed to load KeyStore from '{}'. Application will terminate!", path);
+            final String context = String.format("While loading KeyStore from path '%s'.", path);
+            throw this.errorHandler.handleError(
+                    ErrorCode.KEYSTORE_ACCESS_FAILED,
+                    context,
+                    exception
+            );
+        }
+    }
+
+    /**
+     * Validates that the master KeyStore is not empty.
+     * If it is empty, it logs an error and terminates the application.
+     *
+     * @param keystore the KeyStore to validate
+     * @param path     the path of the KeyStore
+     */
+    private void validateMasterKeyStoreNotEmpty(final KeyStore keystore, final String path) {
+        try {
+            if (keystore.size() == 0) {
+                LOGGER.error("KeyStore at '{}' is empty. Application will terminate!", path);
+                System.exit(1);
+            }
+        } catch (final KeyStoreException exception) {
+            final String context = String.format("While checking KeyStore size at path '%s'.", path);
+            throw this.errorHandler.handleError(
+                    ErrorCode.MASTER_KEYSTORE_INVALID_OR_CORRUPTED,
+                    context,
+                    exception
+            );
+        }
     }
 }

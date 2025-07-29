@@ -6,6 +6,13 @@ import com.projectwork.cryptoservice.errorhandling.util.ErrorHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+/**
+ * NullOrBlankValidator class that validates if a given string is not null or blank.
+ * It throws an error if the string is null or empty.
+ *
+ * SCPs:
+ * - [6] All validation failures should result in input rejection
+ */
 @Component
 @RequiredArgsConstructor
 public class NullOrBlankValidator {

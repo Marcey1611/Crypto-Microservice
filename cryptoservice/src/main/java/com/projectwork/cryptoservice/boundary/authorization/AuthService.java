@@ -11,6 +11,11 @@ import org.springframework.stereotype.Service;
 
 /**
  * AuthService class that handles authorization logic for encryption and decryption requests.
+ *
+ * SCPs:
+ * - [77] Use only trusted system objects (e.g. server-side session objects) for making access authorization decisions
+ * - [87] Restrict access to services to only authorized users
+ * - [88] Restrict access to application data to only authorized users
  */
 @Service
 @RequiredArgsConstructor

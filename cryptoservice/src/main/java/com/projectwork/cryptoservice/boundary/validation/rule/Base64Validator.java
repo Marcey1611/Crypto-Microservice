@@ -10,6 +10,9 @@ import java.util.Base64;
 
 /**
  * Validates that the given input is a valid Base64 encoded string.
+ *
+ * SCPs:
+ * - [6] All validation failures should result in input rejection
  */
 @Component
 @RequiredArgsConstructor

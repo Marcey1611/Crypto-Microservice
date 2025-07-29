@@ -18,6 +18,16 @@ import java.util.Date;
 /**
  * ValidationService class that provides methods for validating JWT generation, encryption, and decryption requests.
  * It uses various validators to ensure the integrity and correctness of the data.
+ *
+ * SCPS:
+ * - [1] Conduct all data validation on a trusted system (e.g., The server)
+ * - [2] Identify all data sources and classify them into trusted and untrusted. Validate all data from untrusted sources
+ * - [3] There should be a centralized input validation routine for the application
+ * - [4] Specify proper character sets, such as UTF-8, for all sources of input
+ * - [6] All validation failures should result in input rejection
+ * - [8] Validate all client-provided data before processing
+ * - [13] Validate data length
+ * - [14] Validate all input against a "white" list of allowed characters, whenever possible
  */
 @Service
 @RequiredArgsConstructor

@@ -7,6 +7,10 @@ import org.slf4j.event.Level;
  * Enum representing various error codes used in the application.
  * Each error code has a unique identifier, a user-friendly message,
  * and a log level indicating the severity of the error.
+ *
+ * SCPs:
+ * - [107] Do not disclose sensitive information in error responses
+ * - [108] Use error handlers that do not display debugging or stack trace information
  */
 @Getter
 public enum ErrorCode {
@@ -354,6 +358,20 @@ public enum ErrorCode {
         "Internal server error",
         "JWT KeyAlias extraction failed",
         Level.ERROR
+    ),
+
+    KEYSTORE_ACCESS_FAILED(
+        "500.033",
+        "Internal server error",
+        "Failed to access keystore.",
+        Level.ERROR
+    ),
+
+    MASTER_KEYSTORE_INVALID_OR_CORRUPTED(
+            "500.035",
+            "Internal server error",
+            "Master keystore is invalid or corrupted.",
+            Level.ERROR
     );
 
 

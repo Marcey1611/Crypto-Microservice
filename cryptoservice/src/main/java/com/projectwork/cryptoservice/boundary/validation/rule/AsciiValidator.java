@@ -6,6 +6,14 @@ import com.projectwork.cryptoservice.errorhandling.util.ErrorHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+/**
+ * AsciiValidator class that validates if a given string contains only ASCII characters.
+ * It throws an error if the string contains non-ASCII characters.
+ *
+ * SCPs:
+ * - [4] Specify proper character sets, such as ASCII, for all sources of input
+ * - [6] All validation failures should result in input rejection
+ */
 @Component
 @RequiredArgsConstructor
 public class AsciiValidator {

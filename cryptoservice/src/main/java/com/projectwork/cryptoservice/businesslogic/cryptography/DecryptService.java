@@ -24,7 +24,9 @@ import java.util.Base64;
 
 /**
  * Service for decrypting texts using AES-GCM.
- * Handles key management, IV retrieval, and error handling for decryption operations.
+ *
+ * SCPs:
+ *  - [101] All cryptographic functions used to protect secrets from the application user must be implemented on a trusted system (e.g., the server)
  */
 @RequiredArgsConstructor
 @Service

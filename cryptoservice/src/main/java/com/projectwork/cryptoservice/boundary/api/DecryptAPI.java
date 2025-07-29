@@ -15,6 +15,9 @@ import jakarta.validation.Valid;
 /**
  * DecryptAPI interface for handling decryption requests.
  * This interface defines the endpoint for decrypting data.
+ *
+ * SCPs:
+ * - [4] Specify proper character sets, such as UTF-8, for all sources of input
  */
 @RequestMapping("/crypto")
 public interface DecryptAPI {

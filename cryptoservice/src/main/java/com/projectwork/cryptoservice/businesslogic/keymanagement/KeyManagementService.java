@@ -20,9 +20,9 @@ import java.util.Base64;
 
 /**
  * Key Management Service implementation: handles the key management of the service.
- * 
- * @author Marcel Eichelberger
- * 
+ *
+ * SCPs:
+ * - [106] Establish and utilize a policy and process for how cryptographic keys will be managed.
  */
 @RequiredArgsConstructor
 @Service

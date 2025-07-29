@@ -10,6 +10,9 @@ import org.springframework.stereotype.Service;
  * ErrorHandler class that provides methods to handle validation errors
  * and log error details.
  * It uses the ErrorCode enum to build error details and logs them appropriately.
+ *
+ * SCPs:
+ * - [108] Use error handlers that do not display debugging or stack trace information
  */
 @Service
 public class ErrorHandler {
@@ -49,6 +52,22 @@ public class ErrorHandler {
         final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
         errorDetailBuilder.withContext(context);
         errorDetailBuilder.withException(exception);
+        final ErrorDetail errorDetail = errorDetailBuilder.build();
+        this.logError(errorDetail);
+        throw new InternalServerErrorException(errorDetail);
+    }
+
+    /**
+     * Handles an error by creating an ErrorDetail object, logging it,
+     * and throwing a BadRequestException.
+     *
+     * @param errorCode the ErrorCode representing the error
+     * @param context   context information about where the error occurred
+     * @return a RuntimeException (BadRequestException) with the error details
+     */
+    public final RuntimeException handleError(final String context, final ErrorCode errorCode) {
+        final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
+        errorDetailBuilder.withContext(context);
         final ErrorDetail errorDetail = errorDetailBuilder.build();
         this.logError(errorDetail);
         throw new InternalServerErrorException(errorDetail);

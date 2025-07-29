@@ -8,6 +8,14 @@ import org.springframework.stereotype.Component;
 
 import java.util.regex.Pattern;
 
+/**
+ * WhitelistValidator class that validates if a given string contains only allowed characters.
+ * It throws an error if the string contains any characters not in the whitelist.
+ *
+ * SCPs:
+ * - [6] All validation failures should result in input rejection
+ * - [14] Validate all input against a "white" list of allowed characters, whenever possible
+ */
 @Component
 @RequiredArgsConstructor
 public class WhitelistValidator {

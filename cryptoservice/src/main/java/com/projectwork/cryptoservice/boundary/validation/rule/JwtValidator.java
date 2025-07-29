@@ -17,6 +17,9 @@ import java.util.regex.Pattern;
  * JwtValidator is a component that validates JWTs (JSON Web Tokens) for format, signature, and expiration.
  * It checks if the JWT matches the expected pattern, validates its signature using a provided secret key,
  * and ensures that the token has not expired.
+ *
+ * SCPs:
+ * - [6] All validation failures should result in input rejection
  */
 @Component
 @RequiredArgsConstructor

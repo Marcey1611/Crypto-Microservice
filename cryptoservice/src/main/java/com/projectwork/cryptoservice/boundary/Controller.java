@@ -29,6 +29,12 @@ import java.security.Principal;
 /** * Controller class that handles incoming requests for encryption, decryption,
  * key management, JWT management, and TLS management.
  * It uses various facades to process the requests and returns appropriate responses.
+ *
+ * SCPs:
+ * - [2] Identify all data sources and classify them into trusted and untrusted. Validate all data from untrusted sources
+ * - [8] Validate all client-provided data before processing
+ * - [87] Restrict access to services to only authorized users
+ * - [88] Restrict access to application data to only authorized users
  */
 @RequiredArgsConstructor
 @RestController
