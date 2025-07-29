@@ -38,6 +38,8 @@ public class DynamicUserDetailsService implements UserDetailsService {
     @Override
     public final UserDetails loadUserByUsername(final String username) throws UsernameNotFoundException {
         final String path = this.request.getRequestURI();
+        final String logMsg = String.format("============================== %s Request from %s ==============================\n", path, username);
+        LOGGER.info(logMsg);
         LOGGER.debug("User authentication attempt for CN='{}' on path '{}'", username, path);
 
         final List<GrantedAuthority> roleUser = AuthorityUtils.createAuthorityList("ROLE_USER");

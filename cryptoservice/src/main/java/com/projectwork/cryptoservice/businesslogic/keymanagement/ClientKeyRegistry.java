@@ -1,16 +1,16 @@
 package com.projectwork.cryptoservice.businesslogic.keymanagement;
 
+import com.projectwork.cryptoservice.boundary.authorization.AuthRegistry;
 import com.projectwork.cryptoservice.entity.factory.ClientKeyDataFactory;
 import com.projectwork.cryptoservice.entity.models.keymanagement.ClientKeyData;
 import com.projectwork.cryptoservice.errorhandling.exceptions.BadRequestException;
-import com.projectwork.cryptoservice.errorhandling.util.ErrorCode;
-import com.projectwork.cryptoservice.errorhandling.util.ErrorHandler;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -28,7 +28,7 @@ public class ClientKeyRegistry {
 
     private final ClientKeyDataFactory clientKeyDataFactory;
     private final Map<String, ClientKeyData> clientKeyDataMap = new ConcurrentHashMap<>();
-    private final ErrorHandler errorHandler;
+    private final AuthRegistry authRegistry;
 
     /**
      * Checks if a client with the given name exists in the registry.
@@ -52,6 +52,7 @@ public class ClientKeyRegistry {
         final ClientKeyData clientKeyData = this.clientKeyDataFactory.buildClientKeyData(keyAlias, null);
         this.clientKeyDataMap.put(clientName, clientKeyData);
         LOGGER.info("Registered new client '{}', key alias '{}'", clientName, keyAlias);
+        this.authRegistry.registerKeyAlias(keyAlias, Set.of());
     }
 
     /**
@@ -112,15 +113,21 @@ public class ClientKeyRegistry {
      */
     public final void updateIvForClient(final String clientName, final byte[] iv) {
         final ClientKeyData data = this.clientKeyDataMap.get(clientName);
-        if (null == data) {
-            throw this.errorHandler.handleError(
-                ErrorCode.CLIENT_NOT_FOUND,
-                clientName,
-        "While trying to update IV for client."
-            );
-        }
         data.setIv(iv);
         this.clientKeyDataMap.put(clientName, data);
         LOGGER.info("Updated IV for client '{}'", clientName);
+    }
+
+    /**
+     * Checks if a key alias exists in the registry.
+     *
+     * @param keyAlias the key alias to check
+     * @return true if the key alias exists, false otherwise
+     */
+    public boolean hasKeyAlias(final String keyAlias) {
+        final boolean exists = this.clientKeyDataMap.values().stream()
+                .anyMatch(data -> data.getKeyAlias().equalsIgnoreCase(keyAlias));
+        LOGGER.debug("Checking if key alias '{}' exists: {}", keyAlias, exists);
+        return exists;
     }
 }

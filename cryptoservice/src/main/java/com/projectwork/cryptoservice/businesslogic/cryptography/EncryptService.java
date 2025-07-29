@@ -29,9 +29,6 @@ import java.util.Base64;
 public class EncryptService {
     private static final Logger LOGGER = LoggerFactory.getLogger(EncryptService.class);
 
-    private static final String ENCRYPTION_ALGORITHM = "AES/GCM/NoPadding";
-    private static final int GCM_TAG_LENGTH = 128;
-
     private final KeyStoreHelper keyStoreHelper;
     private final JwtManagementService jwtManagementService;
     private final ClientKeyRegistry clientKeyRegistry;
@@ -56,34 +53,14 @@ public class EncryptService {
 
         final String jwt = encryptModel.getJwt();
         final String keyAlias = this.jwtManagementService.extractClientKeyAlias(jwt);
-        this.validateKeyAlias(keyAlias, clientName);
+        final String issuedTo = this.jwtManagementService.extractIssuedTo(jwt);
         final SecretKey clientKey = this.getClientKey(keyAlias);
         final byte[] iv = this.generateIV();
         this.clientKeyRegistry.updateIvForClient(clientName, iv);
         final String plainText = encryptModel.getPlainText();
-        final String cipherText = this.encryptPlainText(iv, clientKey, plainText);
+        final String cipherText = this.encryptPlainText(iv, clientKey, plainText, issuedTo);
         LOGGER.info("Encryption completed for client '{}'.", clientName);
         return this.resultModelsFactory.buildEncryptResultModel(cipherText);
-    }
-
-    /**
-     * Validates that the key alias matches the registered alias for the client.
-     * @param keyAlias The key alias from the JWT.
-     * @param clientName The name of the client.
-     */
-    private void validateKeyAlias(final String keyAlias, final String clientName) {
-        final String keyAliasForClient = this.clientKeyRegistry.getKeyAliasForClient(clientName);
-        if (!keyAlias.equals(keyAliasForClient)) {
-            final String context = String.format(
-                    "JWT key alias '%s' does not match registered key alias for client '%s'.",
-                    keyAlias,
-                    clientName
-            );
-            throw this.errorHandler.handleError(
-                    ErrorCode.CLIENT_KEY_ALIAS_MISMATCH_CLIENT_NAME,
-                    context
-            );
-        }
     }
 
     /**
@@ -113,10 +90,11 @@ public class EncryptService {
      * @param plainText The plain text to encrypt.
      * @return The encrypted text (Base64 encoded).
      */
-    private String encryptPlainText(final byte[] iv, final SecretKey clientKey, final String plainText) {
+    private String encryptPlainText(final byte[] iv, final SecretKey clientKey, final String plainText, final String issuedTo) {
         final Cipher cipher = this.cryptoUtility.createCipher();
         final GCMParameterSpec gcmParameterSpec = this.cryptoUtility.createGCMParameterSpec(iv);
         this.cryptoUtility.initCipher(cipher, clientKey, gcmParameterSpec, Cipher.ENCRYPT_MODE);
+        cipher.updateAAD(issuedTo.getBytes(StandardCharsets.UTF_8));
         final byte[] encryptedData = this.encryptData(cipher, plainText);
         return this.encodeBase64(encryptedData);
     }

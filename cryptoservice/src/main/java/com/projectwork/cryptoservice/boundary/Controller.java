@@ -4,12 +4,12 @@ import com.projectwork.cryptoservice.boundary.api.DecryptAPI;
 import com.projectwork.cryptoservice.boundary.api.EncryptAPI;
 import com.projectwork.cryptoservice.boundary.api.JwtManagementAPI;
 import com.projectwork.cryptoservice.boundary.api.KeyManagementAPI;
+import com.projectwork.cryptoservice.boundary.authorization.AuthService;
 import com.projectwork.cryptoservice.boundary.validation.ValidationService;
 import com.projectwork.cryptoservice.businessfacade.DecryptFacade;
 import com.projectwork.cryptoservice.businessfacade.EncryptFacade;
 import com.projectwork.cryptoservice.businessfacade.JwtManagementFacade;
 import com.projectwork.cryptoservice.businessfacade.KeyManagementFacade;
-import com.projectwork.cryptoservice.businesslogic.keymanagement.ClientKeyRegistry;
 import com.projectwork.cryptoservice.entity.models.decrypt.DecryptRequest;
 import com.projectwork.cryptoservice.entity.models.decrypt.DecryptResponse;
 import com.projectwork.cryptoservice.entity.models.encrypt.EncryptRequest;
@@ -17,9 +17,6 @@ import com.projectwork.cryptoservice.entity.models.encrypt.EncryptResponse;
 import com.projectwork.cryptoservice.entity.models.jwtmanagement.GenerateJwtRequest;
 import com.projectwork.cryptoservice.entity.models.jwtmanagement.GenerateJwtResponse;
 import com.projectwork.cryptoservice.entity.models.keymanagement.GenerateKeyResponse;
-import com.projectwork.cryptoservice.errorhandling.exceptions.BadRequestException;
-import com.projectwork.cryptoservice.errorhandling.util.ErrorCode;
-import com.projectwork.cryptoservice.errorhandling.util.ErrorHandler;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,57 +40,14 @@ public class Controller implements EncryptAPI, DecryptAPI, KeyManagementAPI, Jwt
     private final DecryptFacade decryptFacade;
     private final KeyManagementFacade keyManagementFacade;
     private final JwtManagementFacade jwtManagementFacade;
-    private final ClientKeyRegistry clientKeyRegistry;
-    private final ErrorHandler errorHandler;
     private final ValidationService validationService;
+    private final AuthService authService;
 
     @Value("${master.keystore.path}")
     private String masterKeystorePath;
 
     @Value("${master.keystore.password}")
     private String masterKeystorePassword;
-
-    /**
-     * Handles encryption requests.
-     *
-     * @param encryptRequest the request containing the data to be encrypted
-     * @param principal      the authenticated user principal
-     * @return a response entity containing the encryption result
-     */
-    @Override
-    public final ResponseEntity<EncryptResponse> encryptPost(final EncryptRequest encryptRequest, final Principal principal) {
-        final String clientName = this.resolveClientName(principal);
-        LOGGER.info("Received encrypt request for client '{}'", clientName);
-        this.checkClientNameExists(clientName);
-
-        this.validationService.validateEncryptRequest(encryptRequest, this.masterKeystorePath, this.masterKeystorePassword);
-        LOGGER.debug("Encrypt request validated for client '{}'", clientName);
-
-        final ResponseEntity<EncryptResponse> response = this.encryptFacade.processEncryption(encryptRequest, clientName);
-        LOGGER.info("Encryption successful for client '{}'", clientName);
-        return response;
-    }
-
-    /**
-     * Handles decryption requests.
-     *
-     * @param decryptRequest the request containing the data to be decrypted
-     * @param principal      the authenticated user principal
-     * @return a response entity containing the decryption result
-     */
-    @Override
-    public final ResponseEntity<DecryptResponse> decryptPost(final DecryptRequest decryptRequest, final Principal principal) {
-        final String clientName = this.resolveClientName(principal);
-        LOGGER.info("Received decrypt request for client '{}'", clientName);
-        //this.checkClientNameExists(clientName);
-
-        this.validationService.validateDecryptRequest(decryptRequest, this.masterKeystorePath, this.masterKeystorePassword);
-        LOGGER.debug("Decrypt request validated for client '{}'", clientName);
-
-        final ResponseEntity<DecryptResponse> response = this.decryptFacade.processDecryption(decryptRequest, clientName);
-        LOGGER.info("Decryption successful for client '{}'", clientName);
-        return response;
-    }
 
     /**
      * Handles key generation requests.
@@ -103,10 +57,10 @@ public class Controller implements EncryptAPI, DecryptAPI, KeyManagementAPI, Jwt
      */
     @Override
     public final ResponseEntity<GenerateKeyResponse> generateKeyPost(final Principal principal) {
-        final String clientName = this.resolveClientName(principal);
-        LOGGER.info("Key generation requested by client '{}'", clientName);
+        final String clientName = principal.getName();
+        LOGGER.info("Key generation requested by client '{}'.", clientName);
         final ResponseEntity<GenerateKeyResponse> response = this.keyManagementFacade.generateKey(clientName);
-        LOGGER.info("Key successfully generated for client '{}'", clientName);
+        LOGGER.info("Key successfully generated for client '{}'.\n", clientName);
         return response;
     }
 
@@ -119,45 +73,63 @@ public class Controller implements EncryptAPI, DecryptAPI, KeyManagementAPI, Jwt
      */
     @Override
     public final ResponseEntity<GenerateJwtResponse> generateJwtPost(final GenerateJwtRequest generateJwtRequest, final Principal principal) {
-        final String clientName = this.resolveClientName(principal);
-        LOGGER.info("JWT generation requested by client '{}'", clientName);
-        this.checkClientNameExists(clientName);
+        final String clientName = principal.getName();
+        LOGGER.info("JWT generation requested by client '{}'.", clientName);
 
         this.validationService.validateGenerateJwtRequest(generateJwtRequest);
-        LOGGER.debug("JWT request validated for client '{}'", clientName);
+        LOGGER.debug("JWT request validated for client '{}'.", clientName);
+
+        this.authService.authGenerateJwtRequest(clientName);
+        LOGGER.debug("Authorization successful for JWT generation request by client '{}'.", clientName);
 
         final ResponseEntity<GenerateJwtResponse> response = this.jwtManagementFacade.generateJwt(generateJwtRequest, clientName);
-        LOGGER.info("JWT successfully generated for client '{}'", clientName);
+        LOGGER.info("JWT successfully generated for client '{}'.\n", clientName);
         return response;
     }
 
     /**
-     * Checks if the client name exists in the registry.
+     * Handles encryption requests.
      *
-     * @param clientName the name of the client to check
-     * @throws BadRequestException if the client does not exist
+     * @param encryptRequest the request containing the data to be encrypted
+     * @param principal      the authenticated user principal
+     * @return a response entity containing the encryption result
      */
-    private void checkClientNameExists(final String clientName) {
-        if (!this.clientKeyRegistry.hasClient(clientName)) {
-            throw this.errorHandler.handleError(
-                    "While checking if client exists in the registry.",
-                    clientName,
-                    ErrorCode.CLIENT_NOT_FOUND
-            );
-        }
-        LOGGER.debug("Client '{}' found in registry", clientName);
+    @Override
+    public final ResponseEntity<EncryptResponse> encryptPost(final EncryptRequest encryptRequest, final Principal principal) {
+        final String clientName = principal.getName();
+        LOGGER.info("Received encrypt request for client '{}'.", clientName);
+
+        this.validationService.validateEncryptRequest(encryptRequest, this.masterKeystorePath, this.masterKeystorePassword);
+        LOGGER.debug("Encrypt request validated for client '{}'.", clientName);
+
+        this.authService.authEncryptRequest(encryptRequest, clientName);
+        LOGGER.debug("Authorization successful for encrypt request by client '{}'.", clientName);
+
+        final ResponseEntity<EncryptResponse> response = this.encryptFacade.processEncryption(encryptRequest, clientName);
+        LOGGER.info("Encryption successful for client '{}'\n", clientName);
+        return response;
     }
 
     /**
-     * Resolves the client name from the principal.
+     * Handles decryption requests.
      *
-     * @param principal the authenticated user principal
-     * @return the name of the client
+     * @param decryptRequest the request containing the data to be decrypted
+     * @param principal      the authenticated user principal
+     * @return a response entity containing the decryption result
      */
-    private String resolveClientName(final Principal principal) {
-        System.out.println(principal.getName());
-        final String clientName = (null != principal) ? principal.getName() : "anonymous-client";
-        LOGGER.debug("Resolved client name: '{}'", clientName);
-        return clientName;
+    @Override
+    public final ResponseEntity<DecryptResponse> decryptPost(final DecryptRequest decryptRequest, final Principal principal) {
+        final String clientName = principal.getName();
+        LOGGER.info("Received decrypt request for client '{}'.", clientName);
+
+        this.validationService.validateDecryptRequest(decryptRequest, this.masterKeystorePath, this.masterKeystorePassword);
+        LOGGER.debug("Decrypt request validated for client '{}'.", clientName);
+
+        this.authService.authDecryptRequest(decryptRequest, clientName);
+        LOGGER.debug("Authorization successful for decrypt request by client '{}'.", clientName);
+
+        final ResponseEntity<DecryptResponse> response = this.decryptFacade.processDecryption(decryptRequest, clientName);
+        LOGGER.info("Decryption successful for client '{}'.\n", clientName);
+        return response;
     }
 }

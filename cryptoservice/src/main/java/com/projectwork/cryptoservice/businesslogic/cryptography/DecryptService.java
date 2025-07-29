@@ -14,13 +14,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import javax.crypto.*;
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.SecretKey;
 import javax.crypto.spec.GCMParameterSpec;
 import java.nio.charset.StandardCharsets;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
-import java.security.InvalidParameterException;
-import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 
 /**
@@ -55,49 +54,14 @@ public class DecryptService {
     public final DecryptResultModel decrypt(final DecryptModel decryptModel, final String clientName) {
         LOGGER.info("Starting decryption for client '{}'.", clientName);
 
-        this.validateClientName(decryptModel, clientName);
-        final String keyAlias = this.extractKeyAlias(decryptModel);
+        final String keyAlias = this.jwtManagementService.extractClientKeyAlias(decryptModel.getJwt());
         final SecretKey clientKey = this.retrieveClientKey(keyAlias);
         final String clientNameFromKeyAlias = this.mapKeyAliasToClientName(keyAlias);
         final byte[] iv = this.retrieveIvForClient(clientNameFromKeyAlias);
         final String cipherText = decryptModel.getCipherText();
-        final String plainText = this.processDecryption(iv, clientKey, cipherText);
+        final String plainText = this.processDecryption(iv, clientKey, cipherText, clientName);
         LOGGER.info("Decryption completed for client '{}'.", clientName);
         return this.resultModelsFactory.buildDecryptResultModel(plainText);
-    }
-
-    /**
-     * Validates that the client name matches the issuedTo field in the JWT.
-     * @param decryptModel The decryption model containing the JWT.
-     * @param clientName The name of the client.
-     */
-    private void validateClientName(final DecryptModel decryptModel, final String clientName) {
-        final String jwt = decryptModel.getJwt();
-        final String issuedTo = this.jwtManagementService.extractIssuedTo(jwt);
-        if (!issuedTo.equals(clientName)) {
-            final String context = String.format("JWT issuedTo='%s' does not match clientName='%s'", issuedTo, clientName);
-            throw this.errorHandler.handleError(
-                ErrorCode.CLIENT_NAME_MISMATCH_ISSUED_TO,
-                context
-            );
-        }
-    }
-
-    /**
-     * Extracts the key alias from the JWT in the decryption model.
-     * @param decryptModel The decryption model containing the JWT.
-     * @return The extracted key alias.
-     */
-    private String extractKeyAlias(final DecryptModel decryptModel) {
-        final String jwt = decryptModel.getJwt();
-        final String keyAlias = this.jwtManagementService.extractClientKeyAlias(jwt);
-        if (null == keyAlias) {
-            throw this.errorHandler.handleError(
-                ErrorCode.CLIENT_KEY_ALIAS_MISSING,
-                "Client key alias is missing in the JWT"
-            );
-        }
-        return keyAlias;
     }
 
     /**
@@ -124,16 +88,7 @@ public class DecryptService {
      * @return The client name associated with the key alias.
      */
     private String mapKeyAliasToClientName(final String keyAlias) {
-        final String clientNameFromKeyAlias = this.clientKeyRegistry.getClientNameByKeyAlias(keyAlias);
-        if (null == clientNameFromKeyAlias) {
-            final String context = String.format("While mapping key alias '%s' to client name.", keyAlias);
-            throw this.errorHandler.handleError(
-                keyAlias,
-                ErrorCode.CLIENT_NAME_BY_ALIAS_NOT_FOUND,
-                context
-            );
-        }
-        return clientNameFromKeyAlias;
+        return this.clientKeyRegistry.getClientNameByKeyAlias(keyAlias);
     }
 
     /**
@@ -161,10 +116,11 @@ public class DecryptService {
      * @param cipherText The cipher text to decrypt.
      * @return The decrypted plain text.
      */
-    private String processDecryption(final byte[] iv, final SecretKey clientKey, final String cipherText) {
+    private String processDecryption(final byte[] iv, final SecretKey clientKey, final String cipherText, final String clientName) {
         final Cipher cipher = this.cryptoUtility.createCipher();
         final GCMParameterSpec gcmParameterSpec = this.cryptoUtility.createGCMParameterSpec(iv);
         this.cryptoUtility.initCipher(cipher, clientKey, gcmParameterSpec, Cipher.DECRYPT_MODE);
+        cipher.updateAAD(clientName.getBytes(StandardCharsets.UTF_8));
         final byte[] cipherTextBytes = this.decodeCipherText(cipherText);
         return this.decryptCipherText(cipher, cipherTextBytes);
     }

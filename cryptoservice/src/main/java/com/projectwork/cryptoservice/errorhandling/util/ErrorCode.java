@@ -55,13 +55,13 @@ public enum ErrorCode {
     
     CLIENT_NOT_FOUND(
         "400.008",
-        "Invalid client credentials.",
+        "Authorization failed.",
         Level.ERROR
     ),
 
     CLIENT_NAME_MISMATCH_ISSUED_TO(
         "400.009",
-        "Invalid JWT.",
+        "Authorization failed.",
         Level.ERROR
     ),
 
@@ -77,9 +77,9 @@ public enum ErrorCode {
         Level.ERROR
     ),
 
-    CLIENT_NAME_BY_ALIAS_NOT_FOUND(
+    KEY_ALIAS_NOT_FOUND(
         "400.012",
-        "Invalid JWT.",
+        "Authorization failed.",
         Level.ERROR
     ),
 
@@ -91,7 +91,7 @@ public enum ErrorCode {
 
     CLIENT_KEY_ALIAS_MISMATCH_CLIENT_NAME(
         "400.014",
-        "Invalid JWT.",
+        "Authorization failed.",
         Level.ERROR
     ),
 
@@ -122,6 +122,12 @@ public enum ErrorCode {
     INVALID_BASE64(
         "400.019",
         "Invalid input.",
+        Level.ERROR
+    ),
+
+    UNAUTHORIZED_DECRYPT_ACCESS(
+        "400.020",
+        "Authorization failed.",
         Level.ERROR
     ),
     
