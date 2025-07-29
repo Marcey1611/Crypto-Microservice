@@ -7,8 +7,8 @@
     <artifactId>crypto-root</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
-    <name>Crypto Root Project</name>
-    <description>Root POM for CryptoService, CryptoClient, InternalCA</description>
+    <name>Root Project</name>
+    <description>Root POM for CryptoService, CryptoClient</description>
 
     <modules>
         <module>cryptoservice</module>
