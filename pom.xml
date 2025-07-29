@@ -13,7 +13,6 @@
     <modules>
         <module>cryptoservice</module>
         <module>cryptoclient</module>
-        <module>internalca</module>
     </modules>
 
     <properties>

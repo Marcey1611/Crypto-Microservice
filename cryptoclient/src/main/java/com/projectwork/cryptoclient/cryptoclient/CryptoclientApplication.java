@@ -22,14 +22,13 @@ public class CryptoclientApplication {
 	public static void main(String[] args) throws JsonMappingException, JsonProcessingException {
 		final ConfigurableApplicationContext context = SpringApplication.run(CryptoclientApplication.class, args);
 
-        // Beide Clients haben nun eigene Keystores (optional, hier der gleiche)
-        CryptoClient client1 = new CryptoClient(
+        final CryptoClient client1 = new CryptoClient(
                 "src/main/resources/tls/client1-keystore.p12",
                 "src/main/resources/tls/client1-truststore.p12",
                 "changeit"
         );
 
-        CryptoClient client2 = new CryptoClient(
+        final CryptoClient client2 = new CryptoClient(
                 "src/main/resources/tls/client2-keystore.p12",
                 "src/main/resources/tls/client2-truststore.p12",
                 "changeit"
@@ -58,24 +57,24 @@ public class CryptoclientApplication {
 
     private static void testClientToClient(final CryptoClient client1, final CryptoClient client2, final String message, final String issuedTo) throws JsonMappingException, JsonProcessingException {
         // Key generieren
-        String keyResponse = client1.generateKey();
+        final String keyResponse = client1.generateKey();
         System.out.println("Key generated (raw): " + keyResponse);
 
         // JWT für Client1
-        String jwtResponse = client1.generateJwt(issuedTo);
-        JsonNode jwtNode = mapper.readTree(jwtResponse);
-        String jwt = jwtNode.get("jwt").asText();
+        final String jwtResponse = client1.generateJwt(issuedTo);
+        final JsonNode jwtNode = mapper.readTree(jwtResponse);
+        final String jwt = jwtNode.get("jwt").asText();
 
         // Encrypt mit Client1
-        String encryptedResponse = client1.encrypt(message, jwt);
-        JsonNode encryptedNode = mapper.readTree(encryptedResponse);
-        String cipherText = encryptedNode.get("cipherText").asText();
+        final String encryptedResponse = client1.encrypt(message, jwt);
+        final JsonNode encryptedNode = mapper.readTree(encryptedResponse);
+        final String cipherText = encryptedNode.get("cipherText").asText();
         System.out.println("Encrypted (raw): " + cipherText);
 
         // Decrypt mit Client2
-        String decryptedResponse = client2.decrypt(cipherText, jwt);
-        JsonNode decryptedNode = mapper.readTree(decryptedResponse);
-        String plainText = decryptedNode.get("plainText").asText();
+        final String decryptedResponse = client2.decrypt(cipherText, jwt);
+        final JsonNode decryptedNode = mapper.readTree(decryptedResponse);
+        final String plainText = decryptedNode.get("plainText").asText();
         System.out.println("Decrypted: " + plainText);
 
         if (message.equals(plainText)) {

@@ -51,7 +51,7 @@ public class JwtManagementService {
 
         final SecretKey jwtSigningKey = this.keyStoreHelper.getKey("jwt-signing-key");
         final Instant now = Instant.now();
-        final Instant expiration = now.plusSeconds(3600L);
+        final Instant expiration = now.plusSeconds(300L);
         final String keyAlias = this.clientKeyRegistry.getKeyAliasForClient(clientName);
         final Date fromNow = Date.from(now);
         final Date fromExpiration = Date.from(expiration);
