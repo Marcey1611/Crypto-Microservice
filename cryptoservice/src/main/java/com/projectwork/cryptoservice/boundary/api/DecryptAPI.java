@@ -27,5 +27,5 @@ public interface DecryptAPI {
      * @return a ResponseEntity containing the DecryptResponse with decrypted data
      */
     @PostMapping("/decrypt")
-    ResponseEntity<DecryptResponse> decryptPost(@Valid @RequestBody final DecryptRequest decryptRequest, final Principal principal);
+    ResponseEntity<DecryptResponse> decryptPost(@RequestBody final DecryptRequest decryptRequest, final Principal principal);
 }

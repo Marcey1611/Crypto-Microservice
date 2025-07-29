@@ -27,5 +27,5 @@ public interface EncryptAPI {
      * @return a ResponseEntity containing the EncryptResponse with the encrypted data
      */
     @PostMapping("/encrypt")
-    ResponseEntity<EncryptResponse> encryptPost(@Valid @RequestBody final EncryptRequest encryptRequest, final Principal principal);
+    ResponseEntity<EncryptResponse> encryptPost(@RequestBody final EncryptRequest encryptRequest, final Principal principal);
 }

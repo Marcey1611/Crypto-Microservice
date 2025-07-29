@@ -5,6 +5,7 @@ import com.projectwork.cryptoservice.errorhandling.util.ErrorHandler;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.security.auth.DestroyFailedException;
@@ -21,6 +22,8 @@ import java.util.concurrent.TimeUnit;
 /**
  * KeyCleanupTask is a scheduled task that periodically checks for expired keys in the keystore
  * and removes them, ensuring that the keystore remains clean and does not contain outdated keys.
+ *
+ * SCP106 (Key cleanup (deletion of expired keys))
  */
 @Component
 @RequiredArgsConstructor
@@ -28,7 +31,6 @@ public class KeyExpirationChecker {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(KeyExpirationChecker.class);
     private static final long EXPIRATION_TIME_MILLIS = TimeUnit.HOURS.toMillis(1);
-    private static final String ENV_KEYSTORE_PASSWORD = "KEYSTORE_PASSWORD";
 
     private final ErrorHandler errorHandler;
 
@@ -40,9 +42,9 @@ public class KeyExpirationChecker {
      * @param alias    the alias of the key to check
      * @return true if the key is expired, false otherwise
      */
-    public final boolean isExpired(final KeyStore keystore, final String alias) {
+    public final boolean isExpired(final KeyStore keystore, final String alias, final String keystorePassword) {
         LOGGER.debug("Checking expiration status for alias '{}'", alias);
-        final KeyStore.Entry entry = this.getEntry(keystore, alias);
+        final KeyStore.Entry entry = this.getEntry(keystore, alias, keystorePassword);
         if (!(entry instanceof KeyStore.SecretKeyEntry)) {
             LOGGER.debug("Alias '{}' is not a SecretKeyEntry – skipping expiration check", alias);
             return false;
@@ -62,9 +64,8 @@ public class KeyExpirationChecker {
      * @param alias    the alias of the key to retrieve
      * @return the KeyStore.Entry for the specified alias
      */
-    private KeyStore.Entry getEntry(final KeyStore keystore, final String alias) {
-        final String envKeystorePassword = System.getenv(ENV_KEYSTORE_PASSWORD);
-        final char[] passwordChars = Optional.ofNullable(envKeystorePassword)
+    private KeyStore.Entry getEntry(final KeyStore keystore, final String alias, final String keystorePassword) {
+        final char[] passwordChars = Optional.ofNullable(keystorePassword)
                 .map(String::toCharArray)
                 .orElse(new char[0]);
         final PasswordProtection protection = new PasswordProtection(passwordChars);

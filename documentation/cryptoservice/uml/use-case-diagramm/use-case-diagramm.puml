@@ -1,0 +1,21 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+
+actor Client
+
+package "CryptoService Use Cases" {
+
+    usecase "Generate Key" as UC1
+    usecase "Generate JWT" as UC2
+    usecase "Encrypt Data" as UC3
+    usecase "Decrypt Data" as UC4
+
+    Client --> UC1
+    Client --> UC2
+    Client --> UC3
+    Client --> UC4
+}
+
+@enduml

@@ -1,4 +1,4 @@
-package com.projectwork.cryptoservice.businesslogic;
+package com.projectwork.cryptoservice.businesslogic.cryptography;
 
 import com.projectwork.cryptoservice.businesslogic.jwtmanagement.JwtManagementService;
 import com.projectwork.cryptoservice.businesslogic.keymanagement.ClientKeyRegistry;
@@ -11,6 +11,7 @@ import com.projectwork.cryptoservice.errorhandling.util.ErrorHandler;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.*;
@@ -36,6 +37,13 @@ public class EncryptService {
     private final ClientKeyRegistry clientKeyRegistry;
     private final ResultModelsFactory resultModelsFactory;
     private final ErrorHandler errorHandler;
+    private final CryptoUtility cryptoUtility;
+
+    @Value("${client.keystore.path}")
+    private String clientKeystorePath;
+
+    @Value("${client.keystore.password}")
+    private String clientKeystorePassword;
 
     /**
      * Encrypts a plain text for a given client.
@@ -48,12 +56,12 @@ public class EncryptService {
 
         final String jwt = encryptModel.getJwt();
         final String keyAlias = this.jwtManagementService.extractClientKeyAlias(jwt);
-        validateKeyAlias(keyAlias, clientName);
-        final SecretKey clientKey = getClientKeyOrThrow(keyAlias);
-        final byte[] iv = generateIV();
+        this.validateKeyAlias(keyAlias, clientName);
+        final SecretKey clientKey = this.getClientKey(keyAlias);
+        final byte[] iv = this.generateIV();
         this.clientKeyRegistry.updateIvForClient(clientName, iv);
         final String plainText = encryptModel.getPlainText();
-        final String cipherText = encryptPlainText(iv, clientKey, plainText);
+        final String cipherText = this.encryptPlainText(iv, clientKey, plainText);
         LOGGER.info("Encryption completed for client '{}'.", clientName);
         return this.resultModelsFactory.buildEncryptResultModel(cipherText);
     }
@@ -83,8 +91,8 @@ public class EncryptService {
      * @param keyAlias The key alias.
      * @return The SecretKey for the client.
      */
-    private SecretKey getClientKeyOrThrow(final String keyAlias) {
-        final SecretKey clientKey = this.keyStoreHelper.getClientKey(keyAlias);
+    private SecretKey getClientKey(final String keyAlias) {
+        final SecretKey clientKey = this.keyStoreHelper.getClientKey(keyAlias, this.clientKeystorePath, this.clientKeystorePassword);
         if (null == clientKey) {
             final String context = String.format(
                     "While retrieving client key for alias '%s'.",
@@ -106,67 +114,11 @@ public class EncryptService {
      * @return The encrypted text (Base64 encoded).
      */
     private String encryptPlainText(final byte[] iv, final SecretKey clientKey, final String plainText) {
-        final Cipher cipher = createCipher();
-        final GCMParameterSpec gcmParameterSpec = createGCMParameterSpec(iv);
-        initCipher(cipher, clientKey, gcmParameterSpec);
-        final byte[] encryptedData = encryptData(cipher, plainText);
-        return encodeBase64(encryptedData);
-    }
-
-    /**
-     * Creates a Cipher instance for AES-GCM encryption.
-     * @return The Cipher instance.
-     */
-    private Cipher createCipher() {
-        try {
-            Cipher cipher = Cipher.getInstance(ENCRYPTION_ALGORITHM);
-            LOGGER.debug("Cipher instance created with algorithm '{}'.", ENCRYPTION_ALGORITHM);
-            return cipher;
-        } catch (final NoSuchAlgorithmException | NoSuchPaddingException exception) {
-            throw this.errorHandler.handleError(
-                ErrorCode.AES_CIPHER_INSTANCE_FAILED,
-                "While creating Cipher instance for AES encryption.",
-                exception
-            );
-        }
-    }
-
-    /**
-     * Creates a GCMParameterSpec for encryption.
-     * @param iv The initialization vector.
-     * @return The GCMParameterSpec instance.
-     */
-    private GCMParameterSpec createGCMParameterSpec(final byte[] iv) {
-        try {
-            GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(GCM_TAG_LENGTH, iv);
-            LOGGER.debug("GCMParameterSpec created with tag length {}.", GCM_TAG_LENGTH);
-            return gcmParameterSpec;
-        } catch (final IllegalArgumentException exception) {
-            throw this.errorHandler.handleError(
-                ErrorCode.INVALID_GCM_PARAMETERS,
-                exception,
-                "While creating GCMParameterSpec for AES encryption."
-            );
-        }
-    }
-
-    /**
-     * Initializes the Cipher for encryption mode.
-     * @param cipher The Cipher instance.
-     * @param clientKey The secret key.
-     * @param gcmParameterSpec The GCM parameters.
-     */
-    private void initCipher(final Cipher cipher, final SecretKey clientKey, final GCMParameterSpec gcmParameterSpec) {
-        try {
-            cipher.init(Cipher.ENCRYPT_MODE, clientKey, gcmParameterSpec);
-            LOGGER.debug("Cipher initialized for encryption mode.");
-        } catch (final InvalidKeyException | InvalidAlgorithmParameterException | InvalidParameterException exception) {
-            throw this.errorHandler.handleError(
-                ErrorCode.AES_CIPHER_INIT_FAILED,
-                "While initializing Cipher for AES encryption with client key and IV.",
-                exception
-            );
-        }
+        final Cipher cipher = this.cryptoUtility.createCipher();
+        final GCMParameterSpec gcmParameterSpec = this.cryptoUtility.createGCMParameterSpec(iv);
+        this.cryptoUtility.initCipher(cipher, clientKey, gcmParameterSpec, Cipher.ENCRYPT_MODE);
+        final byte[] encryptedData = this.encryptData(cipher, plainText);
+        return this.encodeBase64(encryptedData);
     }
 
     /**
@@ -174,11 +126,13 @@ public class EncryptService {
      * @param cipher The Cipher instance.
      * @param plainText The plain text to encrypt.
      * @return The encrypted data bytes.
+     *
+     * SCP103
      */
     private byte[] encryptData(final Cipher cipher, final String plainText) {
         try {
             final byte[] plainTextBytes = plainText.getBytes(StandardCharsets.UTF_8);
-            byte[] encryptedData = cipher.doFinal(plainTextBytes);
+            final byte[] encryptedData = cipher.doFinal(plainTextBytes);
             LOGGER.debug("Plaintext successfully encrypted.");
             return encryptedData;
         } catch (final IllegalBlockSizeException | BadPaddingException exception) {
@@ -203,6 +157,9 @@ public class EncryptService {
     /**
      * Generates an initialization vector (IV) for AES-GCM.
      * @return The generated IV.
+     *
+     * SCP104
+     * SCP103
      */
     private byte[] generateIV() {
         final SecureRandom secureRandom;
