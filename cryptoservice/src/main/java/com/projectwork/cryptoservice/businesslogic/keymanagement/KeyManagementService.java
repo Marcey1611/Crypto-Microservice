@@ -9,6 +9,7 @@ import com.projectwork.cryptoservice.errorhandling.util.ErrorHandler;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.KeyGenerator;
@@ -35,11 +36,19 @@ public class KeyManagementService {
     private final ClientKeyRegistry clientKeyRegistry;
     private final ErrorHandler errorHandler;
 
+    @Value("${client.keystore.path}")
+    private String clientKeystorePath;
+
+    @Value("${client.keystore.password}")
+    private String clientKeystorePassword;
+
     /**
      * Generates a secure client key, 
      * 
      * @param generateKeyModel the model containing parameters for key generation
      * @return An object of GenerateKeyResultModel
+     *
+     * SCP106 (Key generation)
      */
     public final GenerateKeyResultModel generateKey(final GenerateKeyModel generateKeyModel) {
         final String clientName = generateKeyModel.getClientName();
@@ -58,7 +67,7 @@ public class KeyManagementService {
         final String keyAlias = this.generateRandomKeyAlias();
         LOGGER.debug("Random key alias generated for client '{}': {}", clientName, keyAlias);
 
-        this.keyStoreHelper.storeKey(keyAlias, aesKey);
+        this.keyStoreHelper.storeClientKey(keyAlias, aesKey, this.clientKeystorePath, this.clientKeystorePassword);
         LOGGER.info("Key stored in KeyStore for client '{}', alias '{}'", clientName, keyAlias);
 
         this.clientKeyRegistry.registerClientKey(clientName, keyAlias);
@@ -73,6 +82,8 @@ public class KeyManagementService {
      *
      * @return A SecretKey object representing the generated AES key.
      * @throws InternalServerErrorException if there is an error during key generation.
+     *
+     * SCP104
      */
     private SecretKey generateRandomKey() {
         final SecureRandom secureRandom;
@@ -106,6 +117,8 @@ public class KeyManagementService {
      *
      * @return A Base64 encoded string representing the random key alias.
      * @throws InternalServerErrorException if there is an error during secure random generation.
+     *
+     * SCP104
      */
     private String generateRandomKeyAlias() {
         final SecureRandom secureRandom;

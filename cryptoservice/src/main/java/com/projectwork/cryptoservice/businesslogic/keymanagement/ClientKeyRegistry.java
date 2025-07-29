@@ -17,6 +17,8 @@ import java.util.concurrent.ConcurrentHashMap;
  * ClientKeyRegistry class that manages the registration and retrieval of client keys.
  * It allows for registering clients with their key aliases, checking if a client exists,
  * and retrieving key aliases and IVs associated with clients.
+ *
+ * SCP106 (Key allocation and usage (keyAlias))
  */
 @RequiredArgsConstructor
 @Component

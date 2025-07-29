@@ -1,5 +1,6 @@
-package com.projectwork.cryptoservice.boundary.validation;
+package com.projectwork.cryptoservice.boundary.validation.rule;
 
+import com.projectwork.cryptoservice.boundary.validation.FieldName;
 import com.projectwork.cryptoservice.errorhandling.exceptions.BadRequestException;
 import com.projectwork.cryptoservice.errorhandling.util.ErrorCode;
 import com.projectwork.cryptoservice.errorhandling.util.ErrorHandler;
@@ -22,8 +23,15 @@ import java.util.regex.Pattern;
 public class JwtValidator {
 
     private static final Pattern JWT_PATTERN = Pattern.compile("^[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+$");
+    private static final int MAX_LENGTH = 64;
 
     private final ErrorHandler errorHandler;
+    private final AsciiValidator asciiValidator;
+    private final CharsetValidator charsetValidator;
+    private final ControlCharValidator controlCharValidator;
+    private final LengthValidator lengthValidator;
+    private final NullOrBlankValidator nullOrBlankValidator;
+    private final WhitelistValidator whitelistValidator;
 
     /**
      * Validates the format of a JWT.
@@ -66,5 +74,39 @@ public class JwtValidator {
         if (null == expiration || expiration.before(new Date())) {
             throw this.errorHandler.handleError(ErrorCode.EXPIRED_JWT, "While validating JWT expiration date.");
         }
+    }
+
+    /**
+     * Validates the algorithm specified in the JWT header.
+     *
+     * @param algorithm The algorithm string to validate.
+     * @throws BadRequestException if the algorithm is invalid or insecure.
+     */
+    public final void validateAlgorithmFromHeader(final String algorithm, final int maxLength) {
+        this.nullOrBlankValidator.validateNullOrBlank(algorithm, FieldName.ALGORITHM_HEADER);
+        this.lengthValidator.validateLength(algorithm, maxLength, FieldName.ALGORITHM_HEADER);
+        this.asciiValidator.validateAscii(algorithm, FieldName.ALGORITHM_HEADER);
+        this.charsetValidator.validateCharset(algorithm, FieldName.ALGORITHM_HEADER);
+        this.controlCharValidator.validateControlChars(algorithm, FieldName.ALGORITHM_HEADER);
+        this.whitelistValidator.validateWhitelist(algorithm, FieldName.ALGORITHM_HEADER, false);
+
+        if ("none".equalsIgnoreCase(algorithm)) {
+            throw this.errorHandler.handleError(ErrorCode.INSECURE_JWT_ALGO, "While validating JWT algorithm from header.");
+        }
+    }
+
+    /**
+     * Validates the key alias used in JWT operations.
+     *
+     * @param alias The key alias to validate.
+     * @throws BadRequestException if the alias is blank, too long, contains Unicode escapes, or is not whitelisted.
+     */
+    public final void validateKeyAlias(final String alias, final int maxLength) {
+        this.nullOrBlankValidator.validateNullOrBlank(alias, FieldName.KEY_ALIAS);
+        this.lengthValidator.validateLength(alias, maxLength, FieldName.KEY_ALIAS);
+        this.asciiValidator.validateAscii(alias, FieldName.KEY_ALIAS);
+        this.charsetValidator.validateCharset(alias, FieldName.KEY_ALIAS);
+        this.controlCharValidator.validateControlChars(alias, FieldName.KEY_ALIAS);
+        this.whitelistValidator.validateWhitelist(alias, FieldName.KEY_ALIAS, false);
     }
 }

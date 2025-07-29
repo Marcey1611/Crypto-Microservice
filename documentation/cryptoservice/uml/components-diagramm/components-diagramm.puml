@@ -1,0 +1,38 @@
+@startuml
+skinparam componentStyle rectangle
+skinparam packageStyle rectangle
+
+package "CryptoService" {
+
+  [API Layer] <<component>> as API
+  [Controller Layer] <<component>> as Controller
+  [CryptoLogic] <<component>> as Crypto
+  [KeyManagement] <<component>> as KeyMgmt
+  [JWT Management] <<component>> as JwtMgmt
+  [Validation Layer] <<component>> as Validation
+  [Security Layer] <<component>> as Security
+  [Error Handling] <<component>> as Error
+  [Application Entry] <<component>> as Entry
+
+  ' Beziehungen
+  API --> Controller
+  Controller --> Validation
+  Controller --> Crypto
+  Controller --> KeyMgmt
+  Controller --> JwtMgmt
+  Controller --> Error
+
+  Crypto --> KeyMgmt
+
+  JwtMgmt --> KeyMgmt
+
+  Validation --> Error
+
+  Security --> Controller
+  Security --> Error
+
+  Entry --> Security
+  Entry --> API
+}
+
+@enduml

@@ -16,6 +16,7 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
@@ -37,6 +38,12 @@ public class JwtManagementService {
     private final ClientKeyRegistry clientKeyRegistry;
     private final ErrorHandler errorHandler;
 
+    @Value("${master.keystore.path}")
+    private String masterKeystorePath;
+
+    @Value("${master.keystore.password}")
+    private String masterKeystorePassword;
+    
     /**
      * Generates a JWT based on the provided GenerateJwtModel.
      *
@@ -49,7 +56,7 @@ public class JwtManagementService {
 
         LOGGER.info("Generating JWT for client '{}', issuedTo '{}'", clientName, issuedTo);
 
-        final SecretKey jwtSigningKey = this.keyStoreHelper.getKey("jwt-signing-key");
+        final SecretKey jwtSigningKey = this.keyStoreHelper.getKey("jwt-signing-key", this.masterKeystorePath, this.masterKeystorePassword);
         final Instant now = Instant.now();
         final Instant expiration = now.plusSeconds(3600L);
         final String keyAlias = this.clientKeyRegistry.getKeyAliasForClient(clientName);
@@ -91,7 +98,7 @@ public class JwtManagementService {
     public final String extractClientKeyAlias(final String jwtToken) {
         LOGGER.debug("Extracting keyAlias from JWT");
 
-        final SecretKey jwtSigningKey = this.keyStoreHelper.getKey("jwt-signing-key");
+        final SecretKey jwtSigningKey = this.keyStoreHelper.getKey("jwt-signing-key", this.masterKeystorePath, this.masterKeystorePassword);
         final String keyAlias;
 
         try {
@@ -125,7 +132,7 @@ public class JwtManagementService {
     public final String extractIssuedTo(final String jwtToken) {
         LOGGER.debug("Extracting issuedTo from JWT");
 
-        final SecretKey jwtSigningKey = this.keyStoreHelper.getKey("jwt-signing-key");
+        final SecretKey jwtSigningKey = this.keyStoreHelper.getKey("jwt-signing-key", this.masterKeystorePath, this.masterKeystorePassword);
         final String issuedTo;
 
         try {

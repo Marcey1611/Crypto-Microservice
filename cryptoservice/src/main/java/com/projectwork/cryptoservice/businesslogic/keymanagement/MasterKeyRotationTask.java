@@ -5,6 +5,7 @@ import com.projectwork.cryptoservice.errorhandling.util.ErrorHandler;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -21,6 +22,8 @@ import java.util.List;
 /**
  * MasterKeyRotationTask is a scheduled task that rotates the master key in the keystore.
  * It rewraps all client keys with the new master key and updates the keystore accordingly.
+ *
+ * SCP106 (Key rotation)
  */
 @RequiredArgsConstructor
 @Component
@@ -33,6 +36,18 @@ public class MasterKeyRotationTask {
     private final MasterKeyService masterKeyService;
     private final ErrorHandler errorHandler;
 
+    @Value("${master.keystore.path}")
+    private String masterKeystorePath;
+
+    @Value("${master.keystore.password}")
+    private String masterKeystorePassword;
+
+    @Value("${client.keystore.path}")
+    private String clientKeystorePath;
+
+    @Value("${client.keystore.password}")
+    private String clientKeystorePassword;
+
     /**
      * Scheduled method that runs every 24 hours to rotate the master key.
      * It generates a new master key, rewraps all client keys, and updates the keystore.
@@ -41,36 +56,29 @@ public class MasterKeyRotationTask {
     public final void rotateMasterKey() {
         LOGGER.info("Starting scheduled master key rotation process");
 
-        final KeyStore keystore = this.keyStoreLoader.load();
-        final char[] passwordChars = this.getPassword();
+        final KeyStore masterKeystore = this.keyStoreLoader.load(this.masterKeystorePath, this.masterKeystorePassword);
+        final KeyStore clientKeystore = this.keyStoreLoader.load(this.clientKeystorePath, this.clientKeystorePassword);
+        final char[] masterKeystorePasswordChars = this.masterKeystorePassword.toCharArray();
+        final char[] clientKeystorePasswordChars = this.clientKeystorePassword.toCharArray();
 
-        final SecretKey oldMasterKey = this.masterKeyService.retrieveMasterKey(keystore);
+        final SecretKey oldMasterKey = this.masterKeyService.retrieveMasterKey();
         final SecretKey newMasterKey = this.generateNewMasterKey();
+        final List<String> clientKeyAliases = this.getClientKeyAliases(clientKeystore);
+        this.rewrapClientKeys(clientKeystore, oldMasterKey, newMasterKey, clientKeyAliases, clientKeystorePasswordChars);
+        this.storeNewMasterKey(masterKeystore, newMasterKey, masterKeystorePasswordChars);
 
-        final List<String> clientKeyAliases = this.getClientKeyAliases(keystore);
-        this.rewrapClientKeys(keystore, oldMasterKey, newMasterKey, clientKeyAliases, passwordChars);
-
-        this.storeNewMasterKey(keystore, newMasterKey, passwordChars);
-        this.keyStoreLoader.save(keystore);
+        this.keyStoreLoader.save(masterKeystore, this.masterKeystorePath, this.masterKeystorePassword);
+        this.keyStoreLoader.save(clientKeystore, this.clientKeystorePath, this.clientKeystorePassword);
 
         LOGGER.info("Master key rotation process completed successfully");
-    }
-
-    /**
-     * Retrieves the keystore password from the environment variable.
-     * This method is used to access the keystore securely.
-     *
-     * @return the keystore password as a char array
-     */
-    private char[] getPassword() {
-        final String keystorePassword = System.getenv("KEYSTORE_PASSWORD");
-        return keystorePassword.toCharArray();
     }
 
     /**
      * Generates a new master key using a secure random generator.
      *
      * @return the newly generated SecretKey
+     *
+     * SCP104
      */
     private SecretKey generateNewMasterKey() {
         try {

@@ -1,6 +1,6 @@
 package com.projectwork.cryptoservice.businessfacade;
 
-import com.projectwork.cryptoservice.businesslogic.DecryptService;
+import com.projectwork.cryptoservice.businesslogic.cryptography.DecryptService;
 import com.projectwork.cryptoservice.entity.factory.ModelsFactory;
 import com.projectwork.cryptoservice.entity.factory.ResponseFactory;
 import com.projectwork.cryptoservice.entity.models.decrypt.DecryptModel;
