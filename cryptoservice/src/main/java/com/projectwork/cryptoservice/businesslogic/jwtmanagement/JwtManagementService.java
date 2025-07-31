@@ -5,10 +5,7 @@ import com.projectwork.cryptoservice.businesslogic.keymanagement.KeyStoreHelper;
 import com.projectwork.cryptoservice.entity.factory.ResultModelsFactory;
 import com.projectwork.cryptoservice.entity.models.jwtmanagement.GenerateJwtModel;
 import com.projectwork.cryptoservice.entity.models.jwtmanagement.GenerateJwtResultModel;
-import com.projectwork.cryptoservice.errorhandling.exceptions.InternalServerErrorException;
 import com.projectwork.cryptoservice.errorhandling.util.ErrorCode;
-import com.projectwork.cryptoservice.errorhandling.util.ErrorDetail;
-import com.projectwork.cryptoservice.errorhandling.util.ErrorDetailBuilder;
 import com.projectwork.cryptoservice.errorhandling.util.ErrorHandler;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
@@ -26,6 +23,9 @@ import java.util.Date;
 /**
  * JwtManagementService class that handles the generation and management of JWTs.
  * It uses KeyStoreHelper to retrieve the signing key and ClientKeyRegistry to manage client keys.
+ *
+ * SCPs:
+ * - [114] Logging controls should support both success and failure of specified security events
  */
 @RequiredArgsConstructor
 @Service
@@ -54,7 +54,7 @@ public class JwtManagementService {
         final String clientName = generateJwtModel.getClientName();
         final String issuedTo = generateJwtModel.getIssuedTo();
 
-        LOGGER.info("Generating JWT for client '{}', issuedTo '{}'", clientName, issuedTo);
+        LOGGER.info("Generating JWT for client '{}'.", clientName);
 
         final SecretKey jwtSigningKey = this.keyStoreHelper.getKey("jwt-signing-key", this.masterKeystorePath, this.masterKeystorePassword);
         final Instant now = Instant.now();
@@ -62,8 +62,6 @@ public class JwtManagementService {
         final String keyAlias = this.clientKeyRegistry.getKeyAliasForClient(clientName);
         final Date fromNow = Date.from(now);
         final Date fromExpiration = Date.from(expiration);
-
-        LOGGER.debug("JWT claims: keyAlias='{}', issuedTo='{}', expiresAt='{}'", keyAlias, issuedTo, fromExpiration);
 
         final String jwt;
         try {
@@ -77,7 +75,7 @@ public class JwtManagementService {
                     .compact();
         } catch (final JwtException | IllegalArgumentException | SecurityException exception) {
             final String context = String.format("While generating JWT for client: %s", clientName);
-            throw this.errorHandler.handleError(
+            throw this.errorHandler.handleBusinessError(
                     ErrorCode.JWT_GENERATION_FAILED,
                     clientName,
                     context,
@@ -111,14 +109,14 @@ public class JwtManagementService {
 
 
         } catch (final JwtException | IllegalArgumentException exception) {
-            throw this.errorHandler.handleError(
+            throw this.errorHandler.handleBusinessError(
                     ErrorCode.JWT_KEYALIAS_EXTRACTION_FAILED,
                     "While extracting keyAlias from JWT",
                     exception
             );
         }
 
-        LOGGER.debug("Extracted keyAlias: '{}'", keyAlias);
+        LOGGER.debug("Extracted keyAlias successfully.");
         return keyAlias;
     }
 
@@ -145,14 +143,14 @@ public class JwtManagementService {
 
 
         } catch (final JwtException | IllegalArgumentException exception) {
-            throw this.errorHandler.handleError(
+            throw this.errorHandler.handleBusinessError(
                     ErrorCode.JWT_ISSUEDTO_EXTRACTION_FAILED,
                     "While extracting issuedTo from JWT",
                     exception
             );
         }
 
-        LOGGER.debug("Extracted issuedTo: '{}'", issuedTo);
+        LOGGER.debug("Extracted issuedTo successfully.");
         return issuedTo;
     }
 }

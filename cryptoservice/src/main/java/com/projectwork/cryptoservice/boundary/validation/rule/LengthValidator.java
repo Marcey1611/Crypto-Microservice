@@ -31,7 +31,7 @@ public class LengthValidator {
         if (input.length() > maxLength) {
             final String fieldName = name.getValue();
             final String context = String.format("Field %s exceeds maximum allowed length of %s characters.", fieldName, maxLength);
-            throw this.errorHandler.handleError(context, fieldName, ErrorCode.FIELD_TOO_LONG);
+            throw this.errorHandler.handleClientError(context, fieldName, ErrorCode.FIELD_TOO_LONG);
         }
     }
 }

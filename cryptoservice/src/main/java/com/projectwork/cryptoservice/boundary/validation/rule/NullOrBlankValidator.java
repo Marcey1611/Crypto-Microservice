@@ -30,7 +30,7 @@ public class NullOrBlankValidator {
         if (field == null || field.isBlank()) {
             final String fieldName = name.getValue();
             final String context = String.format("Field '%s' is blank", fieldName);
-            throw this.errorHandler.handleError(context, fieldName, ErrorCode.FIELD_BLANK);
+            throw this.errorHandler.handleClientError(context, fieldName, ErrorCode.FIELD_BLANK);
         }
     }
 }

@@ -20,6 +20,7 @@ import java.security.*;
  *
  * SCPs:
  * - [80] Deny all access if the application cannot access its security configuration information
+ * - [114] Logging controls should support both success and failure of specified security events
  */
 @RequiredArgsConstructor
 @Component
@@ -51,6 +52,9 @@ public class KeyStoreInitializer {
     @PostConstruct
     public final void initKeyStore() {
         LOGGER.info("Initializing KeyStore...");
+
+        this.validateFileExists(this.masterKeystorePath);
+        this.validateFileExists(this.clientKeystorePath);
 
         final KeyStore masterKeystore = this.validateAccessToKeyStore(this.masterKeystorePath, this.masterKeystorePassword);
         this.validateMasterKeyStoreNotEmpty(masterKeystore, this.masterKeystorePath);
@@ -84,13 +88,12 @@ public class KeyStoreInitializer {
 
         try {
             final boolean missing = !keystore.containsAlias(alias);
-            LOGGER.debug("Checked KeyStore for alias '{}': missing={}", alias, missing);
+            LOGGER.debug("Checked KeyStore for given alias.");
             return missing;
         } catch (final KeyStoreException exception) {
-            final String context = String.format("While checking if alias '%s' exists in the keystore.", alias);
-            throw this.errorHandler.handleError(
+            throw this.errorHandler.handleBusinessError(
                     ErrorCode.KEYSTORE_NOT_INITIALIZED,
-                    context,
+                    "While checking if alias exists in the keystore.",
                     exception
             );
         }
@@ -108,7 +111,7 @@ public class KeyStoreInitializer {
             secureRandom = SecureRandom.getInstanceStrong();
             LOGGER.debug("SecureRandom instance for JWT signing key initialized.");
         } catch (final NoSuchAlgorithmException exception) {
-            throw this.errorHandler.handleError(
+            throw this.errorHandler.handleBusinessError(
                     ErrorCode.JWT_SECURE_RANDOM_FAILED,
                     "While creating SecureRandom instance for generating JWT signing key.",
                     exception
@@ -120,7 +123,7 @@ public class KeyStoreInitializer {
             keyGen = KeyGenerator.getInstance("HmacSHA256");
             LOGGER.debug("KeyGenerator for JWT signing key initialized with HmacSHA256.");
         } catch (final NoSuchAlgorithmException exception) {
-            throw this.errorHandler.handleError(
+            throw this.errorHandler.handleBusinessError(
                     ErrorCode.JWT_KEYGEN_INIT_FAILED,
                     "While creating KeyGenerator for JWT signing key.",
                     exception
@@ -131,7 +134,7 @@ public class KeyStoreInitializer {
             keyGen.init(KEY_SIZE, secureRandom);
             LOGGER.debug("KeyGenerator initialized with secure random and key size {} for JWT signing key.", KEY_SIZE);
         } catch (final InvalidParameterException exception) {
-            throw this.errorHandler.handleError(
+            throw this.errorHandler.handleBusinessError(
                     ErrorCode.JWT_KEYGEN_INIT_PARAMS_INVALID,
                     "While initializing KeyGenerator with SecureRandom for JWT signing key.",
                     exception
@@ -156,7 +159,7 @@ public class KeyStoreInitializer {
             secureRandom = SecureRandom.getInstanceStrong();
             LOGGER.debug("SecureRandom instance for master key initialized.");
         } catch (final NoSuchAlgorithmException exception) {
-            throw this.errorHandler.handleError(
+            throw this.errorHandler.handleBusinessError(
                     ErrorCode.MASTER_KEY_SECURE_RANDOM_FAILED,
                     "While creating SecureRandom for master key generation.",
                     exception
@@ -168,7 +171,7 @@ public class KeyStoreInitializer {
             keyGen = KeyGenerator.getInstance("AES");
             LOGGER.debug("KeyGenerator for master key initialized with AES.");
         } catch (final NoSuchAlgorithmException exception) {
-            throw this.errorHandler.handleError(
+            throw this.errorHandler.handleBusinessError(
                     ErrorCode.MASTER_KEYGEN_INIT_FAILED,
                     "While creating KeyGenerator for master key.",
                     exception
@@ -179,7 +182,7 @@ public class KeyStoreInitializer {
             keyGen.init(KEY_SIZE, secureRandom);
             LOGGER.debug("KeyGenerator initialized with secure random and key size {} for master key.", KEY_SIZE);
         } catch (final InvalidParameterException exception) {
-            throw this.errorHandler.handleError(
+            throw this.errorHandler.handleBusinessError(
                     ErrorCode.MASTER_KEYGEN_PARAMS_INVALID,
                     "While initializing KeyGenerator with SecureRandom for master key.",
                     exception
@@ -195,7 +198,7 @@ public class KeyStoreInitializer {
     private void validateFileExists(final String path) {
         final File file = new File(path);
         if (!file.exists()) {
-            LOGGER.error("KeyStore file at '{}' does not exist. Application will terminate!", path);
+            LOGGER.error("KeyStore file does not exist. Application will terminate!");
             System.exit(1);
         }
     }
@@ -211,9 +214,8 @@ public class KeyStoreInitializer {
     private KeyStore validateAccessToKeyStore(final String path, final String password) {
         final File file = new File(path);
         if (!file.exists()) {
-            final String context = String.format("KeyStore file at '%s' does not exist.", path);
-            throw this.errorHandler.handleError(
-                    context,
+            throw this.errorHandler.handleBusinessError(
+                    "KeyStore file does not exist.",
                     ErrorCode.KEYSTORE_ACCESS_FAILED
             );
         }
@@ -221,11 +223,10 @@ public class KeyStoreInitializer {
         try {
             return this.keyStoreLoader.load(path, password);
         } catch (final Exception exception) {
-            LOGGER.error("Failed to load KeyStore from '{}'. Application will terminate!", path);
-            final String context = String.format("While loading KeyStore from path '%s'.", path);
-            throw this.errorHandler.handleError(
+            LOGGER.error("Failed to load KeyStore. Application will terminate!");
+            throw this.errorHandler.handleBusinessError(
                     ErrorCode.KEYSTORE_ACCESS_FAILED,
-                    context,
+                    "While loading KeyStore.",
                     exception
             );
         }
@@ -241,14 +242,13 @@ public class KeyStoreInitializer {
     private void validateMasterKeyStoreNotEmpty(final KeyStore keystore, final String path) {
         try {
             if (keystore.size() == 0) {
-                LOGGER.error("KeyStore at '{}' is empty. Application will terminate!", path);
+                LOGGER.error("KeyStore is empty. Application will terminate!");
                 System.exit(1);
             }
         } catch (final KeyStoreException exception) {
-            final String context = String.format("While checking KeyStore size at path '%s'.", path);
-            throw this.errorHandler.handleError(
+            throw this.errorHandler.handleBusinessError(
                     ErrorCode.MASTER_KEYSTORE_INVALID_OR_CORRUPTED,
-                    context,
+                    "While checking KeyStore size.",
                     exception
             );
         }

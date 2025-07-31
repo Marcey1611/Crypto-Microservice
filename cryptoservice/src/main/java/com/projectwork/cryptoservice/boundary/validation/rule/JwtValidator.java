@@ -26,7 +26,6 @@ import java.util.regex.Pattern;
 public class JwtValidator {
 
     private static final Pattern JWT_PATTERN = Pattern.compile("^[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+$");
-    private static final int MAX_LENGTH = 64;
 
     private final ErrorHandler errorHandler;
     private final AsciiValidator asciiValidator;
@@ -45,7 +44,7 @@ public class JwtValidator {
     public final void validateJwtPattern(final String jwt) {
         final Matcher matcher = JWT_PATTERN.matcher(jwt);
         if (!matcher.matches()) {
-            throw this.errorHandler.handleError(ErrorCode.INVALID_JWT, "While validating JWT pattern.");
+            throw this.errorHandler.handleAuthError(ErrorCode.INVALID_JWT, "While validating JWT pattern.");
         }
     }
 
@@ -62,7 +61,7 @@ public class JwtValidator {
             final JwtParser build = Jwts.parserBuilder().setSigningKey(key).build();
             return build.parseClaimsJws(jwt);
         } catch (final JwtException exception) {
-            throw this.errorHandler.handleError(ErrorCode.INVALID_JWT, "While validating JWT signature.");
+            throw this.errorHandler.handleAuthError(ErrorCode.INVALID_JWT, "While validating JWT signature.");
 
         }
     }
@@ -75,7 +74,7 @@ public class JwtValidator {
      */
     public final void validateExpiration(final Date expiration) {
         if (null == expiration || expiration.before(new Date())) {
-            throw this.errorHandler.handleError(ErrorCode.EXPIRED_JWT, "While validating JWT expiration date.");
+            throw this.errorHandler.handleAuthError(ErrorCode.EXPIRED_JWT, "While validating JWT expiration date.");
         }
     }
 
@@ -94,7 +93,7 @@ public class JwtValidator {
         this.whitelistValidator.validateWhitelist(algorithm, FieldName.ALGORITHM_HEADER, false);
 
         if ("none".equalsIgnoreCase(algorithm)) {
-            throw this.errorHandler.handleError(ErrorCode.INSECURE_JWT_ALGO, "While validating JWT algorithm from header.");
+            throw this.errorHandler.handleClientError(ErrorCode.INSECURE_JWT_ALGO, "While validating JWT algorithm from header.");
         }
     }
 

@@ -20,6 +20,9 @@ import java.util.Arrays;
 
 /**
  * KeyStoreHelper is a utility class for managing cryptographic keys in a secure manner.
+ *
+ * SCPs:
+ * - [114] Logging controls should support both success and failure of specified security events
  */
 @Component
 @RequiredArgsConstructor
@@ -41,14 +44,14 @@ public class KeyStoreHelper {
      * SCP106 (Key storage) -> setKeystoreEntry
      */
     public final void storeKey(final String keyAlias, final byte[] key, final String keystorePath, final String keystorePassword) {
-        LOGGER.debug("Storing key for keyAlias '{}'", keyAlias);
+        LOGGER.debug("Storing key...");
 
         final KeyStore keystore = this.loader.load(keystorePath, keystorePassword);
 
         this.setKeystoreEntry(keystore, keyAlias, key, keystorePassword);
         this.loader.save(keystore, keystorePath, keystorePassword);
 
-        LOGGER.info("Key stored and saved in keystore for keyAlias '{}'", keyAlias);
+        LOGGER.info("Key stored and saved successfully in keystore.");
     }
 
     /**
@@ -69,7 +72,7 @@ public class KeyStoreHelper {
         this.setKeystoreEntry(keystore, keyAlias, encryptedKey, keystorePassword);
         this.loader.save(keystore, keystorePath, keystorePassword);
 
-        LOGGER.info("Key stored and saved in keystore for keyAlias '{}'", keyAlias);
+        LOGGER.info("Key stored and saved successfully in keystore.");
     }
 
     /**
@@ -79,7 +82,7 @@ public class KeyStoreHelper {
      * @return the decrypted client key
      */
     public final SecretKey getClientKey(final String alias, final String keystorePath, final String keystorePassword) {
-        LOGGER.debug("Retrieving and decrypting client key for alias '{}'", alias);
+        LOGGER.debug("Retrieving and decrypting client key.");
 
         final KeyStore keystore = this.loader.load(keystorePath, keystorePassword);
         final SecretKey masterKey = this.masterKeyService.retrieveMasterKey();
@@ -87,7 +90,7 @@ public class KeyStoreHelper {
         final byte[] encoded = encryptedKey.getEncoded();
         final SecretKey decrypted = this.encryptor.decrypt(encoded, masterKey);
 
-        LOGGER.info("Client key successfully retrieved and decrypted for alias '{}'", alias);
+        LOGGER.info("Client key successfully retrieved and decrypted.");
         return decrypted;
     }
 
@@ -101,7 +104,7 @@ public class KeyStoreHelper {
         LOGGER.debug("Retrieving key (raw) for alias '{}'", alias);
         final KeyStore keyStore = this.loader.load(keystorePath, keystorePassword);
         final SecretKey key = this.getKey(keyStore, alias, keystorePassword);
-        LOGGER.info("Key successfully retrieved for alias '{}'", alias);
+        LOGGER.info("Key successfully retrieved.");
         return key;
     }
 
@@ -118,18 +121,17 @@ public class KeyStoreHelper {
         final char[] password = keystorePassword.toCharArray();
 
         try {
-            LOGGER.debug("Storing wrapped key in keystore under alias '{}'", alias);
+            LOGGER.debug("Storing wrapped key in keystore.");
             final SecretKeySpec encryptedKeySpec = new SecretKeySpec(key, "AES");
             final SecretKeyEntry entry = new SecretKeyEntry(encryptedKeySpec);
             final ProtectionParameter protection = new PasswordProtection(password);
             ks.setEntry(alias, entry, protection);
-            LOGGER.debug("Wrapped key stored successfully under alias '{}'", alias);
+            LOGGER.debug("Wrapped key stored successfully.");
         } catch (final KeyStoreException exception) {
-            final String context = String.format("Storing key key under alias: '%s'", alias);
-            throw this.errorHandler.handleError(
+            throw this.errorHandler.handleBusinessError(
                     ErrorCode.SETTING_KEYSTORE_ENTRY_FAILED,
                     alias,
-                    context,
+                    "While storing key.",
                     exception
             );
         } finally {
@@ -149,18 +151,18 @@ public class KeyStoreHelper {
         final char[] password = keystorePassword.toCharArray();
 
         try {
-            LOGGER.debug("Accessing KeyStore entry for alias '{}'", alias);
+            LOGGER.debug("Accessing KeyStore entry.");
             return (SecretKey) ks.getKey(alias, password);
         } catch (final KeyStoreException | NoSuchAlgorithmException | UnrecoverableKeyException exception) {
-            final String context = String.format("Retrieving key under alias: '%s' from keystore.", alias);
-            throw this.errorHandler.handleError(
+            throw this.errorHandler.handleBusinessError(
                     ErrorCode.KEYSTORE_KEY_ACCESS_FAILED,
                     alias,
-                    context,
+                    "While retrieving key.",
                     exception
             );
         } finally {
             Arrays.fill(password, '\0');
+            LOGGER.debug("KeyStore entry accessed successfully.");
         }
     }
 }

@@ -1,7 +1,9 @@
 package com.projectwork.cryptoservice.errorhandling.util;
 
 import com.projectwork.cryptoservice.errorhandling.exceptions.BadRequestException;
+import com.projectwork.cryptoservice.errorhandling.exceptions.ForbiddenException;
 import com.projectwork.cryptoservice.errorhandling.exceptions.InternalServerErrorException;
+import com.projectwork.cryptoservice.errorhandling.exceptions.UnauthorizedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -13,6 +15,7 @@ import org.springframework.stereotype.Service;
  *
  * SCPs:
  * - [108] Use error handlers that do not display debugging or stack trace information
+ * - [112] Error handling logic associated with security controls should deny access by default
  */
 @Service
 public class ErrorHandler {
@@ -29,7 +32,7 @@ public class ErrorHandler {
      * @param exception         the exception that caused the error
      * @return a RuntimeException (InternalServerErrorException) with the error details
      */
-    public final RuntimeException handleError(final ErrorCode errorCode, final String logMsgExtension, final String context, final Throwable exception) {
+    public final RuntimeException handleBusinessError(final ErrorCode errorCode, final String logMsgExtension, final String context, final Throwable exception) {
         final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
         errorDetailBuilder.withLogMsgFormatted(logMsgExtension);
         errorDetailBuilder.withContext(context);
@@ -48,7 +51,7 @@ public class ErrorHandler {
      * @param exception the exception that caused the error
      * @return a RuntimeException (InternalServerErrorException) with the error details
      */
-    public final RuntimeException handleError(final ErrorCode errorCode, final String context, final Throwable exception) {
+    public final RuntimeException handleBusinessError(final ErrorCode errorCode, final String context, final Throwable exception) {
         final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
         errorDetailBuilder.withContext(context);
         errorDetailBuilder.withException(exception);
@@ -65,7 +68,7 @@ public class ErrorHandler {
      * @param context   context information about where the error occurred
      * @return a RuntimeException (BadRequestException) with the error details
      */
-    public final RuntimeException handleError(final String context, final ErrorCode errorCode) {
+    public final RuntimeException handleBusinessError(final String context, final ErrorCode errorCode) {
         final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
         errorDetailBuilder.withContext(context);
         final ErrorDetail errorDetail = errorDetailBuilder.build();
@@ -82,7 +85,7 @@ public class ErrorHandler {
      * @param context   context information about where the error occurred
      * @return a RuntimeException (BadRequestException) with the error details
      */
-    public final RuntimeException handleError(final ErrorCode errorCode, final Throwable exception, final String context) {
+    public final RuntimeException handleClientError(final ErrorCode errorCode, final Throwable exception, final String context) {
         final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
         errorDetailBuilder.withContext(context);
         errorDetailBuilder.withException(exception);
@@ -100,7 +103,7 @@ public class ErrorHandler {
      * @param context           context information about where the error occurred
      * @return a RuntimeException (BadRequestException) with the error details
      */
-    public final RuntimeException handleError(final ErrorCode errorCode, final String userMsgExtension, final String context) {
+    public final RuntimeException handleClientError(final ErrorCode errorCode, final String userMsgExtension, final String context) {
         final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
         errorDetailBuilder.withUserMsgFormatted(userMsgExtension);
         errorDetailBuilder.withContext(context);
@@ -118,7 +121,7 @@ public class ErrorHandler {
      * @param context           context information about where the error occurred
      * @return a RuntimeException (BadRequestException) with the error details
      */
-    public final RuntimeException handleError(final String logMsgExtension, final ErrorCode errorCode, final String context) {
+    public final RuntimeException handleClientError(final String logMsgExtension, final ErrorCode errorCode, final String context) {
         final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
         errorDetailBuilder.withLogMsgFormatted(logMsgExtension);
         errorDetailBuilder.withContext(context);
@@ -135,7 +138,7 @@ public class ErrorHandler {
      * @param context   context information about where the error occurred
      * @return a RuntimeException (BadRequestException) with the error details
      */
-    public final RuntimeException handleError(final ErrorCode errorCode, final String context) {
+    public final RuntimeException handleClientError(final ErrorCode errorCode, final String context) {
         final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
         errorDetailBuilder.withContext(context);
         final ErrorDetail errorDetail = errorDetailBuilder.build();
@@ -152,7 +155,7 @@ public class ErrorHandler {
      * @param errorCode              the ErrorCode representing the error
      * @return a RuntimeException (BadRequestException) with the error details
      */
-    public final RuntimeException handleError(final String context, final String userAndLogMsgExtension, final ErrorCode errorCode) {
+    public final RuntimeException handleClientError(final String context, final String userAndLogMsgExtension, final ErrorCode errorCode) {
         final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
         errorDetailBuilder.withUserMsgFormatted(userAndLogMsgExtension);
         errorDetailBuilder.withLogMsgFormatted(userAndLogMsgExtension);
@@ -160,6 +163,38 @@ public class ErrorHandler {
         final ErrorDetail errorDetail = errorDetailBuilder.build();
         this.logError(errorDetail);
         return new BadRequestException(errorDetail);
+    }
+
+    /**
+     * Handles an error by creating an ErrorDetail object, logging it,
+     * and throwing a BadRequestException.
+     *
+     * @param errorCode the ErrorCode representing the error
+     * @param context   context information about where the error occurred
+     * @return a RuntimeException (BadRequestException) with the error details
+     */
+    public final RuntimeException handleAuthError(final ErrorCode errorCode, final String context) {
+        final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
+        errorDetailBuilder.withContext(context);
+        final ErrorDetail errorDetail = errorDetailBuilder.build();
+        this.logError(errorDetail);
+        throw new UnauthorizedException(errorDetail);
+    }
+
+    /**
+     * Handles an error by creating an ErrorDetail object, logging it,
+     * and throwing a BadRequestException.
+     *
+     * @param errorCode the ErrorCode representing the error
+     * @param context   context information about where the error occurred
+     * @return a RuntimeException (BadRequestException) with the error details
+     */
+    public final RuntimeException handleForbiddenError(final ErrorCode errorCode, final String context) {
+        final ErrorDetailBuilder errorDetailBuilder = errorCode.builder();
+        errorDetailBuilder.withContext(context);
+        final ErrorDetail errorDetail = errorDetailBuilder.build();
+        this.logError(errorDetail);
+        throw new ForbiddenException(errorDetail);
     }
 
     /**

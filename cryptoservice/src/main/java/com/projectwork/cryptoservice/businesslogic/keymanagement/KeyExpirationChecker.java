@@ -5,7 +5,6 @@ import com.projectwork.cryptoservice.errorhandling.util.ErrorHandler;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.security.auth.DestroyFailedException;
@@ -43,17 +42,15 @@ public class KeyExpirationChecker {
      * @return true if the key is expired, false otherwise
      */
     public final boolean isExpired(final KeyStore keystore, final String alias, final String keystorePassword) {
-        LOGGER.debug("Checking expiration status for alias '{}'", alias);
+        LOGGER.debug("Checking expiration status for client key.");
         final KeyStore.Entry entry = this.getEntry(keystore, alias, keystorePassword);
         if (!(entry instanceof KeyStore.SecretKeyEntry)) {
-            LOGGER.debug("Alias '{}' is not a SecretKeyEntry – skipping expiration check", alias);
+            LOGGER.debug("Alias is not a SecretKeyEntry – skipping expiration check.");
             return false;
         }
         final Date creationDate = this.getCreationDate(keystore, alias);
         final long ageMillis = System.currentTimeMillis() - creationDate.getTime();
-        final boolean expired = ageMillis > EXPIRATION_TIME_MILLIS;
-        LOGGER.debug("Alias '{}' created at {}, expired: {}", alias, creationDate, expired);
-        return expired;
+        return ageMillis > EXPIRATION_TIME_MILLIS;
     }
 
     /**
@@ -74,14 +71,13 @@ public class KeyExpirationChecker {
         try {
             return keystore.getEntry(alias, protection);
         } catch (final KeyStoreException | NoSuchAlgorithmException | UnrecoverableEntryException exception) {
-            final String context = "While getting entry for alias: " + alias;
-            throw this.errorHandler.handleError(
+            throw this.errorHandler.handleBusinessError(
                     ErrorCode.GETTING_KEYSTORE_ENTRY_FAILED,
-                    context,
+                    "While getting entry for client key.",
                     exception
             );
         } finally {
-            this.destroyProtection(protection, alias);
+            this.destroyProtection(protection);
         }
     }
 
@@ -96,10 +92,9 @@ public class KeyExpirationChecker {
         try {
             return keystore.getCreationDate(alias);
         } catch (final KeyStoreException exception) {
-            final String context = "While getting creation date for alias: " + alias;
-            throw this.errorHandler.handleError(
+            throw this.errorHandler.handleBusinessError(
                     ErrorCode.KEYSTORE_NOT_INITIALIZED,
-                    context,
+                    "While getting creation date for client key.",
                     exception
             );
         }
@@ -110,16 +105,14 @@ public class KeyExpirationChecker {
      * This is called after retrieving the KeyStore.Entry to ensure that sensitive data is cleared.
      *
      * @param protection the PasswordProtection instance to destroy
-     * @param alias      the alias of the key for which the protection is being destroyed
      */
-    private void destroyProtection(final PasswordProtection protection, final String alias) {
+    private void destroyProtection(final PasswordProtection protection) {
         try {
             protection.destroy();
         } catch (final DestroyFailedException exception) {
-            final String context = "While destroying protection for alias: " + alias;
-            throw this.errorHandler.handleError(
+            throw this.errorHandler.handleBusinessError(
                     ErrorCode.PASSWORD_DESTROY_FAILED,
-                    context,
+                    "While destroying password protection",
                     exception
             );
         }

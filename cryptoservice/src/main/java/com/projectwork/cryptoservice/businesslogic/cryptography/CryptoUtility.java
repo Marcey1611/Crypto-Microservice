@@ -21,6 +21,7 @@ import java.security.NoSuchAlgorithmException;
  *
  * SCPs:
  * - [101] All cryptographic functions used to protect secrets from the application user must be implemented on a trusted system (e.g., the server)
+ * - [129] Log cryptographic module failures
  */
 @Service
 @RequiredArgsConstructor
@@ -41,10 +42,10 @@ public class CryptoUtility {
     public final Cipher createCipher() {
         try {
             final Cipher cipher = Cipher.getInstance(ENCRYPTION_ALGORITHM);
-            LOGGER.debug("Cipher instance created with algorithm '{}'.", ENCRYPTION_ALGORITHM);
+            LOGGER.debug("Cipher instance created with algorithm.");
             return cipher;
         } catch (final NoSuchAlgorithmException | NoSuchPaddingException exception) {
-            throw this.errorHandler.handleError(
+            throw this.errorHandler.handleBusinessError(
                     ErrorCode.AES_CIPHER_INSTANCE_FAILED,
                     "While creating Cipher instance for AES encryption.",
                     exception
@@ -62,10 +63,10 @@ public class CryptoUtility {
     public final GCMParameterSpec createGCMParameterSpec(final byte[] iv) {
         try {
             final GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(GCM_TAG_LENGTH, iv);
-            LOGGER.debug("GCMParameterSpec created with tag length {}.", GCM_TAG_LENGTH);
+            LOGGER.debug("GCMParameterSpec created.");
             return gcmParameterSpec;
         } catch (final IllegalArgumentException exception) {
-            throw this.errorHandler.handleError(
+            throw this.errorHandler.handleClientError(
                     ErrorCode.INVALID_GCM_PARAMETERS,
                     exception,
                     "While creating GCMParameterSpec for AES encryption."
@@ -86,7 +87,7 @@ public class CryptoUtility {
             cipher.init(opmode, clientKey, gcmParameterSpec);
             LOGGER.debug("Cipher initialized for decryption mode.");
         } catch (final InvalidKeyException | InvalidAlgorithmParameterException | InvalidParameterException exception) {
-            throw this.errorHandler.handleError(
+            throw this.errorHandler.handleBusinessError(
                     ErrorCode.AES_CIPHER_INIT_FAILED,
                     "While initializing Cipher for decryption with client key and GCM parameters.",
                     exception

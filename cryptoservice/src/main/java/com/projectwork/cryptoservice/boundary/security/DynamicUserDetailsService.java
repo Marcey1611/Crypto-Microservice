@@ -55,7 +55,7 @@ public class DynamicUserDetailsService implements UserDetailsService {
         }
 
         final String context = String.format("While trying to authenticate user with CN: %s", username);
-        throw this.errorHandler.handleError(
+        throw this.errorHandler.handleClientError(
                 context,
                 username,
                 ErrorCode.UNKNOWN_CLIENT

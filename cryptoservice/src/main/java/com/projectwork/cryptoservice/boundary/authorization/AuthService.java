@@ -7,6 +7,8 @@ import com.projectwork.cryptoservice.entity.models.encrypt.EncryptRequest;
 import com.projectwork.cryptoservice.errorhandling.util.ErrorCode;
 import com.projectwork.cryptoservice.errorhandling.util.ErrorHandler;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 /**
@@ -16,10 +18,14 @@ import org.springframework.stereotype.Service;
  * - [77] Use only trusted system objects (e.g. server-side session objects) for making access authorization decisions
  * - [87] Restrict access to services to only authorized users
  * - [88] Restrict access to application data to only authorized users
+ * - [112] Error handling logic associated with security controls should deny access by default
+ * - [123] Log all access control failures
  */
 @Service
 @RequiredArgsConstructor
 public class AuthService {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(AuthService.class);
 
     private final ClientKeyRegistry clientKeyRegistry;
     private final AuthRegistry authRegistry;
@@ -33,12 +39,12 @@ public class AuthService {
      */
     public void authGenerateJwtRequest(final String clientName) {
         if (!clientKeyRegistry.hasClient(clientName)) {
-            final String context = String.format("While checking if client '%s' exists in the registry.", clientName);
-            throw this.errorHandler.handleError(
+            throw this.errorHandler.handleAuthError(
                     ErrorCode.CLIENT_NOT_FOUND,
-                    context
+                    "While checking if client exists in the registry."
             );
         }
+        LOGGER.debug("Authorization successful: Client is registered and authorized to request a JWT.");
     }
 
     /**
@@ -53,22 +59,16 @@ public class AuthService {
         final String keyAlias = clientKeyRegistry.getKeyAliasForClient(clientName);
 
         if (!clientKeyRegistry.hasClient(clientName)) {
-            final String context = String.format("While checking if client '%s' exists in the registry.", clientName);
-            throw this.errorHandler.handleError(
+            throw this.errorHandler.handleAuthError(
                     ErrorCode.CLIENT_NOT_FOUND,
-                    context
+                    "While checking if the client exists in the registry."
             );
         }
         final String expectedAlias = clientKeyRegistry.getKeyAliasForClient(clientName);
         if (!keyAlias.equals(expectedAlias)) {
-            final String context = String.format(
-                    "JWT key alias '%s' does not match registered key alias for client '%s'.",
-                    keyAlias,
-                    clientName
-            );
-            throw this.errorHandler.handleError(
+            throw this.errorHandler.handleForbiddenError(
                     ErrorCode.CLIENT_KEY_ALIAS_MISMATCH_CLIENT_NAME,
-                    context
+                    "JWT key alias does not match registered key alias for client."
             );
         }
 
@@ -87,26 +87,23 @@ public class AuthService {
         final String keyAlias = jwtManagementService.extractClientKeyAlias(jwt);
 
         if (!issuedTo.equals(clientName)) {
-            final String context = String.format("JWT issuedTo='%s' does not match clientName='%s'", issuedTo, clientName);
-            throw this.errorHandler.handleError(
+            throw this.errorHandler.handleForbiddenError(
                     ErrorCode.CLIENT_NAME_MISMATCH_ISSUED_TO,
-                    context
+                    "JWT issuedTo does not match clientName."
             );
         }
 
         if (!clientKeyRegistry.hasKeyAlias(keyAlias)) {
-            final String context = String.format("JWT key alias '%s' does not exist in the registry.", keyAlias);
-            throw this.errorHandler.handleError(
+            throw this.errorHandler.handleAuthError(
                     ErrorCode.KEY_ALIAS_NOT_FOUND,
-                    context
+                    "JWT key alias does not exist in the registry."
             );
         }
 
         if (!authRegistry.isAccessAllowed(keyAlias, clientName)) {
-            final String context = String.format("Access denied for client '%s' with key alias '%s'.", clientName, keyAlias);
-            throw this.errorHandler.handleError(
-                    ErrorCode.UNAUTHORIZED_DECRYPT_ACCESS,
-                    context
+            throw this.errorHandler.handleForbiddenError(
+                    ErrorCode.FORBIDDEN_DECRYPT_ACCESS,
+                    "Access denied for the client to the requested keyAlias."
             );
         }
 

@@ -129,7 +129,7 @@ public enum ErrorCode {
         Level.ERROR
     ),
 
-    UNAUTHORIZED_DECRYPT_ACCESS(
+    FORBIDDEN_DECRYPT_ACCESS(
         "400.020",
         "Authorization failed.",
         Level.ERROR
@@ -195,7 +195,7 @@ public enum ErrorCode {
     KEYSTORE_KEY_ACCESS_FAILED(
         "500.009",
         "Internal server error", 
-        "Keystore key access failed for alias '%s'.", 
+        "Keystore key access failed.",
         Level.ERROR
     ),
 
@@ -342,7 +342,7 @@ public enum ErrorCode {
     JWT_GENERATION_FAILED(
         "500.030",
         "Internal server error",
-        "JWT creation failed for client %s",
+        "JWT creation failed for client",
         Level.ERROR
     ),
 

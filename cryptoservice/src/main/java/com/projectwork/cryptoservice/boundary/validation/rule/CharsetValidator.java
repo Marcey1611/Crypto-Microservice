@@ -32,7 +32,7 @@ public class CharsetValidator {
         if (!StandardCharsets.UTF_8.newEncoder().canEncode(input)) {
             final String fieldName = name.getValue();
             final String context = String.format("Field '%s' cannot coded as UTF-8.", name);
-            throw this.errorHandler.handleError(context, fieldName, ErrorCode.INVALID_CHARSET);
+            throw this.errorHandler.handleClientError(context, fieldName, ErrorCode.INVALID_CHARSET);
         }
     }
 }

@@ -30,7 +30,7 @@ public class ControlCharValidator {
         if (input.chars().anyMatch(Character::isISOControl)) {
             final String fieldName = name.getValue();
             final String context = String.format("Field '%s' contains control characters.", name);
-            throw this.errorHandler.handleError(context, fieldName, ErrorCode.CONTAINS_CONTROL_CHAR);
+            throw this.errorHandler.handleClientError(context, fieldName, ErrorCode.CONTAINS_CONTROL_CHAR);
         }
     }
 }

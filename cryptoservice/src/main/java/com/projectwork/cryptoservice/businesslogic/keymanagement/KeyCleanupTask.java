@@ -19,7 +19,8 @@ import java.util.List;
  * KeyCleanupTask is a scheduled task that periodically checks for expired keys in the keystore
  * and removes them, ensuring that the keystore remains clean and does not contain outdated keys.
  *
- * SCP106 (Key cleanup (deletion of expired keys)) -> KeyExpirationChecker
+ * SCPs:
+ * - [114] Logging controls should support both success and failure of specified security events
  */
 @RequiredArgsConstructor
 @Component
@@ -73,7 +74,6 @@ public class KeyCleanupTask {
         while (aliases.hasMoreElements()) {
             final String alias = aliases.nextElement();
             if (this.expirationChecker.isExpired(keystore, alias, this.clientKeystorePassword)) {
-                LOGGER.debug("Key with alias '{}' is expired", alias);
                 expired.add(alias);
             }
         }
@@ -91,7 +91,7 @@ public class KeyCleanupTask {
         try {
             return keystore.aliases();
         } catch (final KeyStoreException exception) {
-            throw this.errorHandler.handleError(
+            throw this.errorHandler.handleBusinessError(
                     ErrorCode.KEYSTORE_NOT_INITIALIZED,
             "While loading aliases in cleanup task.",
                     exception
@@ -111,12 +111,11 @@ public class KeyCleanupTask {
             try {
                 keystore.deleteEntry(alias);
                 this.clientKeyRegistry.removeClientByKeyAlias(alias);
-                LOGGER.info("Deleted expired key '{}'", alias);
+                LOGGER.info("Deleted expired key successfully.");
             } catch (final KeyStoreException exception) {
-                final String context = String.format("While deleting key for alias: %s", alias);
-                throw this.errorHandler.handleError(
+                throw this.errorHandler.handleBusinessError(
                         ErrorCode.DELETING_KEYSTORE_ENTRY_FAILED,
-                        context,
+                        "While deleting key.",
                         exception
                 );
             }

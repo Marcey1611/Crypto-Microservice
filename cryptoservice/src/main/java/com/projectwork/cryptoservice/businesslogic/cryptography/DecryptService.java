@@ -27,6 +27,8 @@ import java.util.Base64;
  *
  * SCPs:
  *  - [101] All cryptographic functions used to protect secrets from the application user must be implemented on a trusted system (e.g., the server)
+ *  - [114] Logging controls should support both success and failure of specified security events
+ *  - [129] Log cryptographic module failures
  */
 @RequiredArgsConstructor
 @Service
@@ -74,11 +76,10 @@ public class DecryptService {
     private SecretKey retrieveClientKey(final String keyAlias) {
         final SecretKey clientKey = this.keyStoreHelper.getClientKey(keyAlias, this.clientKeystorePath, this.clientKeystorePassword);
         if (null == clientKey) {
-            final String context = String.format("While retrieving client key for alias '%s'.", keyAlias);
-            throw this.errorHandler.handleError(
+            throw this.errorHandler.handleClientError(
                 keyAlias,
                 ErrorCode.NO_CLIENT_KEY_FOUND_FOR_ALIAS,
-                context
+                "While retrieving client key."
             );
         }
         return clientKey;
@@ -101,11 +102,10 @@ public class DecryptService {
     private byte[] retrieveIvForClient(final String clientNameFromKeyAlias) {
         final byte[] iv = this.clientKeyRegistry.getIvForClient(clientNameFromKeyAlias);
         if (null == iv) {
-            final String context = String.format("While retrieving IV for client with alias '%s'.", clientNameFromKeyAlias);
-            throw this.errorHandler.handleError(
+            throw this.errorHandler.handleClientError(
                 clientNameFromKeyAlias,
                 ErrorCode.IV_NOT_FOUND_FOR_CLIENT,
-                context
+                "While retrieving IV for client."
             );
         }
         return iv;
@@ -141,7 +141,7 @@ public class DecryptService {
             LOGGER.debug("Cipher text successfully decoded from Base64.");
             return cipherTextBytes;
         } catch (final IllegalArgumentException exception) {
-            throw this.errorHandler.handleError(
+            throw this.errorHandler.handleBusinessError(
                 ErrorCode.INVALID_CIPHERTEXT_ENCODING,
                 "While decoding cipher text from Base64 during decryption.",
                 exception
@@ -163,7 +163,7 @@ public class DecryptService {
             LOGGER.debug("Cipher text successfully decrypted.");
             return new String(decryptedBytes, StandardCharsets.UTF_8);
         } catch (final BadPaddingException | IllegalBlockSizeException exception) {
-            throw this.errorHandler.handleError(
+            throw this.errorHandler.handleBusinessError(
                 ErrorCode.DECRYPTION_FAILED,
                 "While decrypting cipher text using AES-GCM.",
                 exception

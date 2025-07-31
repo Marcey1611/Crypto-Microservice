@@ -23,6 +23,9 @@ import java.util.Base64;
  *
  * SCPs:
  * - [106] Establish and utilize a policy and process for how cryptographic keys will be managed.
+ * - [112] Error handling logic associated with security controls should deny access by default
+ * - [114] Logging controls should support both success and failure of specified security events
+ * - [129] Log cryptographic module failures --> General key management and generation
  */
 @RequiredArgsConstructor
 @Service
@@ -65,13 +68,13 @@ public class KeyManagementService {
         LOGGER.debug("Random AES key generated for client '{}'", clientName);
 
         final String keyAlias = this.generateRandomKeyAlias();
-        LOGGER.debug("Random key alias generated for client '{}': {}", clientName, keyAlias);
+        LOGGER.debug("Random key alias generated for client '{}'.", clientName);
 
         this.keyStoreHelper.storeClientKey(keyAlias, aesKey, this.clientKeystorePath, this.clientKeystorePassword);
-        LOGGER.info("Key stored in KeyStore for client '{}', alias '{}'", clientName, keyAlias);
+        LOGGER.info("Key stored in KeyStore for client '{}'.", clientName);
 
         this.clientKeyRegistry.registerClientKey(clientName, keyAlias);
-        LOGGER.info("Client '{}' registered with alias '{}'", clientName, keyAlias);
+        LOGGER.info("Client '{}' registered in client key registry.", clientName);
 
         final String message = String.format("Key generated for client: '%s'", clientName);
         return this.resultModelsFactory.buildGenerateKeyResultModel(message);
@@ -90,7 +93,7 @@ public class KeyManagementService {
         try {
             secureRandom = SecureRandom.getInstanceStrong();
         } catch (final NoSuchAlgorithmException exception) {
-            throw this.errorHandler.handleError(
+            throw this.errorHandler.handleBusinessError(
                     ErrorCode.AES_KEYGEN_SECURE_RANDOM_FAILED,
             "While generating a random client key.",
                     exception
@@ -101,7 +104,7 @@ public class KeyManagementService {
         try {
             keyGen = KeyGenerator.getInstance("AES");
         } catch (final NoSuchAlgorithmException exception) {
-            throw this.errorHandler.handleError(
+            throw this.errorHandler.handleBusinessError(
                     ErrorCode.AES_KEYGEN_INIT_FAILED,
                     "While preparing AES key generator for client key creation.",
                     exception
@@ -125,7 +128,7 @@ public class KeyManagementService {
         try {
             secureRandom = SecureRandom.getInstanceStrong();
         } catch (final NoSuchAlgorithmException exception) {
-            throw this.errorHandler.handleError(
+            throw this.errorHandler.handleBusinessError(
                     ErrorCode.AES_KEYGEN_SECURE_RANDOM_FAILED,
                     "While generating a random client key alias.",
                     exception

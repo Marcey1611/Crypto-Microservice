@@ -23,7 +23,8 @@ import java.util.List;
  * MasterKeyRotationTask is a scheduled task that rotates the master key in the keystore.
  * It rewraps all client keys with the new master key and updates the keystore accordingly.
  *
- * SCP106 (Key rotation)
+ * SCPs:
+ * - [114] Logging controls should support both success and failure of specified security events
  */
 @RequiredArgsConstructor
 @Component
@@ -54,7 +55,7 @@ public class MasterKeyRotationTask {
      */
     @Scheduled(fixedRate = 86400000L)
     public final void rotateMasterKey() {
-        LOGGER.info("Starting scheduled master key rotation process");
+        LOGGER.info("Starting scheduled master key rotation process.");
 
         final KeyStore masterKeystore = this.keyStoreLoader.load(this.masterKeystorePath, this.masterKeystorePassword);
         final KeyStore clientKeystore = this.keyStoreLoader.load(this.clientKeystorePath, this.clientKeystorePassword);
@@ -70,7 +71,7 @@ public class MasterKeyRotationTask {
         this.keyStoreLoader.save(masterKeystore, this.masterKeystorePath, this.masterKeystorePassword);
         this.keyStoreLoader.save(clientKeystore, this.clientKeystorePath, this.clientKeystorePassword);
 
-        LOGGER.info("Master key rotation process completed successfully");
+        LOGGER.info("Master key rotation process completed successfully.");
     }
 
     /**
@@ -87,11 +88,13 @@ public class MasterKeyRotationTask {
             keyGen.init(KEY_SIZE, secureRandom);
             return keyGen.generateKey();
         } catch (final NoSuchAlgorithmException | InvalidParameterException exception) {
-            throw this.errorHandler.handleError(
+            throw this.errorHandler.handleBusinessError(
                 ErrorCode.MASTER_KEYGEN_INIT_FAILED,
                 "While generating new master key.",
                 exception
             );
+        } finally {
+            LOGGER.debug("Generating new master key successfully.");
         }
     }
 
@@ -113,7 +116,7 @@ public class MasterKeyRotationTask {
             }
             return clientKeyAliases;
         } catch (final KeyStoreException exception) {
-            throw this.errorHandler.handleError(
+            throw this.errorHandler.handleBusinessError(
                 ErrorCode.KEYSTORE_NOT_INITIALIZED,
                 "While retrieving client key aliases from keystore.",
                 exception
@@ -132,13 +135,14 @@ public class MasterKeyRotationTask {
      */
     private void rewrapClientKeys(final KeyStore keystore, final SecretKey oldMasterKey, final SecretKey newMasterKey, final List<String> clientKeyAliases, final char[] passwordChars) {
         for (final String clientAlias : clientKeyAliases) {
-            LOGGER.debug("Rewrapping client key: {}", clientAlias);
+            LOGGER.debug("Rewrapping client key: {}.", clientAlias);
 
             final SecretKey unwrappedClientKey = this.unwrapClientKey(keystore, oldMasterKey, clientAlias, passwordChars);
             final byte[] newEncryptedKey = this.wrapClientKey(newMasterKey, unwrappedClientKey);
 
             this.storeClientKey(keystore, clientAlias, newEncryptedKey, passwordChars);
         }
+        LOGGER.debug("Rewrapping of client keys completed successfully.");
     }
 
     /**
@@ -162,10 +166,9 @@ public class MasterKeyRotationTask {
             return (SecretKey) unwrapCipher.unwrap(encoded, "AES", Cipher.SECRET_KEY);
         } catch (final NoSuchPaddingException | InvalidKeyException | NoSuchAlgorithmException |
                        UnrecoverableEntryException | KeyStoreException exception) {
-            final String context = String.format("While unwrapping client key for alias: %s", clientAlias);
-            throw this.errorHandler.handleError(
+            throw this.errorHandler.handleBusinessError(
                 ErrorCode.CLIENT_KEY_UNWRAP_FAILED,
-                context,
+                "While unwrapping client key.",
                 exception
             );
         }
@@ -185,7 +188,7 @@ public class MasterKeyRotationTask {
             return wrapCipher.wrap(unwrappedClientKey);
         } catch (final InvalidKeyException | IllegalBlockSizeException | NoSuchAlgorithmException |
                        NoSuchPaddingException exception) {
-            throw this.errorHandler.handleError(
+            throw this.errorHandler.handleBusinessError(
                 ErrorCode.AES_KEY_WRAP_FAILED,
         "While wrapping client key with new master key using AES cipher.",
                 exception
@@ -206,12 +209,11 @@ public class MasterKeyRotationTask {
             final SecretKeySpec newWrappedKeySpec = new SecretKeySpec(newEncryptedKey, "AES");
             final SecretKeyEntry newEntry = new SecretKeyEntry(newWrappedKeySpec);
             keystore.setEntry(clientAlias, newEntry, new PasswordProtection(passwordChars));
-            LOGGER.info("Successfully rewrapped and stored client key '{}'", clientAlias);
+            LOGGER.info("Successfully rewrapped and stored client key.");
         } catch (final KeyStoreException exception) {
-            final String context = String.format("While storing rewrapped key for client alias: %s", clientAlias);
-            throw this.errorHandler.handleError(
+            throw this.errorHandler.handleBusinessError(
                 ErrorCode.SETTING_KEYSTORE_ENTRY_FAILED,
-                context,
+                "While storing rewrapped key for client.",
                 exception
             );
         }
@@ -228,15 +230,16 @@ public class MasterKeyRotationTask {
         try {
             final SecretKeyEntry newMasterEntry = new SecretKeyEntry(newMasterKey);
             keystore.setEntry("master-key", newMasterEntry, new PasswordProtection(passwordChars));
-            LOGGER.info("New master key successfully stored in keystore");
+            LOGGER.info("New master key successfully stored in keystore.");
         } catch (final KeyStoreException exception) {
-            throw this.errorHandler.handleError(
+            throw this.errorHandler.handleBusinessError(
                 ErrorCode.SETTING_KEYSTORE_ENTRY_FAILED,
         "While storing new master key in keystore.",
                 exception
             );
         } finally {
-            Arrays.fill(passwordChars, '\0'); // OWASP [199]
+            Arrays.fill(passwordChars, '\0');
+            LOGGER.debug("New master key stored successfully in keystore.");
         }
     }
 }

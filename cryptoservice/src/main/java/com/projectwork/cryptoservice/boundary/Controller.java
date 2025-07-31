@@ -35,6 +35,7 @@ import java.security.Principal;
  * - [8] Validate all client-provided data before processing
  * - [87] Restrict access to services to only authorized users
  * - [88] Restrict access to application data to only authorized users
+ * - [114] Logging controls should support both success and failure of specified security events
  */
 @RequiredArgsConstructor
 @RestController

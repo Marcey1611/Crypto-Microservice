@@ -19,10 +19,9 @@ import java.util.Arrays;
 /**
  * MasterKeyService is responsible for retrieving the master key from the KeyStore.
  * It ensures that the master key is securely accessed and handles any exceptions that may occur.
- * SecureCodingPractices:
- * - OWASP [102] Master secret (KeyStore) protection
- * - OWASP [106] Centralized key storage and retrieval logic (KeyStore as secure container)
- * - OWASP [194] Carefully handle sensitive data (keystore password), wiping char arrays after use
+ *
+ * SCPs:
+ * - [114] Logging controls should support both success and failure of specified security events
  */
 @Component
 @RequiredArgsConstructor
@@ -53,7 +52,7 @@ public class MasterKeyService {
         try {
             final SecretKey masterKey = (SecretKey) keystore.getKey("master-key", passwordChars);
             if (null == masterKey) {
-                throw this.errorHandler.handleError(
+                throw this.errorHandler.handleClientError(
                         ErrorCode.MASTER_KEY_MISSING,
                         "Master key is missing in keystore."
                 );
@@ -63,7 +62,7 @@ public class MasterKeyService {
             return masterKey;
 
         } catch (final KeyStoreException | NoSuchAlgorithmException | UnrecoverableKeyException exception) {
-            throw this.errorHandler.handleError(
+            throw this.errorHandler.handleBusinessError(
                     ErrorCode.KEYSTORE_KEY_ACCESS_FAILED,
                     "master-key",
                     "Error accessing master key from keystore.",

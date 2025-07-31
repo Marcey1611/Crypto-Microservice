@@ -25,6 +25,8 @@ import java.util.Base64;
  *
  * SCPs:
  *  - [101] All cryptographic functions used to protect secrets from the application user must be implemented on a trusted system (e.g., the server)
+ *  - [114] Logging controls should support both success and failure of specified security events
+ *  - [129] Log cryptographic module failures
  */
 @RequiredArgsConstructor
 @Service
@@ -61,7 +63,7 @@ public class EncryptService {
         this.clientKeyRegistry.updateIvForClient(clientName, iv);
         final String plainText = encryptModel.getPlainText();
         final String cipherText = this.encryptPlainText(iv, clientKey, plainText, issuedTo);
-        LOGGER.info("Encryption completed for client '{}'.", clientName);
+        LOGGER.info("Encryption completed successfully for client '{}'.", clientName);
         return this.resultModelsFactory.buildEncryptResultModel(cipherText);
     }
 
@@ -73,13 +75,9 @@ public class EncryptService {
     private SecretKey getClientKey(final String keyAlias) {
         final SecretKey clientKey = this.keyStoreHelper.getClientKey(keyAlias, this.clientKeystorePath, this.clientKeystorePassword);
         if (null == clientKey) {
-            final String context = String.format(
-                    "While retrieving client key for alias '%s'.",
-                    keyAlias
-            );
-            throw this.errorHandler.handleError(
+            throw this.errorHandler.handleClientError(
                     ErrorCode.NO_CLIENT_KEY_FOUND_FOR_ALIAS,
-                    context
+                    "While retrieving client key."
             );
         }
         return clientKey;
@@ -106,8 +104,6 @@ public class EncryptService {
      * @param cipher The Cipher instance.
      * @param plainText The plain text to encrypt.
      * @return The encrypted data bytes.
-     *
-     * SCP103
      */
     private byte[] encryptData(final Cipher cipher, final String plainText) {
         try {
@@ -116,7 +112,7 @@ public class EncryptService {
             LOGGER.debug("Plaintext successfully encrypted.");
             return encryptedData;
         } catch (final IllegalBlockSizeException | BadPaddingException exception) {
-            throw this.errorHandler.handleError(
+            throw this.errorHandler.handleClientError(
                 ErrorCode.ENCRYPTION_FAILED,
                 exception,
                 "While encrypting plaintext using AES-GCM."
@@ -137,9 +133,6 @@ public class EncryptService {
     /**
      * Generates an initialization vector (IV) for AES-GCM.
      * @return The generated IV.
-     *
-     * SCP104
-     * SCP103
      */
     private byte[] generateIV() {
         final SecureRandom secureRandom;
@@ -147,7 +140,7 @@ public class EncryptService {
             secureRandom = SecureRandom.getInstanceStrong();
             LOGGER.debug("SecureRandom instance for IV generation successfully created.");
         } catch (final NoSuchAlgorithmException exception) {
-            throw this.errorHandler.handleError(
+            throw this.errorHandler.handleBusinessError(
                 ErrorCode.AES_KEYGEN_SECURE_RANDOM_FAILED,
                 "While generating IV for encryption.",
                 exception

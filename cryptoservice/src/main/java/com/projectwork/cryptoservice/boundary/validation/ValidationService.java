@@ -28,6 +28,8 @@ import java.util.Date;
  * - [8] Validate all client-provided data before processing
  * - [13] Validate data length
  * - [14] Validate all input against a "white" list of allowed characters, whenever possible
+ * - [112] Error handling logic associated with security controls should deny access by default
+ * - [123] Log all access control failures
  */
 @Service
 @RequiredArgsConstructor

@@ -18,6 +18,9 @@ import java.security.NoSuchAlgorithmException;
 /**
  * ClientKeyEncryptor is a utility class for encrypting and decrypting client keys using a master key.
  * It uses AES wrapping for secure key management.
+ *
+ * SCPs:
+ * - [114] Logging controls should support both success and failure of specified security events
  */
 @Component
 @RequiredArgsConstructor
@@ -41,7 +44,7 @@ public class ClientKeyEncryptor {
         try {
             cipher = Cipher.getInstance("AES");
         } catch (final NoSuchAlgorithmException | NoSuchPaddingException exception) {
-            throw this.errorHandler.handleError(
+            throw this.errorHandler.handleBusinessError(
                     ErrorCode.AES_CIPHER_INSTANCE_FAILED,
                     "Preparing AES cipher for encryption.",
                     exception
@@ -54,7 +57,7 @@ public class ClientKeyEncryptor {
             LOGGER.info("Client key successfully encrypted with master key");
             return wrapped;
         } catch (final InvalidKeyException | IllegalBlockSizeException | UnsupportedOperationException | InvalidParameterException exception) {
-            throw this.errorHandler.handleError(
+            throw this.errorHandler.handleBusinessError(
                     ErrorCode.AES_KEY_WRAP_FAILED,
                     "Wrapping client key with master key using AES cipher.",
                     exception
@@ -76,7 +79,7 @@ public class ClientKeyEncryptor {
         try {
             cipher = Cipher.getInstance("AES");
         } catch (final NoSuchAlgorithmException | NoSuchPaddingException exception) {
-            throw this.errorHandler.handleError(
+            throw this.errorHandler.handleBusinessError(
                     ErrorCode.AES_CIPHER_INSTANCE_FAILED,
                     "Preparing AES cipher for decryption.",
                     exception
@@ -89,7 +92,7 @@ public class ClientKeyEncryptor {
             LOGGER.info("Client key successfully decrypted with master key");
             return unwrapped;
         } catch (final InvalidKeyException | NoSuchAlgorithmException | UnsupportedOperationException | InvalidParameterException exception) {
-            throw this.errorHandler.handleError(
+            throw this.errorHandler.handleBusinessError(
                     ErrorCode.CLIENT_KEY_UNWRAP_FAILED,
                     "Unwrapping encrypted client key using AES cipher and master key.",
                     exception

@@ -33,7 +33,7 @@ public class Base64Validator {
         } catch (IllegalArgumentException e) {
             final String fieldName = name.getValue();
             final String context = String.format("Field '%s' contains invalid Base64 characters", fieldName);
-            throw this.errorHandler.handleError(context, fieldName, ErrorCode.INVALID_BASE64);
+            throw this.errorHandler.handleClientError(context, fieldName, ErrorCode.INVALID_BASE64);
         }
     }
 }

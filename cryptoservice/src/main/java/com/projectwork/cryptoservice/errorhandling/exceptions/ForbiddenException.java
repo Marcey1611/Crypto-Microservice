@@ -8,14 +8,14 @@ import com.projectwork.cryptoservice.errorhandling.util.ErrorDetail;
  * Abstract class representing a custom API exception.
  * It extends RuntimeException and contains an ErrorDetail object.
  */
-public class BadRequestException extends ApiException {
+public class ForbiddenException extends ApiException {
 
     /**
-     * Constructor that initializes the BadRequestException with an ErrorDetail object.
+     * Constructor that initializes the ForbiddenException with an ErrorDetail object.
      *
      * @param error the ErrorDetail object containing error information
      */
-    public BadRequestException(final ErrorDetail error) {
+    public ForbiddenException(final ErrorDetail error) {
         super(error);
     }
 
@@ -26,6 +26,6 @@ public class BadRequestException extends ApiException {
      */
     @Override
     public final HttpStatus geHttpStatus() {
-        return HttpStatus.BAD_REQUEST;
+        return HttpStatus.FORBIDDEN;
     }
 }

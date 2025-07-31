@@ -31,7 +31,7 @@ public class AsciiValidator {
         if (field == null || !field.chars().allMatch(c -> c < 128)) {
             final String fieldName = name.getValue();
             final String context = String.format("Field '%s' contains non-ASCII characters", name);
-            throw this.errorHandler.handleError(context, fieldName, ErrorCode.INVALID_ASCII);
+            throw this.errorHandler.handleClientError(context, fieldName, ErrorCode.INVALID_ASCII);
         }
     }
 }

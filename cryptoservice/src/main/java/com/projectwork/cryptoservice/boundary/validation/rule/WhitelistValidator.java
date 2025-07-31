@@ -37,7 +37,7 @@ public class WhitelistValidator {
         if (!pattern.matcher(field).matches()) {
             final String fieldName = name.getValue();
             final String context = String.format("Field '%s' contains invalid characters.", fieldName);
-            throw this.errorHandler.handleError(context, fieldName, ErrorCode.ILLEGAL_CHARS);
+            throw this.errorHandler.handleClientError(context, fieldName, ErrorCode.ILLEGAL_CHARS);
         }
     }
 

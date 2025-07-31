@@ -12,23 +12,27 @@ import org.springframework.web.filter.GenericFilterBean;
 import java.io.IOException;
 import java.security.Principal;
 
+/**
+ * ClientAccessControlFilter is a servlet filter that checks if the client is known
+ * and whether they are allowed to access certain endpoints.
+ * It allows new clients to access specific endpoints for registration or key generation.
+ */
 @RequiredArgsConstructor
 public class ClientAccessControlFilter extends GenericFilterBean {
 
     private final KnownClientStore knownClientStore;
 
     @Override
-    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
+    public void doFilter(final ServletRequest request, final ServletResponse response, final FilterChain chain)
             throws IOException, ServletException {
 
-        HttpServletRequest httpRequest = (HttpServletRequest) request;
-        String path = httpRequest.getRequestURI();
-        Principal principal = httpRequest.getUserPrincipal();
+        final HttpServletRequest httpRequest = (HttpServletRequest) request;
+        final String path = httpRequest.getRequestURI();
+        final Principal principal = httpRequest.getUserPrincipal();
 
         if (principal != null) {
-            String cn = principal.getName();
+            final String cn = principal.getName();
 
-            // Neue Clients dürfen nur auf diese Pfade zugreifen
             boolean isNewClient = !knownClientStore.isKnown(cn);
             boolean pathAllowsNewClients = path.equals("/crypto/keys/generate") || path.equals("/crypto/decrypt");
 
