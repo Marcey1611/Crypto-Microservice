@@ -134,6 +134,12 @@ public enum ErrorCode {
         "Authorization failed.",
         Level.ERROR
     ),
+
+    FORBIDDEN_NEW_CLIENT_ACCESS(
+        "400.021",
+        "Authorization failed.",
+        Level.ERROR
+    ),
     
     //500
     UNEXPECTED_ERROR(

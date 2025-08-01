@@ -16,6 +16,8 @@ import org.springframework.stereotype.Service;
  *
  * SCPs:
  * - [77] Use only trusted system objects (e.g. server-side session objects) for making access authorization decisions
+ * - [78] Use a single site-wide component to check access authorization
+ * - [79] Access controls should fail securely
  * - [87] Restrict access to services to only authorized users
  * - [88] Restrict access to application data to only authorized users
  * - [112] Error handling logic associated with security controls should deny access by default
@@ -32,6 +34,27 @@ public class AuthService {
     private final JwtManagementService jwtManagementService;
     private final ErrorHandler errorHandler;
 
+    public void authorizePathAccess(final String clientName, final String path) {
+        LOGGER.debug("Authorizing access for client '{}' to path '{}'", clientName, path);
+
+        final boolean isNewClient = !clientKeyRegistry.hasClient(clientName);
+        final boolean pathAllowsNewClients = path.equals("/crypto/keys/generate") || path.equals("/crypto/decrypt");
+
+        if (isNewClient) {
+            if (pathAllowsNewClients) {
+                LOGGER.info("New client, path allows access for new clients.");
+            } else {
+                LOGGER.warn("New client access denied for path '{}'.", path);
+                throw this.errorHandler.handleForbiddenError(
+                        ErrorCode.FORBIDDEN_NEW_CLIENT_ACCESS,
+                        "New client access is not allowed for the requested path."
+                );
+            }
+        } else {
+            LOGGER.debug("Known client, access granted.");
+        }
+    }
+
     /**
      * Authenticates a request to generate a JWT for a given client.
      *
@@ -44,7 +67,6 @@ public class AuthService {
                     "While checking if client exists in the registry."
             );
         }
-        LOGGER.debug("Authorization successful: Client is registered and authorized to request a JWT.");
     }
 
     /**

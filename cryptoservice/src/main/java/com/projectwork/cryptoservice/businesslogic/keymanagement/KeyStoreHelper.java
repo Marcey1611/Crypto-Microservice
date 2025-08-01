@@ -59,6 +59,8 @@ public class KeyStoreHelper {
      *
      * @param keyAlias      the keyAlias under which the key will be stored
      * @param clientKey  the client key to be stored
+     * @param keystorePath the path to the keystore
+     * @param keystorePassword the password for the keystore
      *
      * SCP106 (Key storage) -> setKeystoreEntry
      */

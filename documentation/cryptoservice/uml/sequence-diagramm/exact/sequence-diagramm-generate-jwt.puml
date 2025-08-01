@@ -1,0 +1,109 @@
+@startuml
+title Sequence-Diagram for /generate-jwt
+
+' Color scheme:
+' #CCE5FF → Boundary
+' #F9D5E5 → Business-Facade
+' #DFFFD6 → Business-Logic
+' #FFE5B4 → Entity (Factories, Models, ...)
+
+actor Client
+participant SecurityLayer #CCE5FF
+participant JwtManagementAPI #CCE5FF
+participant Controller #CCE5FF
+participant ValidationService #CCE5FF
+participant NullOrBlankValidator #CCE5FF
+participant LengthValidator #CCE5FF
+participant AsciiValidator #CCE5FF
+participant CharsetValidator #CCE5FF
+participant ControlCharValidator #CCE5FF
+participant WhitelistValidator #CCE5FF
+participant AuthService #CCE5FF
+participant AuthRegistry #CCE5FF
+participant JwtManagementFacade #F9D5E5
+participant ModelsFactory #FFE5B4
+participant JwtManagementService #DFFFD6
+participant ClientKeyRegistry #DFFFD6
+participant KeyStoreHelper #DFFFD6
+participant KeyStoreLoader #DFFFD6
+participant ResultModelsFactory #FFE5B4
+participant ResponseFactory #FFE5B4
+
+Client -> SecurityLayer : send HTTPS request
+activate SecurityLayer
+
+SecurityLayer -> JwtManagementAPI : POST /generate-jwt
+activate JwtManagementAPI
+
+JwtManagementAPI -> Controller : generateJwtPost(generateJwtRequest, principal)
+activate Controller
+
+Controller -> ValidationService : validateGenerateJwtRequest(generateJwtRequest)
+activate ValidationService
+ValidationService -> NullOrBlankValidator : validateNullOrBlank(issuedTo, FieldName.ISSUED_TO)
+ValidationService -> LengthValidator : validateLength(issuedTo, ISSUED_TO_MAX_LENGTH, FieldName.ISSUED_TO)
+ValidationService -> AsciiValidator : validateAscii(issuedTo, FieldName.ISSUED_TO)
+ValidationService -> CharsetValidator : validateCharset(issuedTo, FieldName.ISSUED_TO)
+ValidationService -> ControlCharValidator : validateControlChars(issuedTo, FieldName.ISSUED_TO)
+ValidationService -> WhitelistValidator : validateWhitelist(issuedTo, FieldName.ISSUED_TO, false)
+ValidationService -> Controller : void
+deactivate ValidationService
+
+Controller -> AuthService : authGenerateJwtRequest(clientName)
+activate AuthService
+AuthService -> ClientKeyRegistry : hasClient(clientName)
+AuthService -> Controller : void
+deactivate AuthService
+
+Controller -> JwtManagementFacade : generateJwt(clientName)
+activate JwtManagementFacade
+
+JwtManagementFacade -> ModelsFactory : buildGenerateJwtModel(generateJwtRequest, clientName)
+activate ModelsFactory
+ModelsFactory --> JwtManagementFacade : GenerateKeyModel
+deactivate ModelsFactory
+
+JwtManagementFacade -> JwtManagementService : generateJwt(generateJwtModel)
+activate JwtManagementService
+
+JwtManagementService -> KeyStoreHelper : getKey("jwt-signing-key", masterKeystorePath, masterKeystorePassword)
+activate KeyStoreHelper
+KeyStoreHelper -> KeyStoreLoader : load(keyStorePath, keyStorePassword)
+activate KeyStoreLoader
+KeyStoreLoader --> KeyStoreHelper : KeyStore
+deactivate KeyStoreLoader
+KeyStoreHelper -> KeyStoreHelper : getKey(keyStore, alias, keyStorePassword)
+KeyStoreHelper --> JwtManagementService : SecretKey
+deactivate KeyStoreHelper
+
+JwtManagementService -> ClientKeyRegistry : getKeyAliasForClient(clientName)
+activate ClientKeyRegistry
+ClientKeyRegistry --> JwtManagementService : String
+deactivate ClientKeyRegistry
+
+JwtManagementService -> ResultModelsFactory : buildGenerateJwtResultModel(jwt)
+activate ResultModelsFactory
+ResultModelsFactory --> JwtManagementService : GenerateJwtResultModel
+deactivate ResultModelsFactory
+
+JwtManagementService --> JwtManagementFacade : GenerateJwtResultModel
+deactivate JwtManagementService
+
+JwtManagementFacade -> ResponseFactory : buildGenerateJwtResponse(resultModel)
+activate ResponseFactory
+ResponseFactory --> JwtManagementFacade : ResponseEntity<GenerateJwtResponse>
+deactivate ResponseFactory
+
+JwtManagementFacade --> Controller : ResponseEntity<GenerateJwtResponse>
+deactivate JwtManagementFacade
+
+Controller --> JwtManagementAPI : ResponseEntity<GenerateJwtResponse>
+deactivate Controller
+
+JwtManagementAPI --> SecurityLayer : ResponseEntity<GenerateKeyResponse>
+deactivate KeyManagementAPI
+
+SecurityLayer --> Client : ResponseEntity<GenerateKeyResponse>
+deactivate SecurityLayer
+
+@enduml

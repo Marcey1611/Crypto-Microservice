@@ -67,7 +67,7 @@ public class Controller implements EncryptAPI, DecryptAPI, KeyManagementAPI, Jwt
         final String clientName = principal.getName();
         LOGGER.info("Key generation requested by client '{}'.", clientName);
         final ResponseEntity<GenerateKeyResponse> response = this.keyManagementFacade.generateKey(clientName);
-        LOGGER.info("Key successfully generated for client '{}'.\n", clientName);
+        LOGGER.info("Key successfully generated for client '{}'.\n\n\n", clientName);
         return response;
     }
 
@@ -90,7 +90,7 @@ public class Controller implements EncryptAPI, DecryptAPI, KeyManagementAPI, Jwt
         LOGGER.debug("Authorization successful for JWT generation request by client '{}'.", clientName);
 
         final ResponseEntity<GenerateJwtResponse> response = this.jwtManagementFacade.generateJwt(generateJwtRequest, clientName);
-        LOGGER.info("JWT successfully generated for client '{}'.\n", clientName);
+        LOGGER.info("JWT successfully generated for client '{}'.\n\n\n", clientName);
         return response;
     }
 
@@ -113,7 +113,7 @@ public class Controller implements EncryptAPI, DecryptAPI, KeyManagementAPI, Jwt
         LOGGER.debug("Authorization successful for encrypt request by client '{}'.", clientName);
 
         final ResponseEntity<EncryptResponse> response = this.encryptFacade.processEncryption(encryptRequest, clientName);
-        LOGGER.info("Encryption successful for client '{}'\n", clientName);
+        LOGGER.info("Encryption successful for client '{}'\n\n\n", clientName);
         return response;
     }
 
@@ -136,7 +136,7 @@ public class Controller implements EncryptAPI, DecryptAPI, KeyManagementAPI, Jwt
         LOGGER.debug("Authorization successful for decrypt request by client '{}'.", clientName);
 
         final ResponseEntity<DecryptResponse> response = this.decryptFacade.processDecryption(decryptRequest, clientName);
-        LOGGER.info("Decryption successful for client '{}'.\n", clientName);
+        LOGGER.info("Decryption successful for client '{}'.\n\n\n", clientName);
         return response;
     }
 }

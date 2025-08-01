@@ -1,13 +1,14 @@
 package com.projectwork.cryptoservice.boundary.security;
 
-import jakarta.servlet.Filter;
+import com.projectwork.cryptoservice.boundary.authorization.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.preauth.x509.X509AuthenticationFilter;
+import org.springframework.security.web.access.intercept.FilterSecurityInterceptor;
+import org.springframework.security.web.context.SecurityContextHolderFilter;
 
 
 /**
@@ -15,7 +16,7 @@ import org.springframework.security.web.authentication.preauth.x509.X509Authenti
  * This configuration sets up security rules for the endpoints.
  *
  * SCPs:
- * - SCPs:
+ * - [94] Limit the number of transactions a single user/device can perform in a given time
  * - [143] Implement encryption for the transmission of all sensitive information --> communication over mtls
  * - [144] TLS certificates should be valid and have the correct domain name, not be expired, and be installed with intermediate certificates when required --> see mtls files and mtls readme file
  * - [145] Failed TLS connections should not fall back to an insecure connection --> spring boot standard config
@@ -27,7 +28,8 @@ import org.springframework.security.web.authentication.preauth.x509.X509Authenti
 public class SecurityConfig {
 
     private final DynamicUserDetailsService userDetailsService;
-    private final KnownClientStore knownClientStore;
+    private final IpRateLimitingFilter ipRateLimitingFilter;
+    private final PrincipalRateLimitingFilter principalRateLimitingFilter;
 
     @Bean
     public SecurityFilterChain securityFilterChain(final HttpSecurity http) throws Exception {
@@ -39,14 +41,10 @@ public class SecurityConfig {
                         .subjectPrincipalRegex("CN=(.*?)(?:,|$)")
                         .userDetailsService(userDetailsService)
                 )
-                .addFilterAfter(clientAccessFilter(), X509AuthenticationFilter.class)
+                .addFilterBefore(ipRateLimitingFilter, SecurityContextHolderFilter.class)
+                .addFilterAfter(principalRateLimitingFilter, FilterSecurityInterceptor.class)
                 .csrf(csrf -> csrf.disable());
 
         return http.build();
-    }
-
-    @Bean
-    public Filter clientAccessFilter() {
-        return new ClientAccessControlFilter(knownClientStore);
     }
 }

@@ -59,7 +59,7 @@ public class KeyManagementService {
 
         final boolean clientNameExist = this.clientKeyRegistry.hasClient(clientName);
         if (clientNameExist) {
-            final String message = String.format("Key already exists for client: '%s'", clientName);
+            final String message = "Key for client already exists.";
             LOGGER.warn("Key generation skipped: {}", message);
             return this.resultModelsFactory.buildGenerateKeyResultModel(message);
         }

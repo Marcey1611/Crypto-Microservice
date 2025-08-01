@@ -1,40 +1,37 @@
 @startuml
-title Sequenzdiagramm für /generate-key
 
-'TODO Finish after checking and implementing secure coding practices
-
+title Sequence-Diagram for /generate-key
 
 ' Color scheme:
-' #CCE5FF → API & Controller
-' #F9D5E5 → Parts of Validation
-' #DFFFD6 → Services
-' #B7F0DC → Facades
-' #FFE5B4 → Factories
-' #E0E0E0 → Helpers/Utilities
-' #FADBD8 → Registries
+' #CCE5FF → Boundary
+' #F9D5E5 → Business-Facade
+' #DFFFD6 → Business-Logic
+' #FFE5B4 → Entity (Factories, Models, ...)
 
 actor Client
+participant SecurityLayer #CCE5FF
 participant KeyManagementAPI #CCE5FF
 participant Controller #CCE5FF
-participant KeyManagementFacade #B7F0DC
+participant KeyManagementFacade #F9D5E5
 participant ModelsFactory #FFE5B4
 participant KeyManagementService #DFFFD6
-participant ClientKeyRegistry #FADBD8
-participant KeyStoreHelper #E0E0E0
-participant KeyStoreLoader #E0E0E0
+participant ClientKeyRegistry #DFFFD6
+participant KeyStoreHelper #DFFFD6
+participant KeyStoreLoader #DFFFD6
 participant MasterKeyService #DFFFD6
-participant ClientKeyEncryptor #E0E0E0
+participant ClientKeyEncryptor #DFFFD6
 participant ClientKeyDataFactory #FFE5B4
 participant ResultModelsFactory #FFE5B4
 participant ResponseFactory #FFE5B4
 
-Client -> KeyManagementAPI : POST /generate-key
+Client -> SecurityLayer : send HTTPS request
+activate SecurityLayer
+
+SecurityLayer -> KeyManagementAPI : POST /generate-key
 activate KeyManagementAPI
 
 KeyManagementAPI -> Controller : generateKeyPost(principal)
 activate Controller
-
-Controller -> Controller : resolveClientName(principal)
 
 Controller -> KeyManagementFacade : generateKey(clientName)
 activate KeyManagementFacade
@@ -55,7 +52,7 @@ deactivate ClientKeyRegistry
 KeyManagementService -> KeyManagementService : generateRandomKey()
 KeyManagementService -> KeyManagementService : generateRandomKeyAlias()
 
-KeyManagementService -> KeyStoreHelper : storeKey(keyAlias, key)
+KeyManagementService -> KeyStoreHelper : storeClientKey(keyAlias, key, clientKeystorePath, clientKeystorePassword)
 activate KeyStoreHelper
 
 KeyStoreHelper -> KeyStoreLoader : load()
@@ -63,7 +60,7 @@ activate KeyStoreLoader
 KeyStoreLoader --> KeyStoreHelper : KeyStore
 deactivate KeyStoreLoader
 
-KeyStoreHelper -> MasterKeyService : retrieveMasterKey(keystore)
+KeyStoreHelper -> MasterKeyService : retrieveMasterKey()
 activate MasterKeyService
 MasterKeyService --> KeyStoreHelper : SecretKey
 deactivate MasterKeyService
@@ -73,7 +70,7 @@ activate ClientKeyEncryptor
 ClientKeyEncryptor --> KeyStoreHelper : byte[]
 deactivate ClientKeyEncryptor
 
-KeyStoreHelper -> KeyStoreHelper : storeWrappedKey(keystore, keyAlias, encryptedKey)
+KeyStoreHelper -> KeyStoreHelper : setKeystoreEntry(keystore, keyAlias, encryptedKey, keystorePassword)
 
 KeyStoreHelper -> KeyStoreLoader : save(keystore)
 
@@ -110,7 +107,10 @@ deactivate KeyManagementFacade
 Controller --> KeyManagementAPI : ResponseEntity<GenerateKeyResponse>
 deactivate Controller
 
-KeyManagementAPI --> Client : ResponseEntity<GenerateKeyResponse>
+KeyManagementAPI --> SecurityLayer : ResponseEntity<GenerateKeyResponse>
 deactivate KeyManagementAPI
+
+SecurityLayer --> Client : ResponseEntity<GenerateKeyResponse>
+deactivate SecurityLayer
 
 @enduml
