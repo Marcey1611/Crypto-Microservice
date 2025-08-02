@@ -1,0 +1,59 @@
+@startuml
+title Simplified Sequence Diagram for /generate-jwt
+
+actor Client
+participant SecurityLayer
+participant JwtManagementAPI
+participant Controller
+participant AuthService
+participant JwtManagementFacade
+participant JwtManagementService
+participant KeyStoreHelper
+participant ClientKeyRegistry
+
+Client -> SecurityLayer : send HTTPS POST /generate-jwt
+activate SecurityLayer
+
+SecurityLayer -> JwtManagementAPI : forward request
+activate JwtManagementAPI
+
+JwtManagementAPI -> Controller : handle request
+activate Controller
+
+Controller -> Controller : validate input (e.g. issuedTo)
+note right of Controller : Null/blank, length,\ncharset, whitelist, etc.
+
+Controller -> AuthService : authorize client
+activate AuthService
+AuthService -> ClientKeyRegistry : check client registration
+ClientKeyRegistry --> AuthService : result
+deactivate AuthService
+
+Controller -> JwtManagementFacade : generateJwt(clientName, issuedTo)
+activate JwtManagementFacade
+
+JwtManagementFacade -> JwtManagementService : generate JWT token
+activate JwtManagementService
+
+JwtManagementService -> KeyStoreHelper : load signing key
+KeyStoreHelper --> JwtManagementService : signing key
+
+JwtManagementService -> ClientKeyRegistry : get keyAlias for client
+ClientKeyRegistry --> JwtManagementService : keyAlias
+
+JwtManagementService --> JwtManagementFacade : JWT response model
+deactivate JwtManagementService
+
+JwtManagementFacade --> Controller : HTTP 200 with JWT
+deactivate JwtManagementFacade
+
+Controller --> JwtManagementAPI : return response
+deactivate Controller
+
+JwtManagementAPI --> SecurityLayer : return response
+deactivate JwtManagementAPI
+
+SecurityLayer --> Client : HTTP 200 with JWT
+deactivate SecurityLayer
+
+@enduml
