@@ -101,7 +101,6 @@ public class JwtValidator {
      * Validates the key alias used in JWT operations.
      *
      * @param alias The key alias to validate.
-     * @throws BadRequestException if the alias is blank, too long, contains Unicode escapes, or is not whitelisted.
      */
     public final void validateKeyAlias(final String alias, final int maxLength) {
         this.nullOrBlankValidator.validateNullOrBlank(alias, FieldName.KEY_ALIAS);
@@ -110,5 +109,19 @@ public class JwtValidator {
         this.charsetValidator.validateCharset(alias, FieldName.KEY_ALIAS);
         this.controlCharValidator.validateControlChars(alias, FieldName.KEY_ALIAS);
         this.whitelistValidator.validateWhitelist(alias, FieldName.KEY_ALIAS, false);
+    }
+
+    /**
+     * Validates the key issuedTo used in JWT operations.
+     *
+     * @param issuedTo The key issuedTo to validate.
+     */
+    public final void validateIssuedTo(final String issuedTo, final int maxLength) {
+        this.nullOrBlankValidator.validateNullOrBlank(issuedTo, FieldName.ISSUED_TO);
+        this.lengthValidator.validateLength(issuedTo, maxLength, FieldName.ISSUED_TO);
+        this.asciiValidator.validateAscii(issuedTo, FieldName.ISSUED_TO);
+        this.charsetValidator.validateCharset(issuedTo, FieldName.ISSUED_TO);
+        this.controlCharValidator.validateControlChars(issuedTo, FieldName.ISSUED_TO);
+        this.whitelistValidator.validateWhitelist(issuedTo, FieldName.ISSUED_TO, false);
     }
 }

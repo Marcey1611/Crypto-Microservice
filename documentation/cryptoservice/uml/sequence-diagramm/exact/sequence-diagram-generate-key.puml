@@ -41,6 +41,10 @@ activate ModelsFactory
 ModelsFactory --> KeyManagementFacade : GenerateKeyModel
 deactivate ModelsFactory
 
+
+
+group KeyGenerationProcess
+
 KeyManagementFacade -> KeyManagementService : generateKey(GenerateKeyModel)
 activate KeyManagementService
 
@@ -95,6 +99,10 @@ deactivate ResultModelsFactory
 
 KeyManagementService --> KeyManagementFacade : GenerateKeyResultModel
 deactivate KeyManagementService
+
+end
+
+
 
 KeyManagementFacade -> ResponseFactory : buildGenerateKeyResponse(resultModel)
 activate ResponseFactory

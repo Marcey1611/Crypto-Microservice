@@ -42,7 +42,7 @@ public class KeyCleanupTask {
     /**
      * Scheduled method that runs every hour to clean up expired keys.
      */
-    @Scheduled(fixedRate = 3600000L)
+    @Scheduled(fixedRate = 60000L)
     public final void cleanupKeysPeriodically() {
         LOGGER.info("Running scheduled key cleanup task");
         this.cleanupExpiredKeys();

@@ -52,10 +52,10 @@ public class DecryptService {
     /**
      * Decrypts a cipher text for a given client.
      * @param decryptModel The model containing cipher text and JWT.
-     * @param clientName The name of the client.
      * @return The result of the decryption.
      */
-    public final DecryptResultModel decrypt(final DecryptModel decryptModel, final String clientName) {
+    public final DecryptResultModel decrypt(final DecryptModel decryptModel) {
+        final String clientName = decryptModel.getClientName();
         LOGGER.info("Starting decryption for client '{}'.", clientName);
 
         final String keyAlias = this.jwtManagementService.extractClientKeyAlias(decryptModel.getJwt());

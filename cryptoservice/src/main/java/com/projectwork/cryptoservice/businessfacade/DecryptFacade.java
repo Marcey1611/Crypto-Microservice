@@ -32,7 +32,7 @@ public class DecryptFacade {
      */
     public final ResponseEntity<DecryptResponse> processDecryption(final DecryptRequest decryptRequest, final String clientName) {
         final DecryptModel decryptModel = this.modelsFactory.buildDecryptModel(decryptRequest, clientName);
-        final DecryptResultModel decryptResultModel = this.decryptService.decrypt(decryptModel, clientName);
+        final DecryptResultModel decryptResultModel = this.decryptService.decrypt(decryptModel);
         return this.responseFactory.buildDecryptResponse(decryptResultModel);
     }
 }

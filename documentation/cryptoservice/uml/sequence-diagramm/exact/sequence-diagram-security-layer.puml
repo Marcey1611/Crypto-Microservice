@@ -1,55 +1,60 @@
 @startuml
 
-title Sequence-Diagram for Security Layer in CryptoService
+title Sequence-Diagram for Security Layer
 
 actor Client
-participant RateLimitingFilter
+participant IpRateLimitingFilter
 participant X509AuthenticationFilter
-participant DynamicUserDetailsService
-participant ClientAccessControlFilter
+participant PrincipalRateLimitingFilter
+participant SecurityContext
 participant CryptoController
+participant AuthService
+participant ClientKeyRegistry
 
-Client -> RateLimitingFilter : send HTTPS request
-activate RateLimitingFilter
-RateLimitingFilter -> RateLimitingFilter : check rate for CN
+Client -> IpRateLimitingFilter : send HTTPS request
+activate IpRateLimitingFilter
+IpRateLimitingFilter -> IpRateLimitingFilter : check rate for IP
 alt too many requests
-    RateLimitingFilter --> Client : 429 Too Many Requests
-    deactivate RateLimitingFilter
+    IpRateLimitingFilter --> Client : 429 Too Many Requests
+    deactivate IpRateLimitingFilter
     return
 else within limit
-    RateLimitingFilter -> X509AuthenticationFilter : forward request
-    deactivate RateLimitingFilter
+    IpRateLimitingFilter -> X509AuthenticationFilter : forward request
+    deactivate IpRateLimitingFilter
 end
 
 activate X509AuthenticationFilter
-X509AuthenticationFilter -> DynamicUserDetailsService : loadUserByUsername(CN)
-activate DynamicUserDetailsService
-
-alt CN is new and allowed (e.g. /generate-key)
-    DynamicUserDetailsService -> KnownClientStore : addClient(CN)
-else CN is unknown and not allowed
-    DynamicUserDetailsService --> X509AuthenticationFilter : throw UNKNOWN_CLIENT
-    X509AuthenticationFilter --> Client : 403 Forbidden
-    deactivate DynamicUserDetailsService
-    deactivate X509AuthenticationFilter
-    return
-end
-
-DynamicUserDetailsService --> X509AuthenticationFilter : UserDetails
-deactivate DynamicUserDetailsService
+X509AuthenticationFilter -> SecurityContext : extract CN from certificate
+SecurityContext -> SecurityContext : set Authentication (with CN as principal)
+X509AuthenticationFilter --> PrincipalRateLimitingFilter : forward request
 deactivate X509AuthenticationFilter
 
-X509AuthenticationFilter -> ClientAccessControlFilter : forward request
-activate ClientAccessControlFilter
-ClientAccessControlFilter -> KnownClientStore : isKnown(CN)
-
-alt unknown and not allowed endpoint
-    ClientAccessControlFilter --> Client : 403 Forbidden
-    deactivate ClientAccessControlFilter
+activate PrincipalRateLimitingFilter
+PrincipalRateLimitingFilter -> PrincipalRateLimitingFilter : check rate for CN
+alt too many requests
+    PrincipalRateLimitingFilter --> Client : 429 Too Many Requests
+    deactivate PrincipalRateLimitingFilter
     return
-else known or allowed endpoint
-    ClientAccessControlFilter -> CryptoController : proceed to controller
-    deactivate ClientAccessControlFilter
+else within limit
+    PrincipalRateLimitingFilter -> CryptoController : forward request
+    deactivate PrincipalRateLimitingFilter
 end
+
+activate CryptoController
+CryptoController -> AuthService : authorizePathAccess(clientName, path)
+activate AuthService
+AuthService -> ClientKeyRegistry : hasClient(clientName)
+alt unknown client and restricted path
+    AuthService --> Client : 403 Forbidden
+    deactivate AuthService
+    deactivate CryptoController
+    return
+else known client or allowed path
+    AuthService --> CryptoController : authorization successful
+end
+deactivate AuthService
+
+CryptoController -> CryptoController : handle request (e.g. encrypt, generate key, etc.)
+deactivate CryptoController
 
 @enduml

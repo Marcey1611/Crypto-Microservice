@@ -134,6 +134,8 @@ public class ValidationService {
         this.jwtValidator.validateExpiration(expiration);
         final String keyAlias = claims.get("keyAlias", String.class);
         this.jwtValidator.validateKeyAlias(keyAlias, JWT_KEY_ALIAS_MAX_LENGTH);
+        final String issuedTo = claims.get("issuedTo", String.class);
+        this.jwtValidator.validateIssuedTo(issuedTo, ISSUED_TO_MAX_LENGTH);
         final String algorithm = header.getAlgorithm();
         this.jwtValidator.validateAlgorithmFromHeader(algorithm, JWT_ALGORITHM_MAX_LENGTH);
     }

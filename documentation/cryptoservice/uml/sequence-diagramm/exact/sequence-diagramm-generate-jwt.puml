@@ -19,7 +19,6 @@ participant CharsetValidator #CCE5FF
 participant ControlCharValidator #CCE5FF
 participant WhitelistValidator #CCE5FF
 participant AuthService #CCE5FF
-participant AuthRegistry #CCE5FF
 participant JwtManagementFacade #F9D5E5
 participant ModelsFactory #FFE5B4
 participant JwtManagementService #DFFFD6
@@ -38,6 +37,10 @@ activate JwtManagementAPI
 JwtManagementAPI -> Controller : generateJwtPost(generateJwtRequest, principal)
 activate Controller
 
+
+
+group Validation
+
 Controller -> ValidationService : validateGenerateJwtRequest(generateJwtRequest)
 activate ValidationService
 ValidationService -> NullOrBlankValidator : validateNullOrBlank(issuedTo, FieldName.ISSUED_TO)
@@ -49,11 +52,21 @@ ValidationService -> WhitelistValidator : validateWhitelist(issuedTo, FieldName.
 ValidationService -> Controller : void
 deactivate ValidationService
 
+end
+
+
+
+group Authorization
+
 Controller -> AuthService : authGenerateJwtRequest(clientName)
 activate AuthService
 AuthService -> ClientKeyRegistry : hasClient(clientName)
 AuthService -> Controller : void
 deactivate AuthService
+
+end
+
+
 
 Controller -> JwtManagementFacade : generateJwt(clientName)
 activate JwtManagementFacade
@@ -62,6 +75,10 @@ JwtManagementFacade -> ModelsFactory : buildGenerateJwtModel(generateJwtRequest,
 activate ModelsFactory
 ModelsFactory --> JwtManagementFacade : GenerateKeyModel
 deactivate ModelsFactory
+
+
+
+group JWTGenerationProcess
 
 JwtManagementFacade -> JwtManagementService : generateJwt(generateJwtModel)
 activate JwtManagementService
@@ -89,6 +106,10 @@ deactivate ResultModelsFactory
 JwtManagementService --> JwtManagementFacade : GenerateJwtResultModel
 deactivate JwtManagementService
 
+end
+
+
+
 JwtManagementFacade -> ResponseFactory : buildGenerateJwtResponse(resultModel)
 activate ResponseFactory
 ResponseFactory --> JwtManagementFacade : ResponseEntity<GenerateJwtResponse>
@@ -100,10 +121,10 @@ deactivate JwtManagementFacade
 Controller --> JwtManagementAPI : ResponseEntity<GenerateJwtResponse>
 deactivate Controller
 
-JwtManagementAPI --> SecurityLayer : ResponseEntity<GenerateKeyResponse>
-deactivate KeyManagementAPI
+JwtManagementAPI --> SecurityLayer : ResponseEntity<GenerateJwtResponse>
+deactivate JwtManagementAPI
 
-SecurityLayer --> Client : ResponseEntity<GenerateKeyResponse>
+SecurityLayer --> Client : ResponseEntity<GenerateJwtResponse>
 deactivate SecurityLayer
 
 @enduml

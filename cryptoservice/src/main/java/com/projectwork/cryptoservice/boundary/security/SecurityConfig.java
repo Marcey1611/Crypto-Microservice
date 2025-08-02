@@ -6,6 +6,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.authority.AuthorityUtils;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.intercept.FilterSecurityInterceptor;
 import org.springframework.security.web.context.SecurityContextHolderFilter;
@@ -27,9 +30,13 @@ import org.springframework.security.web.context.SecurityContextHolderFilter;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final DynamicUserDetailsService userDetailsService;
     private final IpRateLimitingFilter ipRateLimitingFilter;
     private final PrincipalRateLimitingFilter principalRateLimitingFilter;
+
+    @Bean
+    public UserDetailsService userDetailsService() {
+        return username -> new User(username, "", AuthorityUtils.NO_AUTHORITIES);
+    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(final HttpSecurity http) throws Exception {
@@ -39,7 +46,7 @@ public class SecurityConfig {
                 )
                 .x509(x509 -> x509
                         .subjectPrincipalRegex("CN=(.*?)(?:,|$)")
-                        .userDetailsService(userDetailsService)
+                        .userDetailsService(userDetailsService())
                 )
                 .addFilterBefore(ipRateLimitingFilter, SecurityContextHolderFilter.class)
                 .addFilterAfter(principalRateLimitingFilter, FilterSecurityInterceptor.class)
@@ -47,4 +54,5 @@ public class SecurityConfig {
 
         return http.build();
     }
+
 }

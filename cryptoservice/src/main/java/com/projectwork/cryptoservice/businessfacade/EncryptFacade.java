@@ -32,7 +32,7 @@ public class EncryptFacade {
      */
     public final ResponseEntity<EncryptResponse> processEncryption(final EncryptRequest encryptRequest, final String clientName) {
         final EncryptModel encryptModel = this.modelsFactory.buildEncryptModel(encryptRequest, clientName);
-        final EncryptResultModel encryptResultModel = this.encryptService.encrypt(encryptModel, clientName);
+        final EncryptResultModel encryptResultModel = this.encryptService.encrypt(encryptModel);
         return this.responseFactory.buildEncryptResponse(encryptResultModel);
     }
 }

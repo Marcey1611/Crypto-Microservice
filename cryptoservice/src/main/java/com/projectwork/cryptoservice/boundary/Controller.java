@@ -66,6 +66,7 @@ public class Controller implements EncryptAPI, DecryptAPI, KeyManagementAPI, Jwt
     public final ResponseEntity<GenerateKeyResponse> generateKeyPost(final Principal principal) {
         final String clientName = principal.getName();
         LOGGER.info("Key generation requested by client '{}'.", clientName);
+
         final ResponseEntity<GenerateKeyResponse> response = this.keyManagementFacade.generateKey(clientName);
         LOGGER.info("Key successfully generated for client '{}'.\n\n\n", clientName);
         return response;

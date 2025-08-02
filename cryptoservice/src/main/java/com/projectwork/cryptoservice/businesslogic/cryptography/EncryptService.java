@@ -49,10 +49,10 @@ public class EncryptService {
     /**
      * Encrypts a plain text for a given client.
      * @param encryptModel The model containing plain text and JWT.
-     * @param clientName The name of the client.
      * @return The result of the encryption.
      */
-    public final EncryptResultModel encrypt(final EncryptModel encryptModel, final String clientName) {
+    public final EncryptResultModel encrypt(final EncryptModel encryptModel) {
+        final String clientName = encryptModel.getClientName();
         LOGGER.info("Starting encryption process for client '{}'.", clientName);
 
         final String jwt = encryptModel.getJwt();

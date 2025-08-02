@@ -27,33 +27,10 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class AuthService {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(AuthService.class);
-
     private final ClientKeyRegistry clientKeyRegistry;
     private final AuthRegistry authRegistry;
     private final JwtManagementService jwtManagementService;
     private final ErrorHandler errorHandler;
-
-    public void authorizePathAccess(final String clientName, final String path) {
-        LOGGER.debug("Authorizing access for client '{}' to path '{}'", clientName, path);
-
-        final boolean isNewClient = !clientKeyRegistry.hasClient(clientName);
-        final boolean pathAllowsNewClients = path.equals("/crypto/keys/generate") || path.equals("/crypto/decrypt");
-
-        if (isNewClient) {
-            if (pathAllowsNewClients) {
-                LOGGER.info("New client, path allows access for new clients.");
-            } else {
-                LOGGER.warn("New client access denied for path '{}'.", path);
-                throw this.errorHandler.handleForbiddenError(
-                        ErrorCode.FORBIDDEN_NEW_CLIENT_ACCESS,
-                        "New client access is not allowed for the requested path."
-                );
-            }
-        } else {
-            LOGGER.debug("Known client, access granted.");
-        }
-    }
 
     /**
      * Authenticates a request to generate a JWT for a given client.
@@ -78,7 +55,7 @@ public class AuthService {
     public void authEncryptRequest(final EncryptRequest encryptRequest, final String clientName) {
         final String jwt = encryptRequest.getJwt();
         final String issuedTo = jwtManagementService.extractIssuedTo(jwt);
-        final String keyAlias = clientKeyRegistry.getKeyAliasForClient(clientName);
+        final String keyAlias = jwtManagementService.extractClientKeyAlias(jwt);
 
         if (!clientKeyRegistry.hasClient(clientName)) {
             throw this.errorHandler.handleAuthError(
