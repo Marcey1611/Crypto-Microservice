@@ -33,6 +33,29 @@ activate KeyManagementAPI
 KeyManagementAPI -> Controller : generateKeyPost(principal)
 activate Controller
 
+
+
+group Validation
+
+Controller -> ValidationService : validateGenerateKeyRequest(clientName)
+activate ValidationService
+
+ValidationService -> ValidationService : validateClientName(clientName)
+
+ValidationService -> NullOrBlankValidator : validateNullOrBlank(clientName, FieldName.CLIENT_NAME)
+ValidationService -> LengthValidator : validateLength(clientName, CLIENT_NAME_MAX_LENGTH, FieldName.CLIENT_NAME)
+ValidationService -> AsciiValidator : validateAscii(clientName, FieldName.CLIENT_NAME)
+ValidationService -> CharsetValidator : validateCharset(clientName, FieldName.CLIENT_NAME)
+ValidationService -> ControlCharValidator : validateControlChars(clientName, FieldName.CLIENT_NAME)
+ValidationService -> WhitelistValidator : validateWhitelist(clientName, FieldName.CLIENT_NAME, false)
+
+ValidationService --> Controller : void
+deactivate ValidationService
+
+end
+
+
+
 Controller -> KeyManagementFacade : generateKey(clientName)
 activate KeyManagementFacade
 

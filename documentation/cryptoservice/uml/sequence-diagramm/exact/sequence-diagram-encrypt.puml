@@ -62,12 +62,30 @@ KeyStoreHelper -> KeyStoreHelper : getKey(keyStore, alias, keyStorePassword)
 KeyStoreHelper --> ValidationService : SecretKey
 deactivate KeyStoreHelper
 
+ValidationService -> ValidationService : validateClientName(clientName)
+
+ValidationService -> NullOrBlankValidator : validateNullOrBlank(clientName, FieldName.CLIENT_NAME)
+ValidationService -> LengthValidator : validateLength(clientName, CLIENT_NAME_MAX_LENGTH, FieldName.CLIENT_NAME)
+ValidationService -> AsciiValidator : validateAscii(clientName, FieldName.CLIENT_NAME)
+ValidationService -> CharsetValidator : validateCharset(clientName, FieldName.CLIENT_NAME)
+ValidationService -> ControlCharValidator : validateControlChars(clientName, FieldName.CLIENT_NAME)
+ValidationService -> WhitelistValidator : validateWhitelist(clientName, FieldName.CLIENT_NAME, false)
+
 ValidationService -> NullOrBlankValidator : validateNullOrBlank(issuedTo, FieldName.ISSUED_TO)
 ValidationService -> LengthValidator : validateLength(issuedTo, ISSUED_TO_MAX_LENGTH, FieldName.ISSUED_TO)
 ValidationService -> AsciiValidator : validateAscii(issuedTo, FieldName.ISSUED_TO)
 ValidationService -> CharsetValidator : validateCharset(issuedTo, FieldName.ISSUED_TO)
 ValidationService -> ControlCharValidator : validateControlChars(issuedTo, FieldName.ISSUED_TO)
 ValidationService -> WhitelistValidator : validateWhitelist(issuedTo, FieldName.ISSUED_TO, false)
+
+ValidationService -> ValidationService : validateJwt(jwt, key)
+
+ValidationService -> NullOrBlankValidator : validateNullOrBlank(jwt, FieldName.JWT)
+ValidationService -> LengthValidator : validateLength(jwt, JWT_MAX_LENGTH, FieldName.JWT)
+ValidationService -> AsciiValidator : validateAscii(jwt, FieldName.JWT)
+ValidationService -> CharsetValidator : validateCharset(jwt, FieldName.JWT)
+ValidationService -> ControlCharValidator : validateControlChars(jwt, FieldName.JWT)
+ValidationService -> WhitelistValidator : validateWhitelist(jwt, FieldName.JWT, false)
 
 ValidationService -> JwtValidator : validateJwtPattern(jwt)
 activate JwtValidator

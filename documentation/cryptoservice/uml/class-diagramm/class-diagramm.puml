@@ -23,133 +23,179 @@ package cryptoservice {
             }
         }
 
-        package security {
-            class DynamicUserDetailsService {
-                -knownClientStore: KnownClientStore
-                -request: HttpServletRequest
-                -errorHandler: ErrorHandler
+        package authorization {
+            class AuthRegistry {
+                -LOGGER: Logger
+                -authRegistry: Map<String, String>
                 --
-                +loadUserByUsername(username: String): UserDetails
-                -isNewClient(username: String, path: String): boolean
+                +registerKeyAlias(keyAlias: String, allowedClients: Set<String>): void
+                +grantAccess(keyAlias: String, clientName: String): void
+                +revokeAccess(keyAlias: String, clientName: String): void
+                +isAccessAllowed(keyAlias: String, clientName: String): boolean
             }
 
-            class KnownClientStore {
-                -knownClients: Set<String>
+            class AuthService {
+                -clientKeyRegistry: ClientKeyRegistry
+                -authRegistry: AuthRegistry
+                -jwtManagementService: JwtManagementService
+                -errorHandler: ErrorHandler
                 --
-                +isKnown(cn: String): boolean
-                +addClient(cn: String): void
+                +authGenerateJwtRequest(clientName: String): void
+                +authEncryptRequest(encryptRequest: EncryptRequest, clientName: String): void
+                +authDecryptRequest(decryptRequest: DecryptRequest, clientName: String): void
+            }
+        }
+
+        package security {
+            class IpRateLimitingFilter {
+                - LOGGER: Logger
+                - MAX_REQUESTS_PER_MINUTE: int
+                - TIME_WINDOW_MS: long
+                - requestMap: Map<String, RequestCounter>
+                --
+                + doFilter(request: ServletRequest, response: ServletResponse, chain: FilterChain): void
+                - getClientIp(request: HttpServletRequest): String
+            }
+
+            class PrincipalRateLimitingFilter {
+                - MAX_REQUESTS_PER_MINUTE: int
+                - TIME_WINDOW_MS: long
+                - LOGGER: Logger
+                - requestMap: Map<String, RequestCounter>
+                --
+                + doFilterInternal(request: HttpServletRequest, response: HttpServletResponse, filterChain: FilterChain): void
             }
 
             class SecurityConfig {
-                +securityFilterChain(http: HttpSecurity): SecurityFilterChain
+                - ipRateLimitingFilter: IpRateLimitingFilter
+                - principalRateLimitingFilter: PrincipalRateLimitingFilter
+                --
+                + userDetailsService(): UserDetailsService
+                + securityFilterChain(http: HttpSecurity): SecurityFilterChain
             }
         }
 
         package validation {
-            class DecryptValidator {
-                -JWT_MAX_LENGTH: int
-                -CIPHER_TEXT_MAX_LENGTH: int
-                --
-                -validationService: ValidationService
-                -keyStoreHelper: KeyStoreHelper
-                --
-                +validateDecryptRequest(request: DecryptRequest): void
+            package rule {
+                class AsciiValidator {
+                    - errorHandler: ErrorHandler
+                    --
+                    + validateAscii(field: String, name: FieldName): void
+                }
+
+                class Base64Validator {
+                    - errorHandler: ErrorHandler
+                    --
+                    + validateBase64(input: String, name: FieldName): void
+                }
+
+                class CharsetValidator {
+                    - errorHandler: ErrorHandler
+                    --
+                    + validateCharset(input: String, name: FieldName): void
+                }
+
+                class ControlCharValidator {
+                    - errorHandler: ErrorHandler
+                    --
+                    + validateControlChars(input: String, name: FieldName): void
+                }
+
+                class JwtValidator {
+                    - errorHandler: ErrorHandler
+                    - asciiValidator: AsciiValidator
+                    - charsetValidator: CharsetValidator
+                    - controlCharValidator: ControlCharValidator
+                    - lengthValidator: LengthValidator
+                    - nullOrBlankValidator: NullOrBlankValidator
+                    - whitelistValidator: WhitelistValidator
+                    --
+                    + validateJwtPattern(jwt: String): void
+                    + validateSignature(jwt: String, key: SecretKey): Jws<Claims>
+                    + validateExpiration(expiration: Date): void
+                    + validateAlgorithmFromHeader(algorithm: String, maxLength: int): void
+                    + validateKeyAlias(alias: String, maxLength: int): void
+                    + validateIssuedTo(issuedTo: String, maxLength: int): void
+                }
+
+                class LengthValidator {
+                    - errorHandler: ErrorHandler
+                    --
+                    + validateLength(input: String, maxLength: int, name: FieldName): void
+                }
+
+                class NullOrBlankValidator {
+                    - errorHandler: ErrorHandler
+                    --
+                    + validateNullOrBlank(field: String, name: FieldName): void
+                }
+
+                class WhitelistValidator {
+                    - errorHandler: ErrorHandler
+                    - WHITELIST: Pattern
+                    - EXTENDED_WHITELIST: Pattern
+                    --
+                    + validateWhitelist(field: String, name: FieldName, extended: boolean): void
+                }
             }
 
-            class EncodingValidator {
-                -errorHandler: ErrorHandler
+            class FieldName {
+                + getValue(): String
                 --
-                +validateNoUnicodeEscapes(field: String, name: FieldName): void
-            }
-
-            class EncryptValidator {
-                -PLAIN_TEXT_MAX_LENGTH: int
-                -JWT_MAX_LENGTH: int
-                --
-                -validationService: ValidationService
-                -keyStoreHelper: KeyStoreHelper
-                --
-                +validateEncryptRequest(request: EncryptRequest): void
-            }
-
-            enum FieldName {
-                +CIPHER_TEXT
-                +JWT
-                +PLAIN_TEXT
-                +ISSUED_TO
-                +ALGORITHM_HEADER
-                +KEY_ALIAS
-                --
-                -value: String
-                +getValue(): String
-            }
-
-            class FieldValidator {
-                -WHITELIST: Pattern
-                -EXTENDED_WHITELIST: Pattern
-                -errorHandler: ErrorHandler
-                --
-                +validateNotBlank(field: String, name: FieldName): void
-                +validateMaxLength(field: String, maxLength: int, name: FieldName): void
-                +validateWhitelist(field: String, name: FieldName): void
-                +validateExtendedWhitelist(field: String, name: FieldName): void
-            }
-
-            class JwtClaimsValidator {
-                -MAX_LENGTH: int
-                -fieldValidator: FieldValidator
-                -encodingValidator: EncodingValidator
-                -errorHandler: ErrorHandler
-                --
-                +validateAlgorithmFromHeader(alg: String): void
-                +validateKeyAlias(alias: String): void
-            }
-
-            class JwtManagementValidator {
-                -ISSUED_TO_MAX_LENGTH: int
-                -validationService: ValidationService
-                --
-                +validateGenerateJwtRequest(request: GenerateJwtRequest): void
-            }
-
-            class JwtValidator {
-                -JWT_PATTERN: Pattern
-                -errorHandler: ErrorHandler
-                --
-                +validateJwtPattern(jwt: String): void
-                +validateSignature(jwt: String, key: SecretKey): Jws<Claims>
-                +validateExpiration(expiration: Date): void
+                + CIPHER_TEXT
+                + JWT
+                + PLAIN_TEXT
+                + ISSUED_TO
+                + ALGORITHM_HEADER
+                + KEY_ALIAS
+                + CLIENT_NAME
             }
 
             class ValidationService {
-                -fieldValidator: FieldValidator
-                -encodingValidator: EncodingValidator
-                -jwtValidator: JwtValidator
-                -jwtClaimsValidator: JwtClaimsValidator
+                - int ISSUED_TO_MAX_LENGTH = 64
+                - int CLIENT_NAME_MAX_LENGTH = 64
+                - int PLAIN_TEXT_MAX_LENGTH = 2048
+                - int CIPHER_TEXT_MAX_LENGTH = 2048
+                - int JWT_MAX_LENGTH = 4096
+                - int JWT_ALGORITHM_MAX_LENGTH = 64
+                - int JWT_KEY_ALIAS_MAX_LENGTH = 64
+
+                - KeyStoreHelper keyStoreHelper
+                - AsciiValidator asciiValidator
+                - CharsetValidator charsetValidator
+                - ControlCharValidator controlCharValidator
+                - LengthValidator lengthValidator
+                - NullOrBlankValidator nullOrBlankValidator
+                - WhitelistValidator whitelistValidator
+                - JwtValidator jwtValidator
+                - Base64Validator base64Validator
+
+                - String masterKeystorePath
+                - String masterKeystorePassword
                 --
-                +validateText(text: String, name: FieldName, maxLength: int, extended: boolean): void
-                +validateTextWithoutWhitelist(text: String, name: FieldName, maxLength: int): void
-                +validateJwt(jwt: String, key: SecretKey): void
+                + void validateGenerateKeyRequest(String clientName)
+                + void validateGenerateJwtRequest(GenerateJwtRequest req, String clientName)
+                + void validateEncryptRequest(EncryptRequest req, String clientName)
+                + void validateDecryptRequest(DecryptRequest req, String clientName)
+
+                - void validateJwt(String jwt, SecretKey key)
+                - void validateClientName(String clientName)
             }
         }
 
         class Controller {
-            -encryptFacade: EncryptFacade
-            -decryptFacade: DecryptFacade
-            -keyManagementFacade: KeyManagementFacade
-            -jwtManagementFacade: JwtManagementFacade
-            -encryptValidator: EncryptValidator
-            -decryptValidator: DecryptValidator
-            -jwtManagementValidator: JwtManagementValidator
-            -clientKeyRegistry: ClientKeyRegistry
-            -errorHandler: ErrorHandler
+            - static Logger LOGGER
+            - EncryptFacade encryptFacade
+            - DecryptFacade decryptFacade
+            - KeyManagementFacade keyManagementFacade
+            - JwtManagementFacade jwtManagementFacade
+            - ValidationService validationService
+            - AuthService authService
             --
-            +encryptPost(encryptRequest, principal): ResponseEntity<EncryptResponse>
-            +decryptPost(decryptRequest, principal): ResponseEntity<DecryptResponse>
-            +generateKeyPost(principal): ResponseEntity<GenerateKeyResponse>
-            +generateJwtPost(generateJwtRequest, principal): ResponseEntity<GenerateJwtResponse>
-            -checkClientNameExists(clientName): void
-            -resolveClientName(principal): String
+            + ResponseEntity<GenerateKeyResponse> generateKeyPost(Principal)
+            + ResponseEntity<GenerateJwtResponse> generateJwtPost(GenerateJwtRequest, Principal)
+            + ResponseEntity<EncryptResponse> encryptPost(EncryptRequest, Principal)
+            + ResponseEntity<DecryptResponse> decryptPost(DecryptRequest, Principal)
         }
     }
 
@@ -190,47 +236,53 @@ package cryptoservice {
     package businesslogic {
         package cryptography {
             class CryptoUtility {
-                    -errorHandler: ErrorHandler
-                    --
-                    +createCipher(): Cipher
-                    +createGCMParameterSpec(iv: byte[]): GCMParameterSpec
-                    +initCipher(cipher: Cipher, key: SecretKey, spec: GCMParameterSpec, opmode: int): void
+                - static Logger LOGGER
+                - static String ENCRYPTION_ALGORITHM = "AES/GCM/NoPadding"
+                - static int GCM_TAG_LENGTH = 128
+                - ErrorHandler errorHandler
+                --
+                + Cipher createCipher()
+                + GCMParameterSpec createGCMParameterSpec(byte[])
+                + void initCipher(Cipher, SecretKey, GCMParameterSpec, int)
             }
 
             class DecryptService {
-                - jwtManagementService: JwtManagementService
-                - keyStoreHelper: KeyStoreHelper
-                - clientKeyRegistry: ClientKeyRegistry
-                - resultModelsFactory: ResultModelsFactory
-                - errorHandler: ErrorHandler
-                - cryptoUtility: CryptoUtility
+                - Logger LOGGER
+                - JwtManagementService jwtManagementService
+                - KeyStoreHelper keyStoreHelper
+                - ClientKeyRegistry clientKeyRegistry
+                - ResultModelsFactory resultModelsFactory
+                - ErrorHandler errorHandler
+                - CryptoUtility cryptoUtility
+                - String clientKeystorePath
+                - String clientKeystorePassword
                 --
-                +decrypt(decryptModel: DecryptModel, clientName: String): DecryptResultModel
-                -validateClientName(decryptModel: DecryptModel, clientName: String): void
-                -extractKeyAlias(decryptModel: DecryptModel): String
-                -retrieveClientKey(keyAlias: String): SecretKey
-                -mapKeyAliasToClientName(keyAlias: String): String
-                -retrieveIvForClient(clientNameFromKeyAlias: String): byte[]
-                -processDecryption(iv: byte[], clientKey: SecretKey, cipherText: String): String
-                -decodeCipherText(cipherText: String): byte[]
-                -decryptCipherText(cipher: Cipher, cipherTextBytes: byte[]): String
+                + DecryptResultModel decrypt(DecryptModel decryptModel)
+                - SecretKey retrieveClientKey(String keyAlias)
+                - String mapKeyAliasToClientName(String keyAlias)
+                - byte[] retrieveIvForClient(String clientNameFromKeyAlias)
+                - String processDecryption(byte[] iv, SecretKey clientKey, String cipherText, String clientName)
+                - byte[] decodeCipherText(String cipherText)
+                - String decryptCipherText(Cipher cipher, byte[] cipherTextBytes)
             }
 
             class EncryptService {
-                - keyStoreHelper: KeyStoreHelper
-                - jwtManagementService: JwtManagementService
-                - clientKeyRegistry: ClientKeyRegistry
-                - resultModelsFactory: ResultModelsFactory
-                - errorHandler: ErrorHandler
-                - cryptoUtility: CryptoUtility
+                - Logger LOGGER
+                - KeyStoreHelper keyStoreHelper
+                - JwtManagementService jwtManagementService
+                - ClientKeyRegistry clientKeyRegistry
+                - ResultModelsFactory resultModelsFactory
+                - ErrorHandler errorHandler
+                - CryptoUtility cryptoUtility
+                - String clientKeystorePath
+                - String clientKeystorePassword
                 --
-                +encrypt(encryptModel: EncryptModel, clientName: String): EncryptResultModel
-                -validateKeyAlias(keyAlias: String, clientName: String): void
-                -getClientKey(keyAlias: String): SecretKey
-                -generateIV(): byte[]
-                -encryptPlainText(iv: byte[], clientKey: SecretKey, plainText: String): String
-                -encryptData(cipher: Cipher, plainText: String): byte[]
-                -encodeBase64(encryptedData: byte[]): String
+                + EncryptResultModel encrypt(EncryptModel encryptModel)
+                - SecretKey getClientKey(String keyAlias)
+                - String encryptPlainText(byte[] iv, SecretKey clientKey, String plainText, String issuedTo)
+                - byte[] encryptData(Cipher cipher, String plainText)
+                - String encodeBase64(byte[] encryptedData)
+                - byte[] generateIV()
             }
         }
 
@@ -240,6 +292,8 @@ package cryptoservice {
                 -keyStoreHelper: KeyStoreHelper
                 -clientKeyRegistry: ClientKeyRegistry
                 -errorHandler: ErrorHandler
+                - String masterKeystorePath
+                - String masterKeystorePassword
                 --
                 +generateJwt(generateJwtModel: GenerateJwtModel): GenerateJwtResultModel
                 +extractClientKeyAlias(jwtToken: String): String
@@ -249,6 +303,7 @@ package cryptoservice {
 
         package keymanagement {
             class ClientKeyEncryptor {
+                -LOGGER: Logger
                 -errorHandler: ErrorHandler
                 --
                 +encrypt(clientKey: SecretKey, masterKey: SecretKey): byte[]
@@ -256,6 +311,7 @@ package cryptoservice {
             }
 
             class ClientKeyRegistry {
+                -LOGGER: Logger
                 -clientKeyDataFactory: ClientKeyDataFactory
                 -clientKeyDataMap: Map<String, ClientKeyData>
                 -errorHandler: ErrorHandler
@@ -267,23 +323,28 @@ package cryptoservice {
                 +getClientNameByKeyAlias(keyAlias: String): String
                 +getIvForClient(clientName: String): byte[]
                 +updateIvForClient(clientName: String, iv: byte[]): void
+                +hasKeyAlias(keyAlias: String): boolean
             }
 
             class KeyCleanupTask {
+                -LOGGER: Logger
                 -clientKeyRegistry: ClientKeyRegistry
                 -expirationChecker: KeyExpirationChecker
                 -keyStoreLoader: KeyStoreLoader
                 -errorHandler: ErrorHandler
+                - String clientKeystorePath
+                - String clientKeystorePassword
                 --
                 +cleanupKeysPeriodically(): void
                 +cleanupExpiredKeys(): void
                 -findExpiredAliases(keystore: KeyStore): List<String>
                 -getAliases(keystore: KeyStore): Enumeration<String>
-                -isReservedAlias(alias: String): boolean
                 -deleteExpiredKeys(keystore: KeyStore, aliasesToDelete: List<String>): void
             }
 
             class KeyExpirationChecker {
+                -LOGGER: Logger
+                -EXPIRATION_TIME_MILLIS: long
                 -errorHandler: ErrorHandler
                 --
                 +isExpired(keystore: KeyStore, alias: String): boolean
@@ -293,11 +354,14 @@ package cryptoservice {
             }
 
             class KeyManagementService {
+                -LOGGER: Logger
                 -KEY_SIZE: int
                 -keyStoreHelper: KeyStoreHelper
                 -resultModelsFactory: ResultModelsFactory
                 -clientKeyRegistry: ClientKeyRegistry
                 -errorHandler: ErrorHandler
+                - String clientKeystorePath
+                - String clientKeystorePassword
                 --
                 +generateKey(model: GenerateKeyModel): GenerateKeyResultModel
                 -generateRandomKey(): SecretKey
@@ -305,47 +369,60 @@ package cryptoservice {
             }
 
             class KeyStoreHelper {
-                -loader: KeyStoreLoader
-                -masterKeyService: MasterKeyService
-                -encryptor: ClientKeyEncryptor
-                -errorHandler: ErrorHandler
+                - Logger LOGGER
+                - KeyStoreLoader loader
+                - MasterKeyService masterKeyService
+                - ClientKeyEncryptor encryptor
+                - ErrorHandler errorHandler
                 --
-                +storeKey(alias, clientKey): void
-                +getClientKey(alias): SecretKey
-                +getKey(alias): SecretKey
-                -storeWrappedKey(ks, alias, encrypted): void
-                -getKey(ks, alias): SecretKey
+                + void storeKey(String keyAlias, byte[] key, String keystorePath, String keystorePassword)
+                + void storeClientKey(String keyAlias, SecretKey clientKey, String keystorePath, String keystorePassword)
+                + SecretKey getClientKey(String alias, String keystorePath, String keystorePassword)
+                + SecretKey getKey(String alias, String keystorePath, String keystorePassword)
+                - void setKeystoreEntry(KeyStore ks, String alias, byte[] key, String keystorePassword)
+                - SecretKey getKey(KeyStore ks, String alias, String keystorePassword)
             }
 
             class KeyStoreInitializer {
-                -keyStoreHelper: KeyStoreHelper
-                -keyStoreLoader: KeyStoreLoader
-                -errorHandler: ErrorHandler
+                - static int KEY_SIZE
+                - static Logger LOGGER
+                - KeyStoreHelper keyStoreHelper
+                - KeyStoreLoader keyStoreLoader
+                - ErrorHandler errorHandler
+                - String masterKeystorePath
+                - String masterKeystorePassword
+                - String clientKeystorePath
+                - String clientKeystorePassword
                 --
-                +initKeyStore(): void
-                -checkContainsAlias(alias): boolean
-                -initJwtSigningKey(): void
-                -initMasterKey(): void
+                + void initKeyStore()
+                - boolean checkContainsAlias(String alias)
+                - void initJwtSigningKey()
+                - void initMasterKey()
+                - void validateFileExists(String path)
+                - KeyStore validateAccessToKeyStore(String path, String password)
+                - void validateMasterKeyStoreNotEmpty(KeyStore keystore, String path)
             }
 
             class KeyStoreLoader {
-                -KEYSTORE_PATH: String
-                -KEYSTORE_PASSWORD: String
+                -Logger LOGGER
                 -errorHandler: ErrorHandler
                 --
-                +load(): KeyStore
-                +save(keystore: KeyStore): void
+                +load(path: String, password: String): KeyStore
+                +save(keystore: KeyStore, path: String, password: String): void
             }
 
             class MasterKeyRotationTask {
+                -LOGGER: Logger
                 -KEY_SIZE: int
                 -keyStoreLoader: KeyStoreLoader
                 -masterKeyService: MasterKeyService
                 -errorHandler: ErrorHandler
+                - String masterKeystorePath
+                - String masterKeystorePassword
+                - String clientKeystorePath
+                - String clientKeystorePassword
                 --
                 +rotateMasterKey(): void
-                --
-                -getPassword(): char[]
                 -generateNewMasterKey(): SecretKey
                 -getClientKeyAliases(keystore: KeyStore): List<String>
                 -rewrapClientKeys(keystore, oldMasterKey, newMasterKey, aliases, passwordChars)
@@ -356,9 +433,13 @@ package cryptoservice {
             }
 
             class MasterKeyService {
+                -LOGGER: Logger
                 -errorHandler: ErrorHandler
+                -loader: KeyStoreLoader
+                -masterKeystorePath: String
+                -masterKeystorePassword: String
                 --
-                +retrieveMasterKey(keystore: KeyStore): SecretKey
+                +retrieveMasterKey(): SecretKey
             }
         }
     }
@@ -486,7 +567,15 @@ package cryptoservice {
                 + geHttpStatus(): HttpStatus
             }
 
+            class ForbiddenException {
+                + geHttpStatus(): HttpStatus
+            }
+
             class InternalServerErrorException {
+                + geHttpStatus(): HttpStatus
+            }
+
+            class UnauthorizedException {
                 + geHttpStatus(): HttpStatus
             }
         }
@@ -527,9 +616,19 @@ package cryptoservice {
             }
 
             class ErrorHandler {
-                -LOGGER
-                +handleError(...)
-                +logError(ErrorDetail)
+                - static final Logger LOGGER
+                --
+                + RuntimeException handleBusinessError(errorCode: ErrorCode, logMsgExtension: String, context: String, exception: Throwable)
+                + RuntimeException handleBusinessError(errorCode: ErrorCode, context: String, exception: Throwable)
+                + RuntimeException handleBusinessError(context: String, errorCode: ErrorCode)
+                + RuntimeException handleClientError(errorCode: ErrorCode, exception: Throwable, context: String)
+                + RuntimeException handleClientError(errorCode: ErrorCode, userMsgExtension: String, context: String)
+                + RuntimeException handleClientError(logMsgExtension: String, errorCode: ErrorCode, context: String)
+                + RuntimeException handleClientError(errorCode: ErrorCode, context: String)
+                + RuntimeException handleClientError(context: String, userAndLogMsgExtension: String, errorCode: ErrorCode)
+                + RuntimeException handleAuthError(errorCode: ErrorCode, context: String)
+                + RuntimeException handleForbiddenError(errorCode: ErrorCode, context: String)
+                - void logError(errorDetail: ErrorDetail)
             }
 
             class ErrorResponse {
@@ -548,86 +647,93 @@ package cryptoservice {
         {static} +main(args: String[]): void
     }
 
-    DecryptAPI --> DecryptRequest : uses
+    DecryptAPI --> DecryptRequest : input
     DecryptAPI --> DecryptResponse : returns
 
-    EncryptAPI --> EncryptRequest : uses
+    EncryptAPI --> EncryptRequest : input
     EncryptAPI --> EncryptResponse : returns
 
-    JwtManagementAPI --> GenerateJwtRequest : uses
+    JwtManagementAPI --> GenerateJwtRequest : input
     JwtManagementAPI --> GenerateJwtResponse : returns
 
     KeyManagementAPI --> GenerateKeyResponse : returns
 
-    DynamicUserDetailsService --> KnownClientStore : uses
-    DynamicUserDetailsService --> ErrorHandler : uses
-    DynamicUserDetailsService --> ErrorCode : throws
+    AuthService --> ClientKeyRegistry : uses
+    AuthService --> AuthRegistry : uses
+    AuthService --> JwtManagementService : uses
+    AuthService --> ErrorHandler : uses
+    AuthService --> EncryptRequest : uses
+    AuthService --> DecryptRequest : uses
+    AuthService --> ErrorCode : uses
 
-    DecryptValidator --> ValidationService : uses
-    DecryptValidator --> KeyStoreHelper : uses
-    DecryptValidator --> DecryptRequest : validates
-    DecryptValidator --> FieldName : uses
+    SecurityConfig --> IpRateLimitingFilter : injects
+    SecurityConfig --> PrincipalRateLimitingFilter : injects
 
-    EncryptValidator --> ValidationService : uses
-    EncryptValidator --> KeyStoreHelper : uses
-    EncryptValidator --> EncryptRequest : validates
-    EncryptValidator --> FieldName : uses
+    AsciiValidator --> ErrorHandler : uses
+    AsciiValidator --> FieldName : uses
 
-    FieldValidator --> ErrorHandler : uses
-    FieldValidator --> ErrorCode : uses
-    FieldValidator --> FieldName : uses
-    FieldValidator --> BadRequestException : throws
+    Base64Validator --> ErrorHandler : uses
+    Base64Validator --> FieldName : uses
 
-    JwtClaimsValidator --> FieldValidator : uses
-    JwtClaimsValidator --> EncodingValidator : uses
-    JwtClaimsValidator --> ErrorHandler : uses
-    JwtClaimsValidator --> ErrorCode : uses
-    JwtClaimsValidator --> FieldName : uses
-    JwtClaimsValidator --> BadRequestException : throws
+    CharsetValidator --> ErrorHandler : uses
+    CharsetValidator --> FieldName : uses
 
-    JwtManagementValidator --> ValidationService : uses
-    JwtManagementValidator --> GenerateJwtRequest : validates
-    JwtManagementValidator --> FieldName : uses
+    ControlCharValidator --> ErrorHandler : uses
+    ControlCharValidator --> FieldName : uses
 
+    JwtValidator --> AsciiValidator : uses
+    JwtValidator --> CharsetValidator : uses
+    JwtValidator --> ControlCharValidator : uses
+    JwtValidator --> LengthValidator : uses
+    JwtValidator --> NullOrBlankValidator : uses
+    JwtValidator --> WhitelistValidator : uses
     JwtValidator --> ErrorHandler : uses
-    JwtValidator --> ErrorCode : uses
-    JwtValidator --> BadRequestException : throws
+    JwtValidator --> FieldName : uses
 
-    ValidationService --> FieldValidator : uses
-    ValidationService --> EncodingValidator : uses
+    LengthValidator --> ErrorHandler : uses
+    LengthValidator --> FieldName : uses
+
+    NullOrBlankValidator --> ErrorHandler : uses
+    NullOrBlankValidator --> FieldName : uses
+
+    WhitelistValidator --> ErrorHandler : uses
+    WhitelistValidator --> FieldName : uses
+
+    ValidationService --> KeyStoreHelper : uses
+    ValidationService --> AsciiValidator : uses
+    ValidationService --> CharsetValidator : uses
+    ValidationService --> ControlCharValidator : uses
+    ValidationService --> LengthValidator : uses
+    ValidationService --> NullOrBlankValidator : uses
+    ValidationService --> WhitelistValidator : uses
     ValidationService --> JwtValidator : uses
-    ValidationService --> JwtClaimsValidator : uses
-    ValidationService --> FieldName : uses
+    ValidationService --> Base64Validator : uses
+    ValidationService --> GenerateJwtRequest : input
+    ValidationService --> EncryptRequest : input
+    ValidationService --> DecryptRequest : input
 
-    Controller ..|> EncryptAPI
-    Controller ..|> DecryptAPI
-    Controller ..|> KeyManagementAPI
-    Controller ..|> JwtManagementAPI
-    Controller --> EncryptValidator : uses
-    Controller --> DecryptValidator : uses
-    Controller --> JwtManagementValidator : uses
+    Controller ..|> EncryptAPI : implements
+    Controller ..|> DecryptAPI : implements
+    Controller ..|> KeyManagementAPI : implements
+    Controller ..|> JwtManagementAPI : implements
+    Controller --> ValidationService : uses
+    Controller --> AuthService : uses
     Controller --> EncryptFacade : uses
     Controller --> DecryptFacade : uses
     Controller --> KeyManagementFacade : uses
     Controller --> JwtManagementFacade : uses
-    Controller --> EncryptRequest : param
+    Controller --> EncryptRequest : input
     Controller --> EncryptResponse : returns
-    Controller --> DecryptRequest : param
+    Controller --> DecryptRequest : input
     Controller --> DecryptResponse : returns
-    Controller --> GenerateJwtRequest : param
+    Controller --> GenerateJwtRequest : input
     Controller --> GenerateJwtResponse : returns
     Controller --> GenerateKeyResponse : returns
-    Controller --> ClientKeyRegistry : uses
-    Controller --> ErrorHandler : uses
-    Controller --> ErrorCode : uses
-    Controller --> ErrorDetail : uses
-    Controller --> ErrorDetailBuilder : uses
-    Controller --> BadRequestException : throws
 
     DecryptFacade --> DecryptService : uses
-    DecryptFacade --> ModelsFactory : builds model
-    DecryptFacade --> ResponseFactory : builds response
-    DecryptFacade --> DecryptRequest : receives
+    DecryptFacade --> ModelsFactory : uses
+    DecryptFacade --> ResponseFactory : uses
+    DecryptFacade --> DecryptRequest : input
     DecryptFacade --> DecryptModel : builds
     DecryptFacade --> DecryptResultModel : receives
     DecryptFacade --> DecryptResponse : returns
@@ -641,26 +747,48 @@ package cryptoservice {
     EncryptFacade --> EncryptResponse : returns
 
     JwtManagementFacade --> JwtManagementService : uses
-    JwtManagementFacade --> ModelsFactory : builds
-    JwtManagementFacade --> ResponseFactory : builds
+    JwtManagementFacade --> ModelsFactory : uses
+    JwtManagementFacade --> ResponseFactory : uses
     JwtManagementFacade --> GenerateJwtRequest : input
     JwtManagementFacade --> GenerateJwtModel : builds
     JwtManagementFacade --> GenerateJwtResultModel : receives
     JwtManagementFacade --> GenerateJwtResponse : returns
 
     KeyManagementFacade --> KeyManagementService : uses
-    KeyManagementFacade --> ModelsFactory : builds
-    KeyManagementFacade --> ResponseFactory : builds
+    KeyManagementFacade --> ModelsFactory : uses
+    KeyManagementFacade --> ResponseFactory : uses
     KeyManagementFacade --> GenerateKeyModel : builds
     KeyManagementFacade --> GenerateKeyResultModel : receives
     KeyManagementFacade --> GenerateKeyResponse : returns
+
+    CryptoUtility --> ErrorHandler : uses
+    CryptoUtility ..> ErrorCode : uses
+
+    DecryptService --> JwtManagementService : uses
+    DecryptService --> KeyStoreHelper : uses
+    DecryptService --> ClientKeyRegistry : uses
+    DecryptService --> ResultModelsFactory : uses
+    DecryptService --> ErrorHandler : uses
+    DecryptService --> CryptoUtility : uses
+    DecryptService --> DecryptModel : input
+    DecryptService --> DecryptResultModel : returns
+    DecryptService --> ErrorCode : uses
+
+    EncryptService --> KeyStoreHelper : uses
+    EncryptService --> JwtManagementService : uses
+    EncryptService --> ClientKeyRegistry : uses
+    EncryptService --> ResultModelsFactory : uses
+    EncryptService --> ErrorHandler : uses
+    EncryptService --> CryptoUtility : uses
+    EncryptService --> EncryptModel : input
+    EncryptService --> EncryptResultModel : returns
+    EncryptService --> ErrorCode : uses
 
     JwtManagementService --> ResultModelsFactory : uses
     JwtManagementService --> KeyStoreHelper : uses
     JwtManagementService --> ClientKeyRegistry : uses
     JwtManagementService --> ErrorHandler : uses
     JwtManagementService --> ErrorCode : uses
-    JwtManagementService --> InternalServerErrorException : throws
     JwtManagementService --> GenerateJwtModel : input
     JwtManagementService --> GenerateJwtResultModel : returns
 
@@ -668,15 +796,14 @@ package cryptoservice {
     ClientKeyEncryptor --> ErrorCode : uses
 
     ClientKeyRegistry --> ClientKeyDataFactory : builds
-    ClientKeyRegistry --> ClientKeyData : manages
+    ClientKeyRegistry --> ClientKeyData : uses
     ClientKeyRegistry --> ErrorHandler : uses
     ClientKeyRegistry --> ErrorCode : uses
-    ClientKeyRegistry --> BadRequestException : throws
 
-    KeyCleanupTask --> ClientKeyRegistry : removes
-    KeyCleanupTask --> KeyExpirationChecker : checks
-    KeyCleanupTask --> KeyStoreLoader : loads/saves
-    KeyCleanupTask --> ErrorHandler : handles
+    KeyCleanupTask --> ClientKeyRegistry : uses
+    KeyCleanupTask --> KeyExpirationChecker : uses
+    KeyCleanupTask --> KeyStoreLoader : uses
+    KeyCleanupTask --> ErrorHandler : uses
     KeyCleanupTask --> ErrorCode : uses
 
     KeyExpirationChecker --> ErrorHandler : uses
@@ -685,90 +812,73 @@ package cryptoservice {
     KeyManagementService --> KeyStoreHelper : uses
     KeyManagementService --> ClientKeyRegistry : uses
     KeyManagementService --> ResultModelsFactory : uses
-    KeyManagementService --> ErrorHandler : handles errors via
-    KeyManagementService --> ErrorCode : uses for error context
+    KeyManagementService --> ErrorHandler : uses
+    KeyManagementService --> ErrorCode : uses
     KeyManagementService --> GenerateKeyModel : input
-    KeyManagementService --> GenerateKeyResultModel : output
+    KeyManagementService --> GenerateKeyResultModel : returns
 
     KeyStoreHelper --> KeyStoreLoader : uses
     KeyStoreHelper --> MasterKeyService : uses
     KeyStoreHelper --> ClientKeyEncryptor : uses
-    KeyStoreHelper --> ErrorHandler : handles errors via
-    KeyStoreHelper --> ErrorCode : error context
+    KeyStoreHelper --> ErrorHandler : uses
+    KeyStoreHelper --> ErrorCode : uses
 
     KeyStoreInitializer --> KeyStoreHelper : uses
-    KeyStoreInitializer --> KeyStoreLoader : loads keystore
-    KeyStoreInitializer --> ErrorHandler : handles errors via
+    KeyStoreInitializer --> KeyStoreLoader : uses
+    KeyStoreInitializer --> ErrorHandler : uses
+    KeyStoreInitializer --> ErrorCode : uses
 
-    KeyStoreLoader --> ErrorHandler : uses for exceptions
-    KeyStoreLoader ..> ErrorCode : error classification
+    KeyStoreLoader --> ErrorHandler : uses
+    KeyStoreLoader --> ErrorCode : uses
 
     MasterKeyRotationTask --> KeyStoreLoader : uses
     MasterKeyRotationTask --> MasterKeyService : uses
-    MasterKeyRotationTask --> ErrorHandler : error handling
-    MasterKeyRotationTask ..> ErrorCode : uses for classification
+    MasterKeyRotationTask --> ErrorHandler : uses
+    MasterKeyRotationTask --> ErrorCode : uses
 
-    MasterKeyService --> ErrorHandler : uses for exception handling
-    MasterKeyService ..> ErrorCode : uses error codes
+    MasterKeyService --> ErrorHandler : uses
+    MasterKeyService --> ErrorCode : uses
+    MasterKeyService --> KeyStoreLoader : uses
 
-    CryptoUtility --> ErrorHandler : uses
-    CryptoUtility ..> ErrorCode : uses
+    ClientKeyDataFactory --> ClientKeyData : builds
 
-    DecryptService --> JwtManagementService
-    DecryptService --> KeyStoreHelper
-    DecryptService --> ClientKeyRegistry
-    DecryptService --> ResultModelsFactory
-    DecryptService --> ErrorHandler
-    DecryptService --> CryptoUtility
-    DecryptService ..> DecryptModel
-    DecryptService ..> DecryptResultModel
-    DecryptService ..> ErrorCode
+    ModelsFactory --> EncryptModel : builds
+    ModelsFactory --> DecryptModel : builds
+    ModelsFactory --> GenerateKeyModel : builds
+    ModelsFactory --> GenerateJwtModel : builds
 
-    EncryptService --> KeyStoreHelper
-    EncryptService --> JwtManagementService
-    EncryptService --> ClientKeyRegistry
-    EncryptService --> ResultModelsFactory
-    EncryptService --> ErrorHandler
-    EncryptService --> CryptoUtility
-    EncryptService ..> EncryptModel
-    EncryptService ..> EncryptResultModel
-    EncryptService ..> ErrorCode
+    ResponseFactory --> EncryptResponse : builds
+    ResponseFactory --> DecryptResponse : builds
+    ResponseFactory --> GenerateKeyResponse : builds
+    ResponseFactory --> GenerateJwtResponse : builds
 
-    ClientKeyDataFactory --> ClientKeyData
+    ResultModelsFactory --> GenerateKeyResultModel : builds
+    ResultModelsFactory --> GenerateJwtResultModel : builds
+    ResultModelsFactory --> EncryptResultModel : builds
+    ResultModelsFactory --> DecryptResultModel : builds
 
-    ModelsFactory --> EncryptModel
-    ModelsFactory --> DecryptModel
-    ModelsFactory --> GenerateKeyModel
-    ModelsFactory --> GenerateJwtModel
-
-    ResponseFactory --> EncryptResponse
-    ResponseFactory --> DecryptResponse
-    ResponseFactory --> GenerateKeyResponse
-    ResponseFactory --> GenerateJwtResponse
-
-    ResultModelsFactory --> GenerateKeyResultModel
-    ResultModelsFactory --> GenerateJwtResultModel
-    ResultModelsFactory --> EncryptResultModel
-    ResultModelsFactory --> DecryptResultModel
-
-    ApiException <|-- BadRequestException
-    ApiException <|-- InternalServerErrorException
+    ApiException <|-- BadRequestException : extends
+    ApiException <|-- InternalServerErrorException : extends
+    ApiException <|-- UnauthorizedException : extends
+    ApiException <|-- ForbiddenException : extends
     ApiException --> ErrorDetail : holds
 
-    ErrorCode --> ErrorDetailBuilder : builder()
+    ErrorCode --> ErrorDetailBuilder : builds
 
-    ErrorDetailBuilder --> ErrorDetail : build()
+    ErrorDetailBuilder --> ErrorDetail : builds
 
+    ErrorHandler --> ErrorCode : uses
     ErrorHandler --> ErrorDetailBuilder : creates
-    ErrorHandler --> ErrorDetail : logs and throws
+    ErrorHandler --> ErrorDetail : builds
+    ErrorHandler --> BadRequestException : throws
+    ErrorHandler --> UnauthorizedException : throws
+    ErrorHandler --> ForbiddenException : throws
+    ErrorHandler --> InternalServerErrorException : throws
 
-    ErrorHandler --> BadRequestException
-    ErrorHandler --> InternalServerErrorException
-
-    GlobalExceptionHandler --> ApiException
-    GlobalExceptionHandler --> ErrorResponse
-    GlobalExceptionHandler --> ErrorDetailBuilder
-    GlobalExceptionHandler --> ErrorDetail
+    GlobalExceptionHandler --> ApiException : handles
+    GlobalExceptionHandler --> ErrorResponse : returns
+    GlobalExceptionHandler --> ErrorDetailBuilder : uses
+    GlobalExceptionHandler --> ErrorDetail : builds
 }
 
 @enduml

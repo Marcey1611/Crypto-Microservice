@@ -19,6 +19,11 @@ activate KeyManagementAPI
 KeyManagementAPI -> Controller : handle request
 activate Controller
 
+Controller -> ValidationService : validate request
+activate ValidationService
+ValidationService --> Controller : valid or reject
+deactivate ValidationService
+
 Controller -> KeyManagementFacade : generateKey(clientName)
 activate KeyManagementFacade
 

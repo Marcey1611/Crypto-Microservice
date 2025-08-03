@@ -20,8 +20,10 @@ activate JwtManagementAPI
 JwtManagementAPI -> Controller : handle request
 activate Controller
 
-Controller -> Controller : validate input (e.g. issuedTo)
-note right of Controller : Null/blank, length,\ncharset, whitelist, etc.
+Controller -> ValidationService : validate request
+activate ValidationService
+ValidationService --> Controller : valid or reject
+deactivate ValidationService
 
 Controller -> AuthService : authorize client
 activate AuthService

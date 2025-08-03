@@ -43,6 +43,16 @@ group Validation
 
 Controller -> ValidationService : validateGenerateJwtRequest(generateJwtRequest)
 activate ValidationService
+
+ValidationService -> ValidationService : validateClientName(clientName)
+
+ValidationService -> NullOrBlankValidator : validateNullOrBlank(clientName, FieldName.CLIENT_NAME)
+ValidationService -> LengthValidator : validateLength(clientName, CLIENT_NAME_MAX_LENGTH, FieldName.CLIENT_NAME)
+ValidationService -> AsciiValidator : validateAscii(clientName, FieldName.CLIENT_NAME)
+ValidationService -> CharsetValidator : validateCharset(clientName, FieldName.CLIENT_NAME)
+ValidationService -> ControlCharValidator : validateControlChars(clientName, FieldName.CLIENT_NAME)
+ValidationService -> WhitelistValidator : validateWhitelist(clientName, FieldName.CLIENT_NAME, false)
+
 ValidationService -> NullOrBlankValidator : validateNullOrBlank(issuedTo, FieldName.ISSUED_TO)
 ValidationService -> LengthValidator : validateLength(issuedTo, ISSUED_TO_MAX_LENGTH, FieldName.ISSUED_TO)
 ValidationService -> AsciiValidator : validateAscii(issuedTo, FieldName.ISSUED_TO)
