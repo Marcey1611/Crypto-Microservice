@@ -9,7 +9,6 @@ import org.springframework.stereotype.Component;
 /**
  * ControlCharValidator class that validates if a given string contains control characters.
  * It throws an error if the string contains any control characters.
- *
  * SCPs:
  * - [6] All validation failures should result in input rejection
  */

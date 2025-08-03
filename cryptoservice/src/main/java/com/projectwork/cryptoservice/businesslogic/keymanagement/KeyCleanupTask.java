@@ -18,7 +18,6 @@ import java.util.List;
 /**
  * KeyCleanupTask is a scheduled task that periodically checks for expired keys in the keystore
  * and removes them, ensuring that the keystore remains clean and does not contain outdated keys.
- *
  * SCPs:
  * - [114] Logging controls should support both success and failure of specified security events
  */

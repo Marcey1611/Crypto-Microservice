@@ -9,7 +9,6 @@ import org.springframework.stereotype.Component;
 /**
  * AsciiValidator class that validates if a given string contains only ASCII characters.
  * It throws an error if the string contains non-ASCII characters.
- *
  * SCPs:
  * - [4] Specify proper character sets, such as ASCII, for all sources of input
  * - [6] All validation failures should result in input rejection
@@ -28,7 +27,7 @@ public class AsciiValidator {
      * @throws IllegalArgumentException if the field contains non-ASCII characters.
      */
     public final void validateAscii(final String field, final FieldName name) {
-        if (field == null || !field.chars().allMatch(c -> c < 128)) {
+        if (null == field || !field.chars().allMatch(c -> c < 128)) {
             final String fieldName = name.getValue();
             final String context = String.format("Field '%s' contains non-ASCII characters", name);
             throw this.errorHandler.handleClientError(context, fieldName, ErrorCode.INVALID_ASCII);

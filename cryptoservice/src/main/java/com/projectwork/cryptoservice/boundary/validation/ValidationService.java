@@ -10,6 +10,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.JwsHeader;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
@@ -18,8 +19,7 @@ import java.util.Date;
 /**
  * ValidationService class that provides methods for validating JWT generation, encryption, and decryption requests.
  * It uses various validators to ensure the integrity and correctness of the data.
- *
- * SCPS:
+ * SCPs:
  * - [1] Conduct all data validation on a trusted system (e.g., The server)
  * - [2] Identify all data sources and classify them into trusted and untrusted. Validate all data from untrusted sources
  * - [3] There should be a centralized input validation routine for the application
@@ -36,6 +36,7 @@ import java.util.Date;
 public class ValidationService {
 
     private static final int ISSUED_TO_MAX_LENGTH = 64;
+    private static final int CLIENT_NAME_MAX_LENGTH = 64;
     private static final int PLAIN_TEXT_MAX_LENGTH = 2048;
     private static final int CIPHER_TEXT_MAX_LENGTH = 2048;
     private static final int JWT_MAX_LENGTH = 4096;
@@ -52,12 +53,29 @@ public class ValidationService {
     private final JwtValidator jwtValidator;
     private final Base64Validator base64Validator;
 
+    @Value("${master.keystore.path}")
+    private String masterKeystorePath;
+
+    @Value("${master.keystore.password}")
+    private String masterKeystorePassword;
+
+    /**
+     * Validates the GenerateKeyRequest for key generation.
+     *
+     * @param clientName the name of the client making the request
+     */
+    public final void validateGenerateKeyRequest(final String clientName) {
+        this.validateClientName(clientName);
+    }
+
     /**
      * Validates the GenerateJwtRequest for JWT generation.
      *
      * @param generateJwtRequest the GenerateJwtRequest containing the parameters for JWT generation
+     * @param clientName   the name of the client making the request
      */
-    public final void validateGenerateJwtRequest(final GenerateJwtRequest generateJwtRequest) {
+    public final void validateGenerateJwtRequest(final GenerateJwtRequest generateJwtRequest, final String clientName) {
+        this.validateClientName(clientName);
         final String issuedTo = generateJwtRequest.getIssuedTo();
 
         this.nullOrBlankValidator.validateNullOrBlank(issuedTo, FieldName.ISSUED_TO);
@@ -72,11 +90,11 @@ public class ValidationService {
      * Validates the EncryptRequest for encryption.
      *
      * @param encryptRequest the EncryptRequest containing the plain text and JWT
-     * @param keystorePath   the path to the keystore
-     * @param keystorePassword the password for the keystore
+     * @param clientName   the name of the client making the request
      */
-    public final void validateEncryptRequest(final EncryptRequest encryptRequest, final String keystorePath, final String keystorePassword) {
-        final SecretKey key = this.keyStoreHelper.getKey("jwt-signing-key", keystorePath, keystorePassword);
+    public final void validateEncryptRequest(final EncryptRequest encryptRequest, final String clientName) {
+        this.validateClientName(clientName);
+        final SecretKey key = this.keyStoreHelper.getKey("jwt-signing-key", this.masterKeystorePath, this.masterKeystorePassword);
         final String plainText = encryptRequest.getPlainText();
         final String jwt = encryptRequest.getJwt();
 
@@ -94,11 +112,11 @@ public class ValidationService {
      * Validates the DecryptRequest for decryption.
      *
      * @param decryptRequest the DecryptRequest containing the cipher text and JWT
-     * @param keystorePath   the path to the keystore
-     * @param keystorePassword the password for the keystore
+     * @param clientName  the name of the client making the request
      */
-    public final void validateDecryptRequest(final DecryptRequest decryptRequest, final String keystorePath, final String keystorePassword) {
-        final SecretKey key = this.keyStoreHelper.getKey("jwt-signing-key", keystorePath, keystorePassword);
+    public final void validateDecryptRequest(final DecryptRequest decryptRequest, final String clientName) {
+        this.validateClientName(clientName);
+        final SecretKey key = this.keyStoreHelper.getKey("jwt-signing-key", this.masterKeystorePath, this.masterKeystorePassword);
         final String jwt = decryptRequest.getJwt();
         final String cipherText = decryptRequest.getCipherText();
 
@@ -138,5 +156,19 @@ public class ValidationService {
         this.jwtValidator.validateIssuedTo(issuedTo, ISSUED_TO_MAX_LENGTH);
         final String algorithm = header.getAlgorithm();
         this.jwtValidator.validateAlgorithmFromHeader(algorithm, JWT_ALGORITHM_MAX_LENGTH);
+    }
+
+    /**
+     * Validates the client name for various constraints.
+     *
+     * @param clientName the name of the client to validate
+     */
+    private void validateClientName(final String clientName) {
+        this.nullOrBlankValidator.validateNullOrBlank(clientName, FieldName.CLIENT_NAME);
+        this.lengthValidator.validateLength(clientName, CLIENT_NAME_MAX_LENGTH, FieldName.CLIENT_NAME);
+        this.asciiValidator.validateAscii(clientName, FieldName.CLIENT_NAME);
+        this.charsetValidator.validateCharset(clientName, FieldName.CLIENT_NAME);
+        this.controlCharValidator.validateControlChars(clientName, FieldName.CLIENT_NAME);
+        this.whitelistValidator.validateWhitelist(clientName, FieldName.CLIENT_NAME, false);
     }
 }

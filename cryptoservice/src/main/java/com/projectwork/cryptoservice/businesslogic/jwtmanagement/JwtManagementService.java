@@ -23,7 +23,6 @@ import java.util.Date;
 /**
  * JwtManagementService class that handles the generation and management of JWTs.
  * It uses KeyStoreHelper to retrieve the signing key and ClientKeyRegistry to manage client keys.
- *
  * SCPs:
  * - [114] Logging controls should support both success and failure of specified security events
  */

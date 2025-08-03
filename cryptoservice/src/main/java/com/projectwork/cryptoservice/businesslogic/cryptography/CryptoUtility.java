@@ -18,7 +18,6 @@ import java.security.NoSuchAlgorithmException;
 
 /**
  * Utility class for cryptographic operations, specifically AES-GCM encryption.
- *
  * SCPs:
  * - [101] All cryptographic functions used to protect secrets from the application user must be implemented on a trusted system (e.g., the server)
  * - [129] Log cryptographic module failures
@@ -79,10 +78,9 @@ public class CryptoUtility {
      * @param cipher The Cipher instance.
      * @param clientKey The secret key.
      * @param gcmParameterSpec The GCM parameters.
-     *
-     * SCP103
+     * @param opmode The operation mode (Cipher.DECRYPT_MODE).
      */
-    public final void initCipher(final Cipher cipher, final SecretKey clientKey, final GCMParameterSpec gcmParameterSpec, int opmode) {
+    public final void initCipher(final Cipher cipher, final SecretKey clientKey, final GCMParameterSpec gcmParameterSpec, final int opmode) {
         try {
             cipher.init(opmode, clientKey, gcmParameterSpec);
             LOGGER.debug("Cipher initialized for decryption mode.");

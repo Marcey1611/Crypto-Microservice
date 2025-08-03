@@ -17,7 +17,6 @@ import java.util.regex.Pattern;
  * JwtValidator is a component that validates JWTs (JSON Web Tokens) for format, signature, and expiration.
  * It checks if the JWT matches the expected pattern, validates its signature using a provided secret key,
  * and ensures that the token has not expired.
- *
  * SCPs:
  * - [6] All validation failures should result in input rejection
  */
@@ -82,6 +81,7 @@ public class JwtValidator {
      * Validates the algorithm specified in the JWT header.
      *
      * @param algorithm The algorithm string to validate.
+     * @param maxLength The maximum allowed length for the algorithm string.
      * @throws BadRequestException if the algorithm is invalid or insecure.
      */
     public final void validateAlgorithmFromHeader(final String algorithm, final int maxLength) {
@@ -101,6 +101,7 @@ public class JwtValidator {
      * Validates the key alias used in JWT operations.
      *
      * @param alias The key alias to validate.
+     * @param maxLength The maximum allowed length for the key alias.
      */
     public final void validateKeyAlias(final String alias, final int maxLength) {
         this.nullOrBlankValidator.validateNullOrBlank(alias, FieldName.KEY_ALIAS);
@@ -115,6 +116,7 @@ public class JwtValidator {
      * Validates the key issuedTo used in JWT operations.
      *
      * @param issuedTo The key issuedTo to validate.
+     * @param maxLength The maximum allowed length for the issuedTo string.
      */
     public final void validateIssuedTo(final String issuedTo, final int maxLength) {
         this.nullOrBlankValidator.validateNullOrBlank(issuedTo, FieldName.ISSUED_TO);

@@ -18,7 +18,6 @@ import java.security.NoSuchAlgorithmException;
 /**
  * ClientKeyEncryptor is a utility class for encrypting and decrypting client keys using a master key.
  * It uses AES wrapping for secure key management.
- *
  * SCPs:
  * - [114] Logging controls should support both success and failure of specified security events
  */

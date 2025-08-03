@@ -1,21 +1,17 @@
 package com.projectwork.cryptoservice.boundary.api;
 
-import java.security.Principal;
-
+import com.projectwork.cryptoservice.entity.models.encrypt.EncryptRequest;
+import com.projectwork.cryptoservice.entity.models.encrypt.EncryptResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-import com.projectwork.cryptoservice.entity.models.encrypt.EncryptRequest;
-import com.projectwork.cryptoservice.entity.models.encrypt.EncryptResponse;
-
-import jakarta.validation.Valid;
+import java.security.Principal;
 
 /**
  * EncryptAPI interface for handling encryption requests.
  * This interface defines the endpoint for encrypting data.
- *
  * SCPs:
  *  - [4] Specify proper character sets, such as UTF-8, for all sources of input
  */

@@ -25,8 +25,9 @@ public class AuthRegistry {
      * @param keyAlias the alias of the key to register
      * @param allowedClients the set of clients allowed to access the key
      */
-    public void registerKeyAlias(final String keyAlias, final Set<String> allowedClients) {
-        this.accessMap.putIfAbsent(keyAlias, ConcurrentHashMap.newKeySet(allowedClients.size()));
+    public final void registerKeyAlias(final String keyAlias, final Set<String> allowedClients) {
+        final int size = allowedClients.size();
+        this.accessMap.putIfAbsent(keyAlias, ConcurrentHashMap.newKeySet(size));
         this.accessMap.get(keyAlias).addAll(allowedClients);
         LOGGER.debug("Registered new keyAlias with access for some clients.");
     }
@@ -37,7 +38,7 @@ public class AuthRegistry {
      * @param keyAlias the alias of the key to grant access to.
      * @param clientName the name of the client to grant access to.
      */
-    public void grantAccess(final String keyAlias, final String clientName) {
+    public final void grantAccess(final String keyAlias, final String clientName) {
         final Set<String> clients = this.accessMap.get(keyAlias);
         clients.add(clientName);
         LOGGER.debug("Granted access to specific keyAlias for specific client.");
@@ -49,7 +50,7 @@ public class AuthRegistry {
      * @param keyAlias the alias of the key to revoke access from.
      * @param clientName the name of the client whose access is to be revoked.
      */
-    public void revokeAccess(final String keyAlias, final String clientName) {
+    public final void revokeAccess(final String keyAlias, final String clientName) {
         final Set<String> clients = this.accessMap.get(keyAlias);
         clients.remove(clientName);
         LOGGER.debug("Revoked access to specific keyAlias for specific client");
@@ -62,8 +63,8 @@ public class AuthRegistry {
      * @param clientName the name of the client whose access is to be checked.
      * @return true if the client has access, false otherwise.
      */
-    public boolean isAccessAllowed(final String keyAlias, final String clientName) {
+    public final boolean isAccessAllowed(final String keyAlias, final String clientName) {
         final Set<String> clients = this.accessMap.get(keyAlias);
-        return clients != null && clients.contains(clientName);
+        return null != clients && clients.contains(clientName);
     }
 }

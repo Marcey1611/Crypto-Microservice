@@ -21,7 +21,6 @@ import java.util.Arrays;
 /**
  * KeyStoreLoader is responsible for loading and saving the keystore from/to a file.
  * It uses environment variables to determine the keystore path and password.
- *
  * SCPs:
  * - [114] Logging controls should support both success and failure of specified security events
  */
@@ -35,10 +34,12 @@ public class KeyStoreLoader {
     /**
      * Loads the keystore from the specified file path.
      *
+     * @param path the file path to the keystore
+     * @param password the password for the keystore
      * @return the loaded KeyStore instance
      * @throws InternalServerErrorException if there is an error loading the keystore
      */
-    public KeyStore load(final String path, final String password) {
+    public final KeyStore load(final String path, final String password) {
         final File keystoreFile = new File(path);
         final char[] passwordChars = password.toCharArray();
         final String absolutePath = keystoreFile.getAbsolutePath();
@@ -80,9 +81,11 @@ public class KeyStoreLoader {
      * Saves the provided keystore to the specified file path.
      *
      * @param keystore the KeyStore instance to save
+     * @param path the file path where the keystore will be saved
+     * @param password the password for the keystore
      * @throws InternalServerErrorException if there is an error saving the keystore
      */
-    public void save(final KeyStore keystore, final String path, final String password) {
+    public final void save(final KeyStore keystore, final String path, final String password) {
         final File keystoreFile = new File(path);
         final char[] passwordChars = password.toCharArray();
         final String absolutePath = keystoreFile.getAbsolutePath();

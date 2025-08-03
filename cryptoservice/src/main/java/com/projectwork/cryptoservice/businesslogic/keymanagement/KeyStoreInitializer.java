@@ -17,7 +17,6 @@ import java.security.*;
 /**
  * KeyStoreInitializer is responsible for initializing the KeyStore with necessary keys.
  * It checks for the existence of specific keys and generates them if they are missing.
- *
  * SCPs:
  * - [80] Deny all access if the application cannot access its security configuration information
  * - [114] Logging controls should support both success and failure of specified security events
@@ -102,8 +101,6 @@ public class KeyStoreInitializer {
     /**
      * Initializes the JWT signing key and stores it in the KeyStore.
      * If the key already exists, it skips the initialization.
-     *
-     * SCP104
      */
     private void initJwtSigningKey() {
         final SecureRandom secureRandom;
@@ -150,8 +147,6 @@ public class KeyStoreInitializer {
     /**
      * Initializes the master key and stores it in the KeyStore.
      * If the key already exists, it skips the initialization.
-     *
-     * SCP104
      */
     private void initMasterKey() {
         final SecureRandom secureRandom;
@@ -222,7 +217,7 @@ public class KeyStoreInitializer {
 
         try {
             return this.keyStoreLoader.load(path, password);
-        } catch (final Exception exception) {
+        } catch (final RuntimeException exception) {
             LOGGER.error("Failed to load KeyStore. Application will terminate!");
             throw this.errorHandler.handleBusinessError(
                     ErrorCode.KEYSTORE_ACCESS_FAILED,
@@ -241,7 +236,7 @@ public class KeyStoreInitializer {
      */
     private void validateMasterKeyStoreNotEmpty(final KeyStore keystore, final String path) {
         try {
-            if (keystore.size() == 0) {
+            if (0 == keystore.size()) {
                 LOGGER.error("KeyStore is empty. Application will terminate!");
                 System.exit(1);
             }

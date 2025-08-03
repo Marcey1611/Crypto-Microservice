@@ -22,7 +22,6 @@ import java.util.List;
 /**
  * MasterKeyRotationTask is a scheduled task that rotates the master key in the keystore.
  * It rewraps all client keys with the new master key and updates the keystore accordingly.
- *
  * SCPs:
  * - [114] Logging controls should support both success and failure of specified security events
  */

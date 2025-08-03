@@ -21,15 +21,13 @@ import java.util.concurrent.TimeUnit;
 /**
  * KeyCleanupTask is a scheduled task that periodically checks for expired keys in the keystore
  * and removes them, ensuring that the keystore remains clean and does not contain outdated keys.
- *
- * SCP106 (Key cleanup (deletion of expired keys))
  */
 @Component
 @RequiredArgsConstructor
 public class KeyExpirationChecker {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(KeyExpirationChecker.class);
-    private static final long EXPIRATION_TIME_MILLIS = TimeUnit.HOURS.toMillis(1);
+    private static final long EXPIRATION_TIME_MILLIS = TimeUnit.HOURS.toMillis(1L);
 
     private final ErrorHandler errorHandler;
 
@@ -39,6 +37,7 @@ public class KeyExpirationChecker {
      *
      * @param keystore the KeyStore instance containing the keys
      * @param alias    the alias of the key to check
+     * @param keystorePassword the password for the keystore, can be null
      * @return true if the key is expired, false otherwise
      */
     public final boolean isExpired(final KeyStore keystore, final String alias, final String keystorePassword) {

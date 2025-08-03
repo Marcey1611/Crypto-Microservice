@@ -24,7 +24,6 @@ import java.util.Base64;
 
 /**
  * Service for decrypting texts using AES-GCM.
- *
  * SCPs:
  *  - [101] All cryptographic functions used to protect secrets from the application user must be implemented on a trusted system (e.g., the server)
  *  - [114] Logging controls should support both success and failure of specified security events
@@ -58,7 +57,8 @@ public class DecryptService {
         final String clientName = decryptModel.getClientName();
         LOGGER.info("Starting decryption for current client and cipher text.");
 
-        final String keyAlias = this.jwtManagementService.extractClientKeyAlias(decryptModel.getJwt());
+        final String jwt = decryptModel.getJwt();
+        final String keyAlias = this.jwtManagementService.extractClientKeyAlias(jwt);
         final SecretKey clientKey = this.retrieveClientKey(keyAlias);
         final String clientNameFromKeyAlias = this.mapKeyAliasToClientName(keyAlias);
         final byte[] iv = this.retrieveIvForClient(clientNameFromKeyAlias);
@@ -122,7 +122,8 @@ public class DecryptService {
         final Cipher cipher = this.cryptoUtility.createCipher();
         final GCMParameterSpec gcmParameterSpec = this.cryptoUtility.createGCMParameterSpec(iv);
         this.cryptoUtility.initCipher(cipher, clientKey, gcmParameterSpec, Cipher.DECRYPT_MODE);
-        cipher.updateAAD(clientName.getBytes(StandardCharsets.UTF_8));
+        final byte[] clientNameBytes = clientName.getBytes(StandardCharsets.UTF_8);
+        cipher.updateAAD(clientNameBytes);
         final byte[] cipherTextBytes = this.decodeCipherText(cipherText);
         return this.decryptCipherText(cipher, cipherTextBytes);
     }

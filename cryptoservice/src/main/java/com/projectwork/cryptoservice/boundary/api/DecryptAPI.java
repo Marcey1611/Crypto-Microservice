@@ -1,21 +1,17 @@
 package com.projectwork.cryptoservice.boundary.api;
 
-import java.security.Principal;
-
+import com.projectwork.cryptoservice.entity.models.decrypt.DecryptRequest;
+import com.projectwork.cryptoservice.entity.models.decrypt.DecryptResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-import com.projectwork.cryptoservice.entity.models.decrypt.DecryptRequest;
-import com.projectwork.cryptoservice.entity.models.decrypt.DecryptResponse;
-
-import jakarta.validation.Valid;
+import java.security.Principal;
 
 /**
  * DecryptAPI interface for handling decryption requests.
  * This interface defines the endpoint for decrypting data.
- *
  * SCPs:
  * - [4] Specify proper character sets, such as UTF-8, for all sources of input
  */

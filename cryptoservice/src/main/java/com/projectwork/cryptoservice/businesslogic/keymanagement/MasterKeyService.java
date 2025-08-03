@@ -19,7 +19,6 @@ import java.util.Arrays;
 /**
  * MasterKeyService is responsible for retrieving the master key from the KeyStore.
  * It ensures that the master key is securely accessed and handles any exceptions that may occur.
- *
  * SCPs:
  * - [114] Logging controls should support both success and failure of specified security events
  */

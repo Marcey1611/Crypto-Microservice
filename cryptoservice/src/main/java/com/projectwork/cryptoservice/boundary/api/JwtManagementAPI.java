@@ -1,20 +1,16 @@
 package com.projectwork.cryptoservice.boundary.api;
 
-import java.security.Principal;
-
+import com.projectwork.cryptoservice.entity.models.jwtmanagement.GenerateJwtRequest;
+import com.projectwork.cryptoservice.entity.models.jwtmanagement.GenerateJwtResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-import com.projectwork.cryptoservice.entity.models.jwtmanagement.GenerateJwtRequest;
-import com.projectwork.cryptoservice.entity.models.jwtmanagement.GenerateJwtResponse;
-
-import jakarta.validation.Valid;
+import java.security.Principal;
 
 
 /** * API for managing JWTs (JSON Web Tokens).
  * This interface defines the endpoint for generating JWTs.
- *
  * SCPs:
  *  - [4] Specify proper character sets, such as UTF-8, for all sources of input
  */

@@ -14,7 +14,8 @@ public enum FieldName {
     PLAIN_TEXT("plainText"),
     ISSUED_TO("issuedTo"),
     ALGORITHM_HEADER("algorithm (header)"),
-    KEY_ALIAS("keyAlias");
+    KEY_ALIAS("keyAlias"),
+    CLIENT_NAME("clientName");
 
     private final String value;
 

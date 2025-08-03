@@ -11,7 +11,6 @@ import java.nio.charset.StandardCharsets;
 /**
  * CharsetValidator class that validates if a given string can be encoded in UTF-8.
  * It throws an error if the string contains characters that cannot be represented in UTF-8.
- *
  * SCPs:
  * - [4] Specify proper character sets, such as UTF-8, for all sources of input
  * - [6] All validation failures should result in input rejection

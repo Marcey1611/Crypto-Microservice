@@ -7,13 +7,10 @@ import com.projectwork.cryptoservice.entity.models.encrypt.EncryptRequest;
 import com.projectwork.cryptoservice.errorhandling.util.ErrorCode;
 import com.projectwork.cryptoservice.errorhandling.util.ErrorHandler;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 /**
  * AuthService class that handles authorization logic for encryption and decryption requests.
- *
  * SCPs:
  * - [77] Use only trusted system objects (e.g. server-side session objects) for making access authorization decisions
  * - [78] Use a single site-wide component to check access authorization
@@ -37,8 +34,8 @@ public class AuthService {
      *
      * @param clientName the name of the client requesting the JWT
      */
-    public void authGenerateJwtRequest(final String clientName) {
-        if (!clientKeyRegistry.hasClient(clientName)) {
+    public final void authGenerateJwtRequest(final String clientName) {
+        if (!this.clientKeyRegistry.hasClient(clientName)) {
             throw this.errorHandler.handleAuthError(
                     ErrorCode.CLIENT_NOT_FOUND,
                     "While checking if client exists in the registry."
@@ -52,18 +49,18 @@ public class AuthService {
      * @param encryptRequest the request containing the data to be encrypted
      * @param clientName the name of the client requesting encryption
      */
-    public void authEncryptRequest(final EncryptRequest encryptRequest, final String clientName) {
+    public final void authEncryptRequest(final EncryptRequest encryptRequest, final String clientName) {
         final String jwt = encryptRequest.getJwt();
-        final String issuedTo = jwtManagementService.extractIssuedTo(jwt);
-        final String keyAlias = jwtManagementService.extractClientKeyAlias(jwt);
+        final String issuedTo = this.jwtManagementService.extractIssuedTo(jwt);
+        final String keyAlias = this.jwtManagementService.extractClientKeyAlias(jwt);
 
-        if (!clientKeyRegistry.hasClient(clientName)) {
+        if (!this.clientKeyRegistry.hasClient(clientName)) {
             throw this.errorHandler.handleAuthError(
                     ErrorCode.CLIENT_NOT_FOUND,
                     "While checking if the client exists in the registry."
             );
         }
-        final String expectedAlias = clientKeyRegistry.getKeyAliasForClient(clientName);
+        final String expectedAlias = this.clientKeyRegistry.getKeyAliasForClient(clientName);
         if (!keyAlias.equals(expectedAlias)) {
             throw this.errorHandler.handleForbiddenError(
                     ErrorCode.CLIENT_KEY_ALIAS_MISMATCH_CLIENT_NAME,
@@ -80,10 +77,10 @@ public class AuthService {
      * @param decryptRequest the request containing the data to be decrypted
      * @param clientName the name of the client requesting decryption
      */
-    public void authDecryptRequest(final DecryptRequest decryptRequest, final String clientName) {
+    public final void authDecryptRequest(final DecryptRequest decryptRequest, final String clientName) {
         final String jwt = decryptRequest.getJwt();
-        final String issuedTo = jwtManagementService.extractIssuedTo(jwt);
-        final String keyAlias = jwtManagementService.extractClientKeyAlias(jwt);
+        final String issuedTo = this.jwtManagementService.extractIssuedTo(jwt);
+        final String keyAlias = this.jwtManagementService.extractClientKeyAlias(jwt);
 
         if (!issuedTo.equals(clientName)) {
             throw this.errorHandler.handleForbiddenError(
@@ -92,14 +89,14 @@ public class AuthService {
             );
         }
 
-        if (!clientKeyRegistry.hasKeyAlias(keyAlias)) {
+        if (!this.clientKeyRegistry.hasKeyAlias(keyAlias)) {
             throw this.errorHandler.handleAuthError(
                     ErrorCode.KEY_ALIAS_NOT_FOUND,
                     "JWT key alias does not exist in the registry."
             );
         }
 
-        if (!authRegistry.isAccessAllowed(keyAlias, clientName)) {
+        if (!this.authRegistry.isAccessAllowed(keyAlias, clientName)) {
             throw this.errorHandler.handleForbiddenError(
                     ErrorCode.FORBIDDEN_DECRYPT_ACCESS,
                     "Access denied for the client to the requested keyAlias."

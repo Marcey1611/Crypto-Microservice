@@ -11,7 +11,6 @@ import java.util.regex.Pattern;
 /**
  * WhitelistValidator class that validates if a given string contains only allowed characters.
  * It throws an error if the string contains any characters not in the whitelist.
- *
  * SCPs:
  * - [6] All validation failures should result in input rejection
  * - [14] Validate all input against a "white" list of allowed characters, whenever possible
@@ -30,6 +29,7 @@ public class WhitelistValidator {
      *
      * @param field The field to validate.
      * @param name  The name of the field, used for error messages.
+     * @param extended If true, uses the extended whitelist pattern; otherwise, uses the standard whitelist pattern.
      * @throws IllegalArgumentException if the field is not in the whitelist.
      */
     public final void validateWhitelist(final String field, final FieldName name, final boolean extended) {

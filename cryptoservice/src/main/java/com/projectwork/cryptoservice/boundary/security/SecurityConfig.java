@@ -1,6 +1,5 @@
 package com.projectwork.cryptoservice.boundary.security;
 
-import com.projectwork.cryptoservice.boundary.authorization.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,7 +16,6 @@ import org.springframework.security.web.context.SecurityContextHolderFilter;
 /**
  * Security configuration for the CryptoService application.
  * This configuration sets up security rules for the endpoints.
- *
  * SCPs:
  * - [94] Limit the number of transactions a single user/device can perform in a given time
  * - [143] Implement encryption for the transmission of all sensitive information --> communication over mtls
@@ -33,11 +31,26 @@ public class SecurityConfig {
     private final IpRateLimitingFilter ipRateLimitingFilter;
     private final PrincipalRateLimitingFilter principalRateLimitingFilter;
 
+    /**
+     * Provides a UserDetailsService that returns a User with no authorities.
+     * This is used for X.509 authentication where the user details are not needed.
+     *
+     * @return a UserDetailsService instance
+     */
     @Bean
     public UserDetailsService userDetailsService() {
         return username -> new User(username, "", AuthorityUtils.NO_AUTHORITIES);
     }
 
+    /**
+     * Configures the security filter chain for the application.
+     * This method sets up the authorization rules, X.509 authentication,
+     * and adds custom filters for rate limiting.
+     *
+     * @param http the HttpSecurity object to configure
+     * @return a SecurityFilterChain instance
+     * @throws Exception if an error occurs during configuration
+     */
     @Bean
     public SecurityFilterChain securityFilterChain(final HttpSecurity http) throws Exception {
         http
@@ -48,11 +61,10 @@ public class SecurityConfig {
                         .subjectPrincipalRegex("CN=(.*?)(?:,|$)")
                         .userDetailsService(userDetailsService())
                 )
-                .addFilterBefore(ipRateLimitingFilter, SecurityContextHolderFilter.class)
-                .addFilterAfter(principalRateLimitingFilter, FilterSecurityInterceptor.class)
+                .addFilterBefore(this.ipRateLimitingFilter, SecurityContextHolderFilter.class)
+                .addFilterAfter(this.principalRateLimitingFilter, FilterSecurityInterceptor.class)
                 .csrf(csrf -> csrf.disable());
 
         return http.build();
     }
-
 }

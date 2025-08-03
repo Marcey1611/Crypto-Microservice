@@ -20,7 +20,6 @@ import java.util.Arrays;
 
 /**
  * KeyStoreHelper is a utility class for managing cryptographic keys in a secure manner.
- *
  * SCPs:
  * - [114] Logging controls should support both success and failure of specified security events
  */
@@ -39,6 +38,8 @@ public class KeyStoreHelper {
      * Stores a key in the master-keystore under the specified keyAlias.
      *
      * @param keyAlias      the keyAlias under which the key will be stored
+     * @param keystorePath the path to the keystore
+     * @param keystorePassword the password for the keystore
      * @param key  the client key to be stored
      *
      * SCP106 (Key storage) -> setKeystoreEntry
@@ -81,6 +82,8 @@ public class KeyStoreHelper {
      * Retrieves and decrypts the client key stored under the specified alias.
      *
      * @param alias the alias of the key to retrieve
+     * @param keystorePath the path to the keystore
+     * @param keystorePassword the password for the keystore
      * @return the decrypted client key
      */
     public final SecretKey getClientKey(final String alias, final String keystorePath, final String keystorePassword) {
@@ -100,6 +103,8 @@ public class KeyStoreHelper {
      * Retrieves the raw key stored under the specified alias without decryption.
      *
      * @param alias the alias of the key to retrieve
+     * @param keystorePath the path to the keystore
+     * @param keystorePassword the password for the keystore
      * @return the raw SecretKey associated with the alias
      */
     public final SecretKey getKey(final String alias, final String keystorePath, final String keystorePassword) {

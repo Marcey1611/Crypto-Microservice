@@ -7,14 +7,13 @@ import org.slf4j.event.Level;
  * Enum representing various error codes used in the application.
  * Each error code has a unique identifier, a user-friendly message,
  * and a log level indicating the severity of the error.
- *
  * SCPs:
  * - [107] Do not disclose sensitive information in error responses
  * - [108] Use error handlers that do not display debugging or stack trace information
  */
 @Getter
 public enum ErrorCode {
-    //400
+    //400er
     FIELD_BLANK(
         "400.001", 
         "Required field is missing.",
@@ -24,12 +23,6 @@ public enum ErrorCode {
     FIELD_TOO_LONG(
         "400.002", 
         "Input too long.",
-        Level.ERROR
-    ),
-    
-    INVALID_ENCODING(
-        "400.003", 
-        "Input has invalid format.",
         Level.ERROR
     ),
     
@@ -56,24 +49,6 @@ public enum ErrorCode {
         "Invalid JWT.",
         Level.ERROR
     ),
-    
-    CLIENT_NOT_FOUND(
-        "400.008",
-        "Authorization failed.",
-        Level.ERROR
-    ),
-
-    CLIENT_NAME_MISMATCH_ISSUED_TO(
-        "400.009",
-        "Authorization failed.",
-        Level.ERROR
-    ),
-
-    CLIENT_KEY_ALIAS_MISSING(
-        "400.010",
-        "Invalid JWT.",
-        Level.ERROR
-    ),
 
     NO_CLIENT_KEY_FOUND_FOR_ALIAS(
         "400.011",
@@ -81,27 +56,9 @@ public enum ErrorCode {
         Level.ERROR
     ),
 
-    KEY_ALIAS_NOT_FOUND(
-        "400.012",
-        "Authorization failed.",
-        Level.ERROR
-    ),
-
     IV_NOT_FOUND_FOR_CLIENT(
         "400.013",
         "No IV found for client.",
-        Level.ERROR
-    ),
-
-    CLIENT_KEY_ALIAS_MISMATCH_CLIENT_NAME(
-        "400.014",
-        "Authorization failed.",
-        Level.ERROR
-    ),
-
-    UNKNOWN_CLIENT(
-        "400.015",
-        "Client not authorized.",
         Level.ERROR
     ),
 
@@ -129,19 +86,37 @@ public enum ErrorCode {
         Level.ERROR
     ),
 
-    FORBIDDEN_DECRYPT_ACCESS(
-        "400.020",
-        "Authorization failed.",
-        Level.ERROR
+    CLIENT_NOT_FOUND(
+            "401.001",
+            "Authorization failed.",
+            Level.ERROR
     ),
 
-    FORBIDDEN_NEW_CLIENT_ACCESS(
-        "400.021",
-        "Authorization failed.",
-        Level.ERROR
+    KEY_ALIAS_NOT_FOUND(
+            "401.002",
+            "Authorization failed.",
+            Level.ERROR
+    ),
+
+    CLIENT_NAME_MISMATCH_ISSUED_TO(
+            "403.001",
+            "Authorization failed.",
+            Level.ERROR
+    ),
+
+    CLIENT_KEY_ALIAS_MISMATCH_CLIENT_NAME(
+            "403.002",
+            "Authorization failed.",
+            Level.ERROR
+    ),
+
+    FORBIDDEN_DECRYPT_ACCESS(
+            "403.003",
+            "Authorization failed.",
+            Level.ERROR
     ),
     
-    //500
+    //500er
     UNEXPECTED_ERROR(
         "500.001", 
         "Internal server error", 

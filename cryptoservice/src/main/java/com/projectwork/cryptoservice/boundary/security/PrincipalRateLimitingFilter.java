@@ -18,7 +18,6 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * PrincipalRateLimitingFilter is a servlet filter that limits the number of requests
  * a user can make to the server within a specified time window.
- *
  * SCPs:
  * - [94] Limit the number of transactions a single user/device can perform in a given time
  * - [114] Logging controls should support both success and failure of specified security events
@@ -28,32 +27,33 @@ import java.util.concurrent.ConcurrentHashMap;
 public class PrincipalRateLimitingFilter extends OncePerRequestFilter {
 
     private static final int MAX_REQUESTS_PER_MINUTE = 10;
-    private static final long TIME_WINDOW_MS = 60_000;
+    private static final long TIME_WINDOW_MS = 60_000L;
     private static final Logger LOGGER = LoggerFactory.getLogger(PrincipalRateLimitingFilter.class);
 
     private final Map<String, RequestCounter> requestMap = new ConcurrentHashMap<>();
 
     @Override
-    protected void doFilterInternal(final HttpServletRequest request,
-                                    final HttpServletResponse response,
-                                    final FilterChain filterChain) throws ServletException, IOException {
+    protected final void doFilterInternal(final HttpServletRequest request,
+                                          final HttpServletResponse response,
+                                          final FilterChain filterChain) throws ServletException, IOException {
 
         LOGGER.debug("Processing rate limiting for requesting client.");
         final Principal principal = request.getUserPrincipal();
         final String clientName = principal.getName();
 
         final long now = System.currentTimeMillis();
-        final RequestCounter counter = requestMap.computeIfAbsent(clientName, k -> new RequestCounter());
+        final RequestCounter counter = this.requestMap.computeIfAbsent(clientName, k -> new RequestCounter());
 
-        if (now - counter.startTime > TIME_WINDOW_MS) {
+        if (TIME_WINDOW_MS < now - counter.startTime) {
             counter.startTime = now;
             counter.count = 1;
         } else {
             counter.count++;
         }
 
-        if (counter.count > MAX_REQUESTS_PER_MINUTE) {
-            response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
+        if (MAX_REQUESTS_PER_MINUTE < counter.count) {
+            final int httpStatus = HttpStatus.TOO_MANY_REQUESTS.value();
+            response.setStatus(httpStatus);
             response.getWriter().write("Rate limit exceeded.");
             LOGGER.warn("Rate limit exceeded for requesting client.");
             return;

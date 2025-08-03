@@ -17,7 +17,6 @@ import java.util.concurrent.ConcurrentHashMap;
  * ClientKeyRegistry class that manages the registration and retrieval of client keys.
  * It allows for registering clients with their key aliases, checking if a client exists,
  * and retrieving key aliases and IVs associated with clients.
- *
  * SCP106 (Key allocation and usage (keyAlias))
  */
 @RequiredArgsConstructor
@@ -60,7 +59,7 @@ public class ClientKeyRegistry {
      *
      * @param keyAlias the key alias to check
      */
-    public void removeClientByKeyAlias(final String keyAlias) {
+    public final void removeClientByKeyAlias(final String keyAlias) {
         this.clientKeyDataMap.entrySet().removeIf(entry
                 -> entry.getValue().getKeyAlias().equalsIgnoreCase(keyAlias));
         LOGGER.info("Removed client with specific key alias.");
@@ -72,7 +71,7 @@ public class ClientKeyRegistry {
      * @param clientName the name of the client
      * @return the key alias associated with the client, or null if the client does not exist
      */
-    public String getKeyAliasForClient(final String clientName) {
+    public final String getKeyAliasForClient(final String clientName) {
         final ClientKeyData data = this.clientKeyDataMap.get(clientName);
         return null != data ? data.getKeyAlias() : null;
     }
@@ -122,7 +121,7 @@ public class ClientKeyRegistry {
      * @param keyAlias the key alias to check
      * @return true if the key alias exists, false otherwise
      */
-    public boolean hasKeyAlias(final String keyAlias) {
+    public final boolean hasKeyAlias(final String keyAlias) {
         final boolean exists = this.clientKeyDataMap.values().stream()
                 .anyMatch(data -> data.getKeyAlias().equalsIgnoreCase(keyAlias));
         LOGGER.debug("Checking if specific key alias exists: {}", exists);

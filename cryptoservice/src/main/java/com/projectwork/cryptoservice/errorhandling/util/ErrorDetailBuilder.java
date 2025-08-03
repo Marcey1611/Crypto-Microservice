@@ -42,22 +42,18 @@ public class ErrorDetailBuilder {
      * Sets the context for the error detail.
      *
      * @param context the user message to set
-     * @return the current ErrorDetailBuilder instance
      */
-    public final ErrorDetailBuilder withContext(final String context) {
+    public final void withContext(final String context) {
         this.context = context;
-        return this;
     }
 
     /**
      * Sets the exception for the error detail.
      *
      * @param exception the log headline to set
-     * @return the current ErrorDetailBuilder instance
      */
-    public final ErrorDetailBuilder withException(final Throwable exception) {
+    public final void withException(final Throwable exception) {
         this.exception = exception;
-        return this;
     }
 
     /**

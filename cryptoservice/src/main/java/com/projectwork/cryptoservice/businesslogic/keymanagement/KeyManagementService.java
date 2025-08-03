@@ -20,7 +20,6 @@ import java.util.Base64;
 
 /**
  * Key Management Service implementation: handles the key management of the service.
- *
  * SCPs:
  * - [106] Establish and utilize a policy and process for how cryptographic keys will be managed.
  * - [112] Error handling logic associated with security controls should deny access by default

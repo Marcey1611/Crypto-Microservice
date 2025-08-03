@@ -22,7 +22,6 @@ import java.util.Base64;
 
 /**
  * Service for encrypting texts using AES-GCM.
- *
  * SCPs:
  *  - [101] All cryptographic functions used to protect secrets from the application user must be implemented on a trusted system (e.g., the server)
  *  - [114] Logging controls should support both success and failure of specified security events
@@ -94,7 +93,8 @@ public class EncryptService {
         final Cipher cipher = this.cryptoUtility.createCipher();
         final GCMParameterSpec gcmParameterSpec = this.cryptoUtility.createGCMParameterSpec(iv);
         this.cryptoUtility.initCipher(cipher, clientKey, gcmParameterSpec, Cipher.ENCRYPT_MODE);
-        cipher.updateAAD(issuedTo.getBytes(StandardCharsets.UTF_8));
+        final byte[] issuedToBytes = issuedTo.getBytes(StandardCharsets.UTF_8);
+        cipher.updateAAD(issuedToBytes);
         final byte[] encryptedData = this.encryptData(cipher, plainText);
         return this.encodeBase64(encryptedData);
     }
