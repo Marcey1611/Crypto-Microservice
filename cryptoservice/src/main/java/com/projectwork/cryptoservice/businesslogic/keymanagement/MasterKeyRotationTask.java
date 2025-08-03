@@ -23,6 +23,7 @@ import java.util.List;
  * MasterKeyRotationTask is a scheduled task that rotates the master key in the keystore.
  * It rewraps all client keys with the new master key and updates the keystore accordingly.
  * SCPs:
+ * - [104] All random numbers, random file names, random GUIDs, and random strings should be generated using the cryptographic module's approved random number generator when these random values are intended to be un-guessable
  * - [114] Logging controls should support both success and failure of specified security events
  */
 @RequiredArgsConstructor
@@ -77,8 +78,6 @@ public class MasterKeyRotationTask {
      * Generates a new master key using a secure random generator.
      *
      * @return the newly generated SecretKey
-     *
-     * SCP104
      */
     private SecretKey generateNewMasterKey() {
         try {

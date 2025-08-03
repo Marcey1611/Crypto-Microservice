@@ -20,6 +20,7 @@ import java.security.NoSuchAlgorithmException;
  * Utility class for cryptographic operations, specifically AES-GCM encryption.
  * SCPs:
  * - [101] All cryptographic functions used to protect secrets from the application user must be implemented on a trusted system (e.g., the server)
+ * - [103] Cryptographic modules should fail securely
  * - [129] Log cryptographic module failures
  */
 @Service

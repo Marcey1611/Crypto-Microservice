@@ -26,6 +26,7 @@ import java.util.Base64;
  * Service for decrypting texts using AES-GCM.
  * SCPs:
  *  - [101] All cryptographic functions used to protect secrets from the application user must be implemented on a trusted system (e.g., the server)
+ *  - [103] Cryptographic modules should fail securely
  *  - [114] Logging controls should support both success and failure of specified security events
  *  - [129] Log cryptographic module failures
  */

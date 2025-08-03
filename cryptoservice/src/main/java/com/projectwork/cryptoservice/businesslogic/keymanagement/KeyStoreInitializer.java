@@ -19,6 +19,7 @@ import java.security.*;
  * It checks for the existence of specific keys and generates them if they are missing.
  * SCPs:
  * - [80] Deny all access if the application cannot access its security configuration information
+ * - [104] All random numbers, random file names, random GUIDs, and random strings should be generated using the cryptographic module's approved random number generator when these random values are intended to be un-guessable
  * - [114] Logging controls should support both success and failure of specified security events
  */
 @RequiredArgsConstructor

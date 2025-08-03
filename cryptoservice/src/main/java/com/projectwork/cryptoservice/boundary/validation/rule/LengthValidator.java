@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
  * SCPs:
  * - [6] All validation failures should result in input rejection
  * - [13] Validate data length
+ * - [121] Log all input validation failures
  */
 @Component
 @RequiredArgsConstructor

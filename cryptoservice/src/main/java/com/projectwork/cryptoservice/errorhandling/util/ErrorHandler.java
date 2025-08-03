@@ -12,10 +12,13 @@ import org.springframework.stereotype.Service;
  * ErrorHandler class that provides methods to handle validation errors
  * and log error details.
  * It uses the ErrorCode enum to build error details and logs them appropriately.
- *
  * SCPs:
  * - [108] Use error handlers that do not display debugging or stack trace information
+ * - [109] Implement generic error messages and use custom error pages
+ * - [110] The application should handle application errors and not rely on the server configuration
  * - [112] Error handling logic associated with security controls should deny access by default
+ * - [113] All logging controls should be implemented on a trusted system (e.g., the server)
+ * - [126] Log all system exceptions
  */
 @Service
 public class ErrorHandler {

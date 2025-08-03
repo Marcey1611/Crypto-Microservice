@@ -16,8 +16,8 @@ import com.projectwork.cryptoservice.errorhandling.util.ErrorResponse;
 /**
  * GlobalExceptionHandler is responsible for handling exceptions thrown by the application.
  * It catches ApiException and other unhandled exceptions, returning appropriate error responses.
- * SecureCodingPractices:
- * - OWASP [102] Ensuring master secrets (master-key & jwt-signing-key) are protected and initialized
+ * SCPs:
+ * - [126] Log all system exceptions
  */
 @RestControllerAdvice
 public class GlobalExceptionHandler {

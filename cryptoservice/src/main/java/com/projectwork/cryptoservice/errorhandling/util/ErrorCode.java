@@ -10,6 +10,7 @@ import org.slf4j.event.Level;
  * SCPs:
  * - [107] Do not disclose sensitive information in error responses
  * - [108] Use error handlers that do not display debugging or stack trace information
+ * - [109] Implement generic error messages and use custom error pages
  */
 @Getter
 public enum ErrorCode {

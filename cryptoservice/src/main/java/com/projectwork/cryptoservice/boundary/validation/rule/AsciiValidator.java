@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
  * SCPs:
  * - [4] Specify proper character sets, such as ASCII, for all sources of input
  * - [6] All validation failures should result in input rejection
+ * - [121] Log all input validation failures
  */
 @Component
 @RequiredArgsConstructor

@@ -19,6 +19,7 @@ import java.util.regex.Pattern;
  * and ensures that the token has not expired.
  * SCPs:
  * - [6] All validation failures should result in input rejection
+ * - [121] Log all input validation failures
  */
 @Component
 @RequiredArgsConstructor

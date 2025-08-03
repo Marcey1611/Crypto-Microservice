@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
  * It throws an error if the string is null or empty.
  * SCPs:
  * - [6] All validation failures should result in input rejection
+ * - [121] Log all input validation failures
  */
 @Component
 @RequiredArgsConstructor

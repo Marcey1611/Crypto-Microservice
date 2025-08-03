@@ -12,6 +12,7 @@ import java.util.Base64;
  * Validates that the given input is a valid Base64 encoded string.
  * SCPs:
  * - [6] All validation failures should result in input rejection
+ * - [121] Log all input validation failures
  */
 @Component
 @RequiredArgsConstructor

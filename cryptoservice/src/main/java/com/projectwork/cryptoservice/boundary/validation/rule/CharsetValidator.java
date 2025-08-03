@@ -14,6 +14,7 @@ import java.nio.charset.StandardCharsets;
  * SCPs:
  * - [4] Specify proper character sets, such as UTF-8, for all sources of input
  * - [6] All validation failures should result in input rejection
+ * - [121] Log all input validation failures
  */
 @Component
 @RequiredArgsConstructor

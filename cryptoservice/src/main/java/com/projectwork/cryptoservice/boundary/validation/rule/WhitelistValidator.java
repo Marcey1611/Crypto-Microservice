@@ -14,6 +14,7 @@ import java.util.regex.Pattern;
  * SCPs:
  * - [6] All validation failures should result in input rejection
  * - [14] Validate all input against a "white" list of allowed characters, whenever possible
+ * - [121] Log all input validation failures
  */
 @Component
 @RequiredArgsConstructor
