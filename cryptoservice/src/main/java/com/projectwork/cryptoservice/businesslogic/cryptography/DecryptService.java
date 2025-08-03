@@ -56,7 +56,7 @@ public class DecryptService {
      */
     public final DecryptResultModel decrypt(final DecryptModel decryptModel) {
         final String clientName = decryptModel.getClientName();
-        LOGGER.info("Starting decryption for client '{}'.", clientName);
+        LOGGER.info("Starting decryption for current client and cipher text.");
 
         final String keyAlias = this.jwtManagementService.extractClientKeyAlias(decryptModel.getJwt());
         final SecretKey clientKey = this.retrieveClientKey(keyAlias);
@@ -64,7 +64,7 @@ public class DecryptService {
         final byte[] iv = this.retrieveIvForClient(clientNameFromKeyAlias);
         final String cipherText = decryptModel.getCipherText();
         final String plainText = this.processDecryption(iv, clientKey, cipherText, clientName);
-        LOGGER.info("Decryption completed for client '{}'.", clientName);
+        LOGGER.info("Decryption completed for current client and cipher text.");
         return this.resultModelsFactory.buildDecryptResultModel(plainText);
     }
 

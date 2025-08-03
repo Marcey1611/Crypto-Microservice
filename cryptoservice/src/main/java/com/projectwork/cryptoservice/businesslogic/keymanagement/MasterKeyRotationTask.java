@@ -135,7 +135,7 @@ public class MasterKeyRotationTask {
      */
     private void rewrapClientKeys(final KeyStore keystore, final SecretKey oldMasterKey, final SecretKey newMasterKey, final List<String> clientKeyAliases, final char[] passwordChars) {
         for (final String clientAlias : clientKeyAliases) {
-            LOGGER.debug("Rewrapping client key: {}.", clientAlias);
+            LOGGER.debug("Rewrapping client key.");
 
             final SecretKey unwrappedClientKey = this.unwrapClientKey(keystore, oldMasterKey, clientAlias, passwordChars);
             final byte[] newEncryptedKey = this.wrapClientKey(newMasterKey, unwrappedClientKey);

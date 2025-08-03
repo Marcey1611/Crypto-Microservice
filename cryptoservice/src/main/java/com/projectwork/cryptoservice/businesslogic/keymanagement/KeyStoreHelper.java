@@ -65,7 +65,7 @@ public class KeyStoreHelper {
      * SCP106 (Key storage) -> setKeystoreEntry
      */
     public final void storeClientKey(final String keyAlias, final SecretKey clientKey, final String keystorePath, final String keystorePassword) {
-        LOGGER.debug("Storing key for keyAlias '{}'", keyAlias);
+        LOGGER.debug("Storing client key for current client with specific keyAlias");
 
         final KeyStore keystore = this.loader.load(keystorePath, keystorePassword);
         final SecretKey masterKey = this.masterKeyService.retrieveMasterKey();
@@ -103,7 +103,7 @@ public class KeyStoreHelper {
      * @return the raw SecretKey associated with the alias
      */
     public final SecretKey getKey(final String alias, final String keystorePath, final String keystorePassword) {
-        LOGGER.debug("Retrieving key (raw) for alias '{}'", alias);
+        LOGGER.debug("Retrieving key (raw) for specific alias.");
         final KeyStore keyStore = this.loader.load(keystorePath, keystorePassword);
         final SecretKey key = this.getKey(keyStore, alias, keystorePassword);
         LOGGER.info("Key successfully retrieved.");

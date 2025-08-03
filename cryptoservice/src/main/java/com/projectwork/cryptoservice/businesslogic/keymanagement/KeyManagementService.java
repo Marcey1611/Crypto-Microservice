@@ -55,7 +55,7 @@ public class KeyManagementService {
      */
     public final GenerateKeyResultModel generateKey(final GenerateKeyModel generateKeyModel) {
         final String clientName = generateKeyModel.getClientName();
-        LOGGER.info("Starting key generation for client '{}'", clientName);
+        LOGGER.info("Starting key generation for current client.");
 
         final boolean clientNameExist = this.clientKeyRegistry.hasClient(clientName);
         if (clientNameExist) {
@@ -65,18 +65,18 @@ public class KeyManagementService {
         }
 
         final SecretKey aesKey = this.generateRandomKey();
-        LOGGER.debug("Random AES key generated for client '{}'", clientName);
+        LOGGER.debug("Random AES key generated for current client.");
 
         final String keyAlias = this.generateRandomKeyAlias();
-        LOGGER.debug("Random key alias generated for client '{}'.", clientName);
+        LOGGER.debug("Random key alias generated for current client.");
 
         this.keyStoreHelper.storeClientKey(keyAlias, aesKey, this.clientKeystorePath, this.clientKeystorePassword);
-        LOGGER.info("Key stored in KeyStore for client '{}'.", clientName);
+        LOGGER.info("Key stored in KeyStore for current client.");
 
         this.clientKeyRegistry.registerClientKey(clientName, keyAlias);
-        LOGGER.info("Client '{}' registered in client key registry.", clientName);
+        LOGGER.info("Current client registered in client key registry.");
 
-        final String message = String.format("Key generated for client: '%s'", clientName);
+        final String message = "Key generated for client.";
         return this.resultModelsFactory.buildGenerateKeyResultModel(message);
     }
 

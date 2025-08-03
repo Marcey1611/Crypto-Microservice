@@ -28,7 +28,7 @@ public class AuthRegistry {
     public void registerKeyAlias(final String keyAlias, final Set<String> allowedClients) {
         this.accessMap.putIfAbsent(keyAlias, ConcurrentHashMap.newKeySet(allowedClients.size()));
         this.accessMap.get(keyAlias).addAll(allowedClients);
-        LOGGER.debug("Registered keyAlias '{}' with access for: {}", keyAlias, allowedClients);
+        LOGGER.debug("Registered new keyAlias with access for some clients.");
     }
 
     /**
@@ -40,7 +40,7 @@ public class AuthRegistry {
     public void grantAccess(final String keyAlias, final String clientName) {
         final Set<String> clients = this.accessMap.get(keyAlias);
         clients.add(clientName);
-        LOGGER.debug("Granted access to keyAlias '{}' for client '{}'", keyAlias, clientName);
+        LOGGER.debug("Granted access to specific keyAlias for specific client.");
     }
 
     /**
@@ -52,7 +52,7 @@ public class AuthRegistry {
     public void revokeAccess(final String keyAlias, final String clientName) {
         final Set<String> clients = this.accessMap.get(keyAlias);
         clients.remove(clientName);
-        LOGGER.debug("Revoked access to keyAlias '{}' for client '{}'", keyAlias, clientName);
+        LOGGER.debug("Revoked access to specific keyAlias for specific client");
     }
 
     /**

@@ -53,7 +53,7 @@ public class EncryptService {
      */
     public final EncryptResultModel encrypt(final EncryptModel encryptModel) {
         final String clientName = encryptModel.getClientName();
-        LOGGER.info("Starting encryption process for client '{}'.", clientName);
+        LOGGER.info("Starting encryption process for current client and plain text.");
 
         final String jwt = encryptModel.getJwt();
         final String keyAlias = this.jwtManagementService.extractClientKeyAlias(jwt);
@@ -63,7 +63,7 @@ public class EncryptService {
         this.clientKeyRegistry.updateIvForClient(clientName, iv);
         final String plainText = encryptModel.getPlainText();
         final String cipherText = this.encryptPlainText(iv, clientKey, plainText, issuedTo);
-        LOGGER.info("Encryption completed successfully for client '{}'.", clientName);
+        LOGGER.info("Encryption completed successfully for current client and plain text.");
         return this.resultModelsFactory.buildEncryptResultModel(cipherText);
     }
 

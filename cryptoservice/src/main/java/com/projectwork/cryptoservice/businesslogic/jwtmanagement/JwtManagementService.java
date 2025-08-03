@@ -54,7 +54,7 @@ public class JwtManagementService {
         final String clientName = generateJwtModel.getClientName();
         final String issuedTo = generateJwtModel.getIssuedTo();
 
-        LOGGER.info("Generating JWT for client '{}'.", clientName);
+        LOGGER.info("Generating JWT for current client.");
 
         final SecretKey jwtSigningKey = this.keyStoreHelper.getKey("jwt-signing-key", this.masterKeystorePath, this.masterKeystorePassword);
         final Instant now = Instant.now();
@@ -74,16 +74,15 @@ public class JwtManagementService {
                     .signWith(jwtSigningKey, SignatureAlgorithm.HS256)
                     .compact();
         } catch (final JwtException | IllegalArgumentException | SecurityException exception) {
-            final String context = String.format("While generating JWT for client: %s", clientName);
             throw this.errorHandler.handleBusinessError(
                     ErrorCode.JWT_GENERATION_FAILED,
                     clientName,
-                    context,
+                    "While generating JWT for current client.",
                     exception
             );
         }
 
-        LOGGER.info("JWT successfully generated for client '{}'", clientName);
+        LOGGER.info("JWT successfully generated for current client.");
         return this.resultModelsFactory.buildGenerateJwtResultModel(jwt);
     }
 

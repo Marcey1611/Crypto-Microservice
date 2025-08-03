@@ -92,7 +92,7 @@ public class KeyStoreLoader {
         try (final FileOutputStream fos = new FileOutputStream(absolutePath)) {
             try {
                 keystore.store(fos, passwordChars);
-                LOGGER.info("Keystore successfully saved to '{}'", absolutePath);
+                LOGGER.info("Keystore successfully saved.");
             } catch (final KeyStoreException | IOException | NoSuchAlgorithmException | CertificateException exception) {
                 throw this.errorHandler.handleBusinessError(
                         ErrorCode.KEYSTORE_SAVE_FAILED,

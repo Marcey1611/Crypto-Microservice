@@ -38,7 +38,7 @@ public class ClientKeyRegistry {
      */
     public final boolean hasClient(final String clientName) {
         final boolean exists = this.clientKeyDataMap.containsKey(clientName);
-        LOGGER.debug("Checking if client '{}' exists: {}", clientName, exists);
+        LOGGER.debug("Checking if specific client exists: {}", exists);
         return exists;
     }
 
@@ -51,7 +51,7 @@ public class ClientKeyRegistry {
     public final void registerClientKey(final String clientName, final String keyAlias) {
         final ClientKeyData clientKeyData = this.clientKeyDataFactory.buildClientKeyData(keyAlias, null);
         this.clientKeyDataMap.put(clientName, clientKeyData);
-        LOGGER.info("Registered new client '{}', key alias '{}'", clientName, keyAlias);
+        LOGGER.info("Registered new (current) client with specific key alias");
         this.authRegistry.registerKeyAlias(keyAlias, Set.of());
     }
 
@@ -61,11 +61,9 @@ public class ClientKeyRegistry {
      * @param keyAlias the key alias to check
      */
     public void removeClientByKeyAlias(final String keyAlias) {
-        final long before = (long) this.clientKeyDataMap.size();
         this.clientKeyDataMap.entrySet().removeIf(entry
                 -> entry.getValue().getKeyAlias().equalsIgnoreCase(keyAlias));
-        final long after = (long) this.clientKeyDataMap.size();
-        LOGGER.info("Removed client(s) with key alias '{}'. Size before: {}, after: {}", keyAlias, before, after);
+        LOGGER.info("Removed client with specific key alias.");
     }
 
     /**
@@ -115,7 +113,7 @@ public class ClientKeyRegistry {
         final ClientKeyData data = this.clientKeyDataMap.get(clientName);
         data.setIv(iv);
         this.clientKeyDataMap.put(clientName, data);
-        LOGGER.info("Updated IV for client '{}'", clientName);
+        LOGGER.info("Updated IV for current client");
     }
 
     /**
@@ -127,7 +125,7 @@ public class ClientKeyRegistry {
     public boolean hasKeyAlias(final String keyAlias) {
         final boolean exists = this.clientKeyDataMap.values().stream()
                 .anyMatch(data -> data.getKeyAlias().equalsIgnoreCase(keyAlias));
-        LOGGER.debug("Checking if key alias '{}' exists: {}", keyAlias, exists);
+        LOGGER.debug("Checking if specific key alias exists: {}", exists);
         return exists;
     }
 }
