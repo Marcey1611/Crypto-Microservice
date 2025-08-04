@@ -1,5 +1,5 @@
 @startuml
-title TESTExact Sequence Diagram Decryption - CryptoService
+title Exact Sequence Diagram Decryption - CryptoService
 
 ' Color scheme:
 ' #CCE5FF → Boundary

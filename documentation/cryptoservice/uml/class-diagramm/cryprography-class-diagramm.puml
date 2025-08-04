@@ -1,0 +1,85 @@
+@startuml
+
+title Cryptography Class Diagram - CryptoService
+
+package cryptoservice {
+    package businesslogic {
+        package cryptography {
+            class CryptoUtility {
+                - static Logger LOGGER
+                - static String ENCRYPTION_ALGORITHM = "AES/GCM/NoPadding"
+                - static int GCM_TAG_LENGTH = 128
+                - ErrorHandler errorHandler
+                --
+                + Cipher createCipher()
+                + GCMParameterSpec createGCMParameterSpec(byte[])
+                + void initCipher(Cipher, SecretKey, GCMParameterSpec, int)
+            }
+
+            class DecryptService {
+                - Logger LOGGER
+                - JwtManagementService jwtManagementService
+                - KeyStoreHelper keyStoreHelper
+                - ClientKeyRegistry clientKeyRegistry
+                - ResultModelsFactory resultModelsFactory
+                - ErrorHandler errorHandler
+                - CryptoUtility cryptoUtility
+                - String clientKeystorePath
+                - String clientKeystorePassword
+                --
+                + DecryptResultModel decrypt(DecryptModel decryptModel)
+                - SecretKey retrieveClientKey(String keyAlias)
+                - String mapKeyAliasToClientName(String keyAlias)
+                - byte[] retrieveIvForClient(String clientNameFromKeyAlias)
+                - String processDecryption(byte[] iv, SecretKey clientKey, String cipherText, String clientName)
+                - byte[] decodeCipherText(String cipherText)
+                - String decryptCipherText(Cipher cipher, byte[] cipherTextBytes)
+            }
+
+            class EncryptService {
+                - Logger LOGGER
+                - KeyStoreHelper keyStoreHelper
+                - JwtManagementService jwtManagementService
+                - ClientKeyRegistry clientKeyRegistry
+                - ResultModelsFactory resultModelsFactory
+                - ErrorHandler errorHandler
+                - CryptoUtility cryptoUtility
+                - String clientKeystorePath
+                - String clientKeystorePassword
+                --
+                + EncryptResultModel encrypt(EncryptModel encryptModel)
+                - SecretKey getClientKey(String keyAlias)
+                - String encryptPlainText(byte[] iv, SecretKey clientKey, String plainText, String issuedTo)
+                - byte[] encryptData(Cipher cipher, String plainText)
+                - String encodeBase64(byte[] encryptedData)
+                - byte[] generateIV()
+            }
+        }
+
+        package keymanagement {}
+        package jwtmanagement {}
+    }
+
+    package businessfacade {}
+    package errorhandling {}
+    package entity {}
+
+    businessfacade --> DecryptService : uses
+    businessfacade --> EncryptService : uses
+
+    CryptoUtility --> errorhandling : uses
+
+    DecryptService --> jwtmanagement : uses
+    DecryptService --> keymanagement : uses
+    DecryptService --> errorhandling : uses
+    DecryptService --> CryptoUtility : uses
+    DecryptService --> entity : uses
+
+    EncryptService --> keymanagement : uses
+    EncryptService --> jwtmanagement : uses
+    EncryptService --> entity : uses
+    EncryptService --> errorhandling : uses
+    EncryptService --> CryptoUtility : uses
+}
+
+@enduml

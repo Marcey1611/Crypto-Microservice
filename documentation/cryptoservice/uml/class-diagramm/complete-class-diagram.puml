@@ -138,7 +138,7 @@ package cryptoservice {
                 }
             }
 
-            class FieldName {
+            enum FieldName {
                 + getValue(): String
                 --
                 + CIPHER_TEXT

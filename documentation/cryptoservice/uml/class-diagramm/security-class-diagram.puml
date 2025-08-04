@@ -1,0 +1,41 @@
+@startuml
+
+title Security Class Diagram - CryptoService
+
+package cryptoservice {
+    package boundary {
+        package security {
+            class IpRateLimitingFilter {
+                - LOGGER: Logger
+                - MAX_REQUESTS_PER_MINUTE: int
+                - TIME_WINDOW_MS: long
+                - requestMap: Map<String, RequestCounter>
+                --
+                + doFilter(request: ServletRequest, response: ServletResponse, chain: FilterChain): void
+                - getClientIp(request: HttpServletRequest): String
+            }
+
+            class PrincipalRateLimitingFilter {
+                - MAX_REQUESTS_PER_MINUTE: int
+                - TIME_WINDOW_MS: long
+                - LOGGER: Logger
+                - requestMap: Map<String, RequestCounter>
+                --
+                + doFilterInternal(request: HttpServletRequest, response: HttpServletResponse, filterChain: FilterChain): void
+            }
+
+            class SecurityConfig {
+                - ipRateLimitingFilter: IpRateLimitingFilter
+                - principalRateLimitingFilter: PrincipalRateLimitingFilter
+                --
+                + userDetailsService(): UserDetailsService
+                + securityFilterChain(http: HttpSecurity): SecurityFilterChain
+            }
+        }
+    }
+
+    SecurityConfig --> IpRateLimitingFilter : injects
+    SecurityConfig --> PrincipalRateLimitingFilter : injects
+}
+
+@enduml
