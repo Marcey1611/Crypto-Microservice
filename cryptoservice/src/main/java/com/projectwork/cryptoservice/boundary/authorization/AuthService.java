@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
  * - [77] Use only trusted system objects (e.g. server-side session objects) for making access authorization decisions
  * - [78] Use a single site-wide component to check access authorization
  * - [79] Access controls should fail securely
+ * - [80] Deny all access if the application cannot access its security configuration information
  * - [87] Restrict access to services to only authorized users
  * - [88] Restrict access to application data to only authorized users
  * - [112] Error handling logic associated with security controls should deny access by default

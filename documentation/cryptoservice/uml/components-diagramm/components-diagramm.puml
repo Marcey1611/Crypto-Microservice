@@ -1,4 +1,7 @@
 @startuml
+
+title Components Diagram - CryptoService
+
 package "CryptoService" {
     [Application Entry] as Entry
     [Security Layer] as Security
@@ -14,13 +17,12 @@ package "CryptoService" {
 
     Entry --> Security
     Security --> API
-    Security --> Authorization
     API --> Controller
-    Controller --> Validation
+    Controller -left-> Validation : 1
     Validation --> Error
-    Controller --> Authorization
+    Controller -left-> Authorization : 2
     Authorization --> Error
-    Controller --> BusinessFacade
+    Controller -down-> BusinessFacade : 3
     BusinessFacade --> KeyMgmt
     BusinessFacade --> JwtMgmt
     BusinessFacade --> Crypto

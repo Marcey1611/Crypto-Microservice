@@ -1,5 +1,5 @@
 @startuml
-title Sequence-Diagram for /encrypt
+title Exact Sequence Diagram Encryption - CryptoService
 
 ' Color scheme:
 ' #CCE5FF → Boundary

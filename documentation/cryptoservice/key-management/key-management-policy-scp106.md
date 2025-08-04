@@ -1,4 +1,4 @@
-# 🔐 Key Management Policy (CryptoService)
+# Key Management Policy - CryptoService
 
 ## 1. Objective
 
@@ -70,9 +70,3 @@ This policy defines the procedures and responsibilities for the secure handling 
 - The `KeyManagementService` is responsible for ensuring compliance with this policy.
 - Client-to-alias mapping is exclusively maintained by the `ClientKeyRegistry`.
 
----
-
-## 📌 Reference
-
-This policy fulfills the requirements of OWASP Secure Coding Practice [SCP-106]:  
-**“Establish and utilize a policy and process for how cryptographic keys will be managed.”**

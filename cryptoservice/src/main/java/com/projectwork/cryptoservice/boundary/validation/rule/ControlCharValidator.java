@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
  * It throws an error if the string contains any control characters.
  * SCPs:
  * - [6] All validation failures should result in input rejection
+ * - [16] Discrete checks for null bytes, newline chars, path traversal
  * - [121] Log all input validation failures
  */
 @Component
@@ -27,7 +28,7 @@ public class ControlCharValidator {
      * @throws IllegalArgumentException if the input contains control characters.
      */
     public final void validateControlChars(final String input, final FieldName name) {
-        if (input.chars().anyMatch(Character::isISOControl)) {
+        if (input.chars().anyMatch(Character::isISOControl) || input.contains("../") || input.contains("..\\") || input.contains("%2e%2e") || input.contains("..%2f")) {
             final String fieldName = name.getValue();
             final String context = String.format("Field '%s' contains control characters.", name);
             throw this.errorHandler.handleClientError(context, fieldName, ErrorCode.CONTAINS_CONTROL_CHAR);

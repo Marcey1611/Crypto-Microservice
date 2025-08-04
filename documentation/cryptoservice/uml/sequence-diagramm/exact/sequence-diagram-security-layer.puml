@@ -1,6 +1,6 @@
 @startuml
 
-title Sequence-Diagram for Security Layer
+title Sequence Diagram Security Layer - CryptoService
 
 actor Client
 participant IpRateLimitingFilter

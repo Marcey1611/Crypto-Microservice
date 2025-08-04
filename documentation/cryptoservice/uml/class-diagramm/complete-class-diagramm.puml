@@ -1,7 +1,6 @@
 @startuml
 
-'TODO Finish after checking and implementing secure coding practices
-
+title Complete Class Diagram - CryptoService
 
 package cryptoservice {
     package boundary {

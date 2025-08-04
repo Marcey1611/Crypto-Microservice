@@ -1,6 +1,6 @@
 @startuml
 
-title Sequence-Diagram for /generate-key
+title Exact Sequence Diagram Key Generation - CryptoService
 
 ' Color scheme:
 ' #CCE5FF → Boundary

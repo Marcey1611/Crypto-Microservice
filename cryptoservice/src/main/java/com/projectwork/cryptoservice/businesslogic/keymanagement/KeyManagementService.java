@@ -22,10 +22,8 @@ import java.util.Base64;
  * Key Management Service implementation: handles the key management of the service.
  * SCPs:
  * - [104] All random numbers, random file names, random GUIDs, and random strings should be generated using the cryptographic module's approved random number generator when these random values are intended to be un-guessable
- * - [106] Establish and utilize a policy and process for how cryptographic keys will be managed.
  * - [112] Error handling logic associated with security controls should deny access by default
  * - [114] Logging controls should support both success and failure of specified security events
- * - [129] Log cryptographic module failures --> General key management and generation
  */
 @RequiredArgsConstructor
 @Service

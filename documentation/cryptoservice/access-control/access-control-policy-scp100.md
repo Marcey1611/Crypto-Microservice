@@ -1,4 +1,4 @@
-# Access Control Policy – CryptoService
+# Access Control Policy - CryptoService
 
 ## 1. Objective
 

@@ -1,5 +1,5 @@
 @startuml
-title Simplified Sequence Diagram for /generate-key
+title Simplified Sequence Diagram Key Generation - CryptoService
 
 actor Client
 participant SecurityLayer

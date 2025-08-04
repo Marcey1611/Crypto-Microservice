@@ -1,5 +1,5 @@
 @startuml
-title Simplified Sequence Diagram for /generate-jwt
+title Simplified Sequence Diagram JWT Generation - CryptoService
 
 actor Client
 participant SecurityLayer

@@ -1,5 +1,5 @@
 @startuml
-title Simplified Sequence Diagram for /encrypt
+title Simplified Sequence Diagram Encryption - CryptoService
 
 actor Client
 participant SecurityLayer
