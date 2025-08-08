@@ -67,6 +67,7 @@ public class CryptoclientApplication implements CommandLineRunner {
             return;
         }
         final String jwt = jwtNode.get("jwt").asText();
+        System.out.println("Generated JWT: " + jwt);
 
         final String encryptedJson = this.cryptoClient.encrypt(message, jwt);
         final JsonNode encryptedNode;
@@ -77,6 +78,7 @@ public class CryptoclientApplication implements CommandLineRunner {
             return;
         }
         final String cipherText = encryptedNode.get("cipherText").asText();
+        System.out.println("Encrypted message: " + cipherText);
 
         try {
             final String response = this.cryptoClient.sendToOtherClient(this.otherClientHost, this.otherClientPort, jwt, cipherText);
