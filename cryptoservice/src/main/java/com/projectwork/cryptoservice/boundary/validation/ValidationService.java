@@ -104,7 +104,7 @@ public class ValidationService {
         this.controlCharValidator.validateControlChars(plainText, FieldName.PLAIN_TEXT);
         this.whitelistValidator.validateWhitelist(plainText, FieldName.PLAIN_TEXT, true);
 
-        this.validateJwt(jwt, key);
+        this.validateJwt(jwt, key, false);
     }
 
     /**
@@ -126,7 +126,7 @@ public class ValidationService {
         this.controlCharValidator.validateControlChars(cipherText, FieldName.CIPHER_TEXT);
         this.base64Validator.validateBase64(cipherText, FieldName.CIPHER_TEXT);
 
-        this.validateJwt(jwt, key);
+        this.validateJwt(jwt, key, true);
     }
 
     /**
@@ -134,8 +134,10 @@ public class ValidationService {
      *
      * @param jwt the JWT string to validate
      * @param key the SecretKey used for signature validation
+     *
+     *            TODO vllt schuaen das der jwt validator nicht von den anderen validatoren abhängt, sondern DIE ANDEREN VALIDATOREN FÜR DEN ALGO HEADER KEYALIAS UND ISSUEDTO HIER DRIN AUFGERUFEN WERDEN:::
      */
-    private void validateJwt(final String jwt, final SecretKey key) {
+    private void validateJwt(final String jwt, final SecretKey key, final boolean consumeJti) {
         this.nullOrBlankValidator.validateNullOrBlank(jwt, FieldName.JWT);
         this.lengthValidator.validateLength(jwt, JWT_MAX_LENGTH, FieldName.JWT);
         this.asciiValidator.validateAscii(jwt, FieldName.JWT);
@@ -144,17 +146,25 @@ public class ValidationService {
         this.whitelistValidator.validateWhitelist(jwt, FieldName.JWT, false);
 
         this.jwtValidator.validateJwtPattern(jwt);
+
         final Jws<Claims> parsed = this.jwtValidator.validateSignature(jwt, key);
         final Claims claims = parsed.getBody();
         final JwsHeader<?> header = (JwsHeader<?>) parsed.getHeader();
-        final Date expiration = claims.getExpiration();
-        this.jwtValidator.validateExpiration(expiration);
+
+        this.jwtValidator.validateExpiration(claims);
+        this.jwtValidator.validateIssuerAndAudience(claims);
+
         final String keyAlias = claims.get("keyAlias", String.class);
         this.jwtValidator.validateKeyAlias(keyAlias, JWT_KEY_ALIAS_MAX_LENGTH);
         final String issuedTo = claims.get("issuedTo", String.class);
         this.jwtValidator.validateIssuedTo(issuedTo, ISSUED_TO_MAX_LENGTH);
+
         final String algorithm = header.getAlgorithm();
         this.jwtValidator.validateAlgorithmFromHeader(algorithm, JWT_ALGORITHM_MAX_LENGTH);
+
+        if (consumeJti) {
+            this.jwtValidator.validateAndConsumeJti(claims);
+        }
     }
 
     /**

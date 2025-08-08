@@ -1,5 +1,6 @@
 package com.projectwork.cryptoservice.businesslogic.jwtmanagement;
 
+import com.projectwork.cryptoservice.boundary.validation.cache.ReplayCache;
 import com.projectwork.cryptoservice.businesslogic.keymanagement.ClientKeyRegistry;
 import com.projectwork.cryptoservice.businesslogic.keymanagement.KeyStoreHelper;
 import com.projectwork.cryptoservice.entity.factory.ResultModelsFactory;
@@ -17,7 +18,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.time.Instant;
+import java.util.Base64;
 import java.util.Date;
 
 /**
@@ -36,13 +40,14 @@ public class JwtManagementService {
     private final KeyStoreHelper keyStoreHelper;
     private final ClientKeyRegistry clientKeyRegistry;
     private final ErrorHandler errorHandler;
+    private final ReplayCache replayCache;
 
     @Value("${master.keystore.path}")
     private String masterKeystorePath;
 
     @Value("${master.keystore.password}")
     private String masterKeystorePassword;
-    
+
     /**
      * Generates a JWT based on the provided GenerateJwtModel.
      *
@@ -57,19 +62,28 @@ public class JwtManagementService {
 
         final SecretKey jwtSigningKey = this.keyStoreHelper.getKey("jwt-signing-key", this.masterKeystorePath, this.masterKeystorePassword);
         final Instant now = Instant.now();
-        final Instant expiration = now.plusSeconds(300L);
         final String keyAlias = this.clientKeyRegistry.getKeyAliasForClient(clientName);
-        final Date fromNow = Date.from(now);
-        final Date fromExpiration = Date.from(expiration);
+        final byte[] randomBytes = new byte[16];
+
+        try {
+            SecureRandom secureRandom = SecureRandom.getInstanceStrong();
+            secureRandom.nextBytes(randomBytes);
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
+        final String jti = Base64.getUrlEncoder().withoutPadding().encodeToString(randomBytes);
 
         final String jwt;
         try {
             jwt = Jwts.builder()
+                    .setIssuer(JwtConsts.ISSUER)
+                    .setAudience(JwtConsts.AUDIENCE)
+                    .setId(jti)
                     .setSubject("CryptoMicroserviceAccesToken")
                     .claim("keyAlias", keyAlias)
                     .claim("issuedTo", issuedTo)
-                    .setIssuedAt(fromNow)
-                    .setExpiration(fromExpiration)
+                    .setIssuedAt(Date.from(now))
+                    .setExpiration(Date.from(now.plusSeconds(JwtConsts.TOKEN_TTL_SECONDS)))
                     .signWith(jwtSigningKey, SignatureAlgorithm.HS256)
                     .compact();
         } catch (final JwtException | IllegalArgumentException | SecurityException exception) {
@@ -81,6 +95,7 @@ public class JwtManagementService {
             );
         }
 
+        replayCache.register(jti, now.plusSeconds(JwtConsts.TOKEN_TTL_SECONDS).getEpochSecond());
         LOGGER.info("JWT successfully generated for current client.");
         return this.resultModelsFactory.buildGenerateJwtResultModel(jwt);
     }

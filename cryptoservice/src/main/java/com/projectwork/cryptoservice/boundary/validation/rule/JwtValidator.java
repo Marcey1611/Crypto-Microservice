@@ -1,6 +1,8 @@
 package com.projectwork.cryptoservice.boundary.validation.rule;
 
 import com.projectwork.cryptoservice.boundary.validation.FieldName;
+import com.projectwork.cryptoservice.boundary.validation.cache.ReplayCache;
+import com.projectwork.cryptoservice.businesslogic.jwtmanagement.JwtConsts;
 import com.projectwork.cryptoservice.errorhandling.exceptions.BadRequestException;
 import com.projectwork.cryptoservice.errorhandling.util.ErrorCode;
 import com.projectwork.cryptoservice.errorhandling.util.ErrorHandler;
@@ -34,6 +36,8 @@ public class JwtValidator {
     private final LengthValidator lengthValidator;
     private final NullOrBlankValidator nullOrBlankValidator;
     private final WhitelistValidator whitelistValidator;
+    private final ReplayCache replayCache;
+
 
     /**
      * Validates the format of a JWT.
@@ -58,8 +62,11 @@ public class JwtValidator {
      */
     public final Jws<Claims> validateSignature(final String jwt, final SecretKey key) {
         try {
-            final JwtParser build = Jwts.parserBuilder().setSigningKey(key).build();
-            return build.parseClaimsJws(jwt);
+            return Jwts.parserBuilder()
+                    .setSigningKey(key)
+                    .setAllowedClockSkewSeconds(JwtConsts.CLOCK_SKEW_SECONDS)
+                    .build()
+                    .parseClaimsJws(jwt);
         } catch (final JwtException exception) {
             throw this.errorHandler.handleAuthError(ErrorCode.INVALID_JWT, "While validating JWT signature.");
 
@@ -69,12 +76,34 @@ public class JwtValidator {
     /**
      * Validates the expiration date of a JWT.
      *
-     * @param expiration the expiration date to validate
+     * @param claims the claims extracted from the JWT
      * @throws BadRequestException if the expiration date is null or in the past
      */
-    public final void validateExpiration(final Date expiration) {
-        if (null == expiration || expiration.before(new Date())) {
+    public final void validateExpiration(final Claims claims) {
+        if (null == claims.getExpiration() || claims.getExpiration().before(new Date())) {
             throw this.errorHandler.handleAuthError(ErrorCode.EXPIRED_JWT, "While validating JWT expiration date.");
+        }
+    }
+
+    public final void validateIssuerAndAudience(final Claims claims) {
+        final String iss = claims.getIssuer();
+        final String aud = claims.getAudience();
+        if (!JwtConsts.ISSUER.equals(iss) || !JwtConsts.AUDIENCE.equals(aud)) {
+            throw this.errorHandler.handleAuthError(ErrorCode.INVALID_JWT, "Invalid iss/aud in JWT.");
+        }
+    }
+
+    public final void validateAndConsumeJti(final Claims claims) {
+        final String jti = claims.getId();
+        if (jti == null || jti.isBlank()) {
+            throw this.errorHandler.handleAuthError(ErrorCode.INVALID_JWT, "Missing jti in JWT.");
+        }
+        final Date exp = claims.getExpiration();
+        if (exp != null) {
+            replayCache.register(jti, exp.toInstant().getEpochSecond());
+        }
+        if (!replayCache.consumeOnce(jti)) {
+            throw this.errorHandler.handleForbiddenError(ErrorCode.INVALID_JWT, "JWT replay detected.");
         }
     }
 
