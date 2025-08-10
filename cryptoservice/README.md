@@ -12,6 +12,8 @@ Linux:
 MASTER_KEYSTORE_PASSWORD=PzDXe4in3qG7LWvSgwLp0JG3Snm7UxT5kFVuG1ey3h7hyp9IVL MASTER_KEYSTORE_PATH=src/main/resources/keystore/master-keystore.p12 CLIENT_KEYSTORE_PASSWORD=P095NxN4cROz0IaWF8105KB6oVYNXKg2q4JqhSKf6zMawsT2Lr CLIENT_KEYSTORE_PATH=src/main/resources/keystore/client-keystore.p12 mvn spring-boot:run
 ```
 
+mvn spring-boot:run -Dspring-boot.run.arguments="--MASTER_KEYSTORE_PASSWORD=PzDXe4in3qG7LWvSgwLp0JG3Snm7UxT5kFVuG1ey3h7hyp9IVL --MASTER_KEYSTORE_PATH=src/main/resources/keystore/master-keystore.p12 --CLIENT_KEYSTORE_PASSWORD=P095NxN4cROz0IaWF8105KB6oVYNXKg2q4JqhSKf6zMawsT2Lr --CLIENT_KEYSTORE_PATH=src/main/resources/keystore/client-keystore.p12"
+
 Powershell (windows):
 ```
 $env:MASTER_KEYSTORE_PASSWORD = "PzDXe4in3qG7LWvSgwLp0JG3Snm7UxT5kFVuG1ey3h7hyp9IVL"

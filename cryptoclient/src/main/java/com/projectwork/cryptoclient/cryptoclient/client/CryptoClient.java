@@ -105,7 +105,7 @@ public class CryptoClient {
                 .block();
     }
 
-    public final String sendToOtherClient(final String host, final int port, final String jwt, final String cipherText) {
+    public final String sendToOtherClient(final String host, final String port, final String jwt, final String cipherText) {
         final WebClient otherClient = WebClient.builder().baseUrl("http://" + host + ":" + port).build();
         return otherClient.post()
                 .uri("/messages/receive")

@@ -21,12 +21,6 @@ import java.util.Scanner;
 @RequestMapping("/messages")
 public class CryptoclientApplication implements CommandLineRunner {
 
-    @Value("${otherclient.host}")
-    private String otherClientHost;
-
-    @Value("${otherclient.port}")
-    private int otherClientPort;
-
     @Autowired
     private CryptoClient cryptoClient;
 
@@ -56,6 +50,10 @@ public class CryptoclientApplication implements CommandLineRunner {
         final String message = this.scanner.nextLine();
         System.out.println("Enter receiver:");
         final String receiverName = this.scanner.nextLine();
+        System.out.println("Enter receivers host (e.g. localhost) or the ip address:");
+        final String receiverHost = this.scanner.nextLine();
+        System.out.println("Enter receivers port (e.g. 8080):");
+        final String receiverPort = this.scanner.nextLine();
 
         this.cryptoClient.generateKey();
         final String jwtJson = this.cryptoClient.generateJwt(receiverName);
@@ -81,7 +79,7 @@ public class CryptoclientApplication implements CommandLineRunner {
         System.out.println("Encrypted message: " + cipherText);
 
         try {
-            final String response = this.cryptoClient.sendToOtherClient(this.otherClientHost, this.otherClientPort, jwt, cipherText);
+            final String response = this.cryptoClient.sendToOtherClient(receiverHost, receiverPort, jwt, cipherText);
             System.out.println("Response from other client: " + response);
         } catch (final Exception exception) {
             System.err.println("Error sending message to client " + receiverName);

@@ -82,7 +82,6 @@ public class AuthService {
         final String jwt = decryptRequest.getJwt();
         final String issuedTo = this.jwtManagementService.extractIssuedTo(jwt);
         final String keyAlias = this.jwtManagementService.extractClientKeyAlias(jwt);
-        System.out.println("AuthService: DecryptRequest for client: " + clientName + ", issuedTo: " + issuedTo);
 
         if (!issuedTo.equals(clientName)) {
             throw this.errorHandler.handleForbiddenError(
