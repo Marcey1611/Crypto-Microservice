@@ -37,7 +37,7 @@ curl -v -X POST https://localhost:8443/crypto/jwt/generate \
 --key cryptoclient/src/main/resources/tls/client1.key \
 --cacert ca/root-ca.crt \
 -H "Content-Type: application/json" \
--d '{"issuedTo": "Client2"}'
+-d '{"issuedTo": "client2"}'
 
 
 
