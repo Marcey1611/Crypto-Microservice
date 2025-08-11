@@ -48,9 +48,8 @@ mvn spring-boot:run -Dspring-boot.run.arguments="--client.name=client1 --client.
 mvn spring-boot:run -Dspring-boot.run.arguments="--client.name=client2 --client.port=8082 --client.password=changeit --client.crypto-service-url=https://localhost:8443/crypto"
 ```
 
-### 5. Alternative: Send Records via curl
+### 5. Alternative: Send Requests via curl
 
-TODO: Add curl commands to send records to the service.
 You also can use curl to send requests to the service. The following commands show how to do this with client1 and client2.
 
 1. **Generate a Key:**
