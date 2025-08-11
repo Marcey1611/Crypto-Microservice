@@ -51,6 +51,57 @@ mvn spring-boot:run -Dspring-boot.run.arguments="--client.name=client2 --client.
 ### 5. Alternative: Send Records via curl
 
 TODO: Add curl commands to send records to the service.
+You also can use curl to send requests to the service. The following commands show how to do this with client1 and client2.
+
+1. **Generate a Key:**
+```bash
+curl -v -X POST https://localhost:8443/crypto/keys/generate \
+--cert cryptoclient/src/main/resources/tls/client1.crt \
+--key cryptoclient/src/main/resources/tls/client1.key \
+--cacert ca/root-ca.crt
+```
+
+2. **Generate a JWT:**
+```bash
+curl -v -X POST https://localhost:8443/crypto/jwt/generate \
+--cert cryptoclient/src/main/resources/tls/client1.crt \
+--key cryptoclient/src/main/resources/tls/client1.key \
+--cacert ca/root-ca.crt \
+-H "Content-Type: application/json" \
+-d '{"issuedTo": "ISSUED_TO_CLIENT_NAME"}'
+```
+Please replace `ISSUED_TO_CLIENT_NAME` with the name of the client you want to issue the JWT for (e.g. `client2`).
+You will receive a JWT in the response, which you can use for encryption and decryption.
+
+3. **Encrypt a Message:**
+```bash
+curl -v -X POST https://localhost:8443/crypto/encrypt \
+--cert cryptoclient/src/main/resources/tls/client1.crt \
+--key cryptoclient/src/main/resources/tls/client1.key \
+--cacert ca/root-ca.crt \
+-H "Content-Type: application/json" \
+-d '{
+"plainText": "MESSAGE",
+"jwt": "JWT_TOKEN"
+}'
+```
+Please replace `JWT_TOKEN` with the JWT you received in the previous step and `MESSAGE` with the message you want to encrypt.
+You will receive a ciphertext in the response, which you can use for decryption.
+
+4. **Decrypt a Message:**
+```bash
+curl -v -X POST https://localhost:8443/crypto/decrypt \
+--cert cryptoclient/src/main/resources/tls/client2.crt \
+--key cryptoclient/src/main/resources/tls/client2.key \
+--cacert ca/root-ca.crt \
+-H "Content-Type: application/json" \
+-d '{
+"cipherText": "CIPHER_TEXT",
+"jwt": "JWT_TOKEN"
+}'
+```
+Please replace `CIPHER_TEXT` with the ciphertext you received in the previous step and `JWT_TOKEN` with the JWT you received earlier.
+You will receive the decrypted plaintext in the response.
 
 ## Components
 
