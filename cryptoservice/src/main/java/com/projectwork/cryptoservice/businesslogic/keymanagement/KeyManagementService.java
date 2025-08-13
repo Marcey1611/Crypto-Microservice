@@ -1,0 +1,139 @@
+package com.projectwork.cryptoservice.businesslogic.keymanagement;
+
+import com.projectwork.cryptoservice.entity.factory.ResultModelsFactory;
+import com.projectwork.cryptoservice.entity.models.keymanagement.GenerateKeyModel;
+import com.projectwork.cryptoservice.entity.models.keymanagement.GenerateKeyResultModel;
+import com.projectwork.cryptoservice.errorhandling.exceptions.InternalServerErrorException;
+import com.projectwork.cryptoservice.errorhandling.util.ErrorCode;
+import com.projectwork.cryptoservice.errorhandling.util.ErrorHandler;
+import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.util.Base64;
+
+/**
+ * Key Management Service implementation: handles the key management of the service.
+ * SCPs:
+ * - [104] All random numbers, random file names, random GUIDs, and random strings should be generated using the cryptographic module's approved random number generator when these random values are intended to be un-guessable
+ * - [112] Error handling logic associated with security controls should deny access by default
+ * - [114] Logging controls should support both success and failure of specified security events
+ */
+@RequiredArgsConstructor
+@Service
+public class KeyManagementService {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(KeyManagementService.class);
+    private static final int KEY_SIZE = 256;
+
+    private final KeyStoreHelper keyStoreHelper;
+    private final ResultModelsFactory resultModelsFactory;
+    private final ClientKeyRegistry clientKeyRegistry;
+    private final ErrorHandler errorHandler;
+
+    @Value("${client.keystore.path}")
+    private String clientKeystorePath;
+
+    @Value("${client.keystore.password}")
+    private String clientKeystorePassword;
+
+    /**
+     * Generates a secure client key, 
+     * 
+     * @param generateKeyModel the model containing parameters for key generation
+     * @return An object of GenerateKeyResultModel
+     *
+     * SCP106 (Key generation)
+     */
+    public final GenerateKeyResultModel generateKey(final GenerateKeyModel generateKeyModel) {
+        final String clientName = generateKeyModel.getClientName();
+        LOGGER.info("Starting key generation for current client.");
+
+        final boolean clientNameExist = this.clientKeyRegistry.hasClient(clientName);
+        if (clientNameExist) {
+            final String message = "Key for client already exists.";
+            LOGGER.warn("Key generation skipped: {}", message);
+            return this.resultModelsFactory.buildGenerateKeyResultModel(message);
+        }
+
+        final SecretKey aesKey = this.generateRandomKey();
+        LOGGER.debug("Random AES key generated for current client.");
+
+        final String keyAlias = this.generateRandomKeyAlias();
+        LOGGER.debug("Random key alias generated for current client.");
+
+        this.keyStoreHelper.storeClientKey(keyAlias, aesKey, this.clientKeystorePath, this.clientKeystorePassword);
+        LOGGER.info("Key stored in KeyStore for current client.");
+
+        this.clientKeyRegistry.registerClientKey(clientName, keyAlias);
+        LOGGER.info("Current client registered in client key registry.");
+
+        final String message = "Key generated for client.";
+        return this.resultModelsFactory.buildGenerateKeyResultModel(message);
+    }
+
+    /**
+     * Generates a random AES key and stores it in the KeyStore.
+     *
+     * @return A SecretKey object representing the generated AES key.
+     * @throws InternalServerErrorException if there is an error during key generation.
+     *
+     * SCP104
+     */
+    private SecretKey generateRandomKey() {
+        final SecureRandom secureRandom;
+        try {
+            secureRandom = SecureRandom.getInstanceStrong();
+        } catch (final NoSuchAlgorithmException exception) {
+            throw this.errorHandler.handleBusinessError(
+                    ErrorCode.AES_KEYGEN_SECURE_RANDOM_FAILED,
+            "While generating a random client key.",
+                    exception
+            );
+        }
+    
+        final KeyGenerator keyGen;
+        try {
+            keyGen = KeyGenerator.getInstance("AES");
+        } catch (final NoSuchAlgorithmException exception) {
+            throw this.errorHandler.handleBusinessError(
+                    ErrorCode.AES_KEYGEN_INIT_FAILED,
+                    "While preparing AES key generator for client key creation.",
+                    exception
+            );
+        }
+
+        keyGen.init(KEY_SIZE, secureRandom);
+        return keyGen.generateKey();
+    }
+
+    /**
+     * Generates a random key alias using a secure random number generator.
+     *
+     * @return A Base64 encoded string representing the random key alias.
+     * @throws InternalServerErrorException if there is an error during secure random generation.
+     *
+     * SCP104
+     */
+    private String generateRandomKeyAlias() {
+        final SecureRandom secureRandom;
+        try {
+            secureRandom = SecureRandom.getInstanceStrong();
+        } catch (final NoSuchAlgorithmException exception) {
+            throw this.errorHandler.handleBusinessError(
+                    ErrorCode.AES_KEYGEN_SECURE_RANDOM_FAILED,
+                    "While generating a random client key alias.",
+                    exception
+            );
+        }
+        final byte[] randomBytes = new byte[16];
+        secureRandom.nextBytes(randomBytes);
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(randomBytes).toLowerCase();
+    }
+}

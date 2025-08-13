@@ -1,0 +1,60 @@
+@startuml
+
+title Sequence Diagram Security Layer - CryptoService
+
+actor Client
+participant IpRateLimitingFilter
+participant X509AuthenticationFilter
+participant PrincipalRateLimitingFilter
+participant SecurityContext
+participant CryptoController
+participant AuthService
+participant ClientKeyRegistry
+
+Client -> IpRateLimitingFilter : send HTTPS request
+activate IpRateLimitingFilter
+IpRateLimitingFilter -> IpRateLimitingFilter : check rate for IP
+alt too many requests
+    IpRateLimitingFilter --> Client : 429 Too Many Requests
+    deactivate IpRateLimitingFilter
+    return
+else within limit
+    IpRateLimitingFilter -> X509AuthenticationFilter : forward request
+    deactivate IpRateLimitingFilter
+end
+
+activate X509AuthenticationFilter
+X509AuthenticationFilter -> SecurityContext : extract CN from certificate
+SecurityContext -> SecurityContext : set Authentication (with CN as principal)
+X509AuthenticationFilter --> PrincipalRateLimitingFilter : forward request
+deactivate X509AuthenticationFilter
+
+activate PrincipalRateLimitingFilter
+PrincipalRateLimitingFilter -> PrincipalRateLimitingFilter : check rate for CN
+alt too many requests
+    PrincipalRateLimitingFilter --> Client : 429 Too Many Requests
+    deactivate PrincipalRateLimitingFilter
+    return
+else within limit
+    PrincipalRateLimitingFilter -> CryptoController : forward request
+    deactivate PrincipalRateLimitingFilter
+end
+
+activate CryptoController
+CryptoController -> AuthService : authorizePathAccess(clientName, path)
+activate AuthService
+AuthService -> ClientKeyRegistry : hasClient(clientName)
+alt unknown client and restricted path
+    AuthService --> Client : 403 Forbidden
+    deactivate AuthService
+    deactivate CryptoController
+    return
+else known client or allowed path
+    AuthService --> CryptoController : authorization successful
+end
+deactivate AuthService
+
+CryptoController -> CryptoController : handle request (e.g. encrypt, generate key, etc.)
+deactivate CryptoController
+
+@enduml

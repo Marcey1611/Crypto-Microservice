@@ -1,0 +1,27 @@
+@startuml
+title System Use Case Diagram
+
+actor Client1
+actor Client2
+rectangle "CryptoService" {
+    usecase "/crypto/keys/generate\nClient key generation" as UC1
+    usecase "/crypto/jwt/generate\nJWT generation" as UC2
+    usecase "/crypto/encrypt\nEncryption" as UC3
+    usecase "/crypto/decrypt\nDecryption" as UC5
+}
+
+Client1 -down-> UC1 : (1) empty body
+UC1 .up.> Client1 : (2) status message
+
+Client1 -down-> UC2 : (3) issuedTo
+UC2 .up.> Client1 : (4) jwt
+
+Client1 -down-> UC3 : (5) plaintext, jwt
+UC3 .up.> Client1 : (6) ciphertext
+
+Client1 -right-> Client2 : (7) jwt, ciphertext
+
+Client2 -down-> UC5 : (8) jwt, ciphertext
+UC5 .up.> Client2 : (9) plaintext
+
+@enduml

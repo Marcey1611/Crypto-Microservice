@@ -1,0 +1,58 @@
+@startuml
+title Simplified Sequence Diagram Key Generation - CryptoService
+
+actor Client
+participant SecurityLayer
+participant KeyManagementAPI
+participant Controller
+participant KeyManagementFacade
+participant KeyManagementService
+participant KeyStoreHelper
+participant ClientKeyRegistry
+
+Client -> SecurityLayer : send HTTPS POST /generate-key
+activate SecurityLayer
+
+SecurityLayer -> KeyManagementAPI : forward request
+activate KeyManagementAPI
+
+KeyManagementAPI -> Controller : handle request
+activate Controller
+
+Controller -> ValidationService : validate request
+activate ValidationService
+ValidationService --> Controller : valid or reject
+deactivate ValidationService
+
+Controller -> KeyManagementFacade : generateKey(clientName)
+activate KeyManagementFacade
+
+KeyManagementFacade -> KeyManagementService : generate and store key
+activate KeyManagementService
+
+KeyManagementService -> ClientKeyRegistry : check if client exists
+ClientKeyRegistry --> KeyManagementService : result
+
+KeyManagementService -> KeyStoreHelper : store client key securely
+KeyStoreHelper --> KeyManagementService : confirmation
+
+KeyManagementService -> ClientKeyRegistry : register keyAlias for client
+ClientKeyRegistry --> KeyManagementService : confirmation
+
+KeyManagementService --> KeyManagementFacade : result with keyAlias
+
+deactivate KeyManagementService
+
+KeyManagementFacade --> Controller : success response
+deactivate KeyManagementFacade
+
+Controller --> KeyManagementAPI : HTTP 200 with JWT (containing keyAlias)
+deactivate Controller
+
+KeyManagementAPI --> SecurityLayer : return response
+deactivate KeyManagementAPI
+
+SecurityLayer --> Client : HTTP 200 with JWT
+deactivate SecurityLayer
+
+@enduml

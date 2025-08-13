@@ -1,0 +1,222 @@
+@startuml
+
+title Entity Class Diagram - CryptoService
+
+package cryptoservice {
+    package boundary {
+        package api {}
+
+        package authorization {}
+
+        package security {}
+
+        package validation {}
+
+        class Controller {}
+    }
+
+    package businessfacade {}
+
+    package businesslogic {
+        package cryptography {}
+
+        package businesslogicjwtmanagement {}
+
+        package businesslogickeymanagement {}
+    }
+
+    package entity {
+        package factory {
+            class ClientKeyDataFactory {
+                +buildClientKeyData(keyAlias: String, iv: byte[]): ClientKeyData
+            }
+
+            class ModelsFactory {
+                +buildEncryptModel(encryptRequest: EncryptRequest, clientName: String): EncryptModel
+                +buildDecryptModel(decryptRequest: DecryptRequest, clientName: String): DecryptModel
+                +buildGenerateKeyModel(clientName: String): GenerateKeyModel
+                +buildGenerateJwtModel(generateJwtRequest: GenerateJwtRequest, clientName: String): GenerateJwtModel
+            }
+
+            class ResponseFactory {
+                +buildEncryptResponse(encryptResultModel: EncryptResultModel): ResponseEntity<EncryptResponse>
+                +buildDecryptResponse(decryptResultModel: DecryptResultModel): ResponseEntity<DecryptResponse>
+                +buildGenerateKeyResponse(generateKeyResultModel: GenerateKeyResultModel): ResponseEntity<GenerateKeyResponse>
+                +buildGenerateJwtResponse(generateJwtResultModel: GenerateJwtResultModel): ResponseEntity<GenerateJwtResponse>
+            }
+
+            class ResultModelsFactory {
+                +buildGenerateKeyResultModel(message: String): GenerateKeyResultModel
+                +buildGenerateJwtResultModel(jwt: String): GenerateJwtResultModel
+                +buildEncryptResultModel(cipherText: String): EncryptResultModel
+                +buildDecryptResultModel(plainText: String): DecryptResultModel
+            }
+        }
+
+        package model {
+            package decrypt {
+                class DecryptModel {
+                    - cipherText: String
+                    - jwt: String
+                    - clientName: String
+                }
+
+                class DecryptRequest {
+                    - cipherText: String
+                    - jwt: String
+                }
+
+                class DecryptResponse {
+                    - plainText: String
+                }
+                class DecryptResultModel {
+                    - plainText: String
+                }
+            }
+
+            package encrypt {
+                class EncryptModel {
+                    - plainText: String
+                    - jwt: String
+                    - clientName: String
+                }
+
+                class EncryptRequest {
+                    - plainText: String
+                    - jwt: String
+                }
+
+                class EncryptResponse {
+                    - cipherText: String
+                }
+
+                class EncryptResultModel {
+                    - cipherText: String
+                }
+            }
+
+            package jwtmanagement {
+                class GenerateJwtModel {
+                    - issuedTo: String
+                    - clientName: String
+                }
+
+                class GenerateJwtRequest {
+                    - issuedTo: String
+                }
+
+                class GenerateJwtResponse {
+                    - jwt: String
+                }
+
+                class GenerateJwtResultModel {
+                    - jwt: String
+                }
+            }
+
+            package keymanagement {
+                class ClientKeyData {
+                    - keyAlias: String
+                    - iv: byte[]
+                }
+
+                class GenerateKeyModel {
+                    - clientName: String
+                }
+
+                class GenerateKeyResponse {
+                    - message: String
+                }
+
+                class GenerateKeyResultModel {
+                    - message: String
+                }
+            }
+        }
+    }
+
+    package errorhandling {}
+
+    api --> DecryptRequest : input
+    api --> DecryptResponse : returns
+
+    api --> EncryptRequest : input
+    api --> EncryptResponse : returns
+
+    api --> GenerateJwtRequest : input
+    api --> GenerateJwtResponse : returns
+
+    api --> GenerateKeyResponse : returns
+
+    authorization --> EncryptRequest : uses
+    authorization --> DecryptRequest : uses
+
+    validation --> GenerateJwtRequest : input
+    validation --> EncryptRequest : input
+    validation --> DecryptRequest : input
+
+    Controller --> EncryptRequest : input
+    Controller --> EncryptResponse : returns
+    Controller --> DecryptRequest : input
+    Controller --> DecryptResponse : returns
+    Controller --> GenerateJwtRequest : input
+    Controller --> GenerateJwtResponse : returns
+    Controller --> GenerateKeyResponse : returns
+
+    businessfacade --> ModelsFactory : uses
+    businessfacade --> ResponseFactory : uses
+    businessfacade --> DecryptRequest : input
+    businessfacade --> DecryptModel : builds
+    businessfacade --> DecryptResultModel : receives
+    businessfacade --> DecryptResponse : returns
+
+    businessfacade --> EncryptRequest : input
+    businessfacade --> EncryptModel : builds
+    businessfacade --> EncryptResultModel : receives
+    businessfacade --> EncryptResponse : returns
+
+    businessfacade --> GenerateJwtRequest : input
+    businessfacade --> GenerateJwtModel : builds
+    businessfacade --> GenerateJwtResultModel : receives
+    businessfacade --> GenerateJwtResponse : returns
+
+    businessfacade --> GenerateKeyModel : builds
+    businessfacade --> GenerateKeyResultModel : receives
+    businessfacade --> GenerateKeyResponse : returns
+
+    cryptography --> ResultModelsFactory : uses
+    cryptography --> DecryptModel : input
+    cryptography --> DecryptResultModel : returns
+
+    cryptography --> EncryptModel : input
+    cryptography --> EncryptResultModel : returns
+
+    businesslogicjwtmanagement --> GenerateJwtModel : input
+    businesslogicjwtmanagement --> GenerateJwtResultModel : returns
+
+    businesslogickeymanagement --> ClientKeyDataFactory : builds
+    businesslogickeymanagement --> ClientKeyData : uses
+
+    businesslogickeymanagement --> ResultModelsFactory : uses
+    businesslogickeymanagement --> GenerateKeyModel : input
+    businesslogickeymanagement --> GenerateKeyResultModel : returns
+
+    ClientKeyDataFactory --> ClientKeyData : builds
+
+    ModelsFactory --> EncryptModel : builds
+    ModelsFactory --> DecryptModel : builds
+    ModelsFactory --> GenerateKeyModel : builds
+    ModelsFactory --> GenerateJwtModel : builds
+
+    ResponseFactory --> EncryptResponse : builds
+    ResponseFactory --> DecryptResponse : builds
+    ResponseFactory --> GenerateKeyResponse : builds
+    ResponseFactory --> GenerateJwtResponse : builds
+
+    ResultModelsFactory --> GenerateKeyResultModel : builds
+    ResultModelsFactory --> GenerateJwtResultModel : builds
+    ResultModelsFactory --> EncryptResultModel : builds
+    ResultModelsFactory --> DecryptResultModel : builds
+}
+
+@enduml

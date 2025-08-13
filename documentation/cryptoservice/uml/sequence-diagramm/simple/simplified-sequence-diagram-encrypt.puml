@@ -1,0 +1,65 @@
+@startuml
+title Simplified Sequence Diagram Encryption - CryptoService
+
+actor Client
+participant SecurityLayer
+participant EncryptAPI
+participant Controller
+participant ValidationService
+participant AuthService
+participant EncryptFacade
+participant EncryptService
+participant JwtManagementService
+participant KeyStoreHelper
+participant ClientKeyRegistry
+
+Client -> SecurityLayer : send HTTPS POST /encrypt
+activate SecurityLayer
+
+SecurityLayer -> EncryptAPI : forward request
+activate EncryptAPI
+
+EncryptAPI -> Controller : handle request
+activate Controller
+
+Controller -> ValidationService : validate request & JWT
+activate ValidationService
+ValidationService --> Controller : valid or reject
+deactivate ValidationService
+
+Controller -> AuthService : authorize decryption
+activate AuthService
+AuthService --> Controller : access granted or denied
+deactivate AuthService
+
+Controller -> EncryptFacade : process encryption
+activate EncryptFacade
+
+EncryptFacade -> EncryptService : perform encryption
+activate EncryptService
+
+EncryptService -> KeyStoreHelper : retrieve client key
+KeyStoreHelper -> EncryptService : SecretKey
+
+EncryptService -> EncryptService : generate iv
+
+EncryptService -> ClientKeyRegistry : store IV for client
+
+EncryptService -> EncryptService : encrypt using AES-GCM
+
+EncryptService --> EncryptFacade : EncryptResultModel
+deactivate EncryptService
+
+EncryptFacade --> Controller : HTTP 200 with EncryptResponse
+deactivate EncryptFacade
+
+Controller --> EncryptAPI : HTTP 200 with EncryptResponse
+deactivate Controller
+
+EncryptAPI --> SecurityLayer : HTTP 200 with EncryptResponse
+deactivate EncryptAPI
+
+SecurityLayer --> Client : HTTP 200 with EncryptResponse
+deactivate SecurityLayer
+
+@enduml

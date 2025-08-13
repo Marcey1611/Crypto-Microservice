@@ -1,0 +1,145 @@
+openapi: 3.0.3
+info:
+  title: API Specification - CryptoService
+  version: 1.0.0
+  description: |
+    API specification for the CryptoService, which generates symmetric keys,
+    encrypts and decrypts messages, and issues JWTs for authorized communication.
+
+servers:
+  - url: https://localhost:8443
+    description: Local development environment (mTLS required)
+
+paths:
+  /crypto/keys/generate:
+    post:
+      summary: Generates a symmetric client key
+      security:
+        - mtls: []
+      responses:
+        '200':
+          description: Key successfully generated
+        '400':
+          description: Bad Request
+        '500':
+          description: Internal server error
+
+  /crypto/jwt/generate:
+    post:
+      summary: Generates a JWT for authorized decryption by another client
+      security:
+        - mtls: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - issuedTo
+              properties:
+                issuedTo:
+                  type: string
+                  description: Common Name (CN) of the receiving client
+      responses:
+        '200':
+          description: JWT successfully generated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  jwt:
+                    type: string
+        '401':
+          description: Unauthorized
+        '400':
+          description: Bad Request
+        '500':
+          description: Internal server error
+
+  /crypto/encrypt:
+    post:
+      summary: Encrypts a message using the key alias referenced in the JWT
+      security:
+        - mtls: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - jwt
+                - plaintext
+              properties:
+                jwt:
+                  type: string
+                  description: Signed JWT containing keyAlias and issuedTo
+                plaintext:
+                  type: string
+                  description: Message in plain text
+      responses:
+        '200':
+          description: Message successfully encrypted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ciphertext:
+                    type: string
+                    description: Base64-encoded ciphertext
+        '403':
+          description: Forbidden
+        '401':
+          description: Unauthorized
+        '400':
+          description: Bad Request
+        '500':
+          description: Internal server error
+
+  /crypto/decrypt:
+    post:
+      summary: Decrypts a message using the key referenced by the JWT
+      security:
+        - mtls: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - jwt
+                - ciphertext
+              properties:
+                jwt:
+                  type: string
+                  description: Signed JWT containing keyAlias and issuedTo
+                ciphertext:
+                  type: string
+                  description: Base64-encoded ciphertext
+      responses:
+        '200':
+          description: Message successfully decrypted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  plaintext:
+                    type: string
+        '403':
+          description: Forbidden
+        '401':
+          description: Unauthorized
+        '400':
+          description: Bad request
+        '500':
+          description: Internal server error
+
+components:
+  securitySchemes:
+    mtls:
+      type: mutualTLS

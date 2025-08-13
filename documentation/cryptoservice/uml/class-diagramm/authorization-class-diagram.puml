@@ -1,0 +1,45 @@
+@startuml
+
+title Authorization Class Diagram - CryptoService
+
+package cryptoservice {
+    package boundary {
+        package authorization {
+            class AuthRegistry {
+                -LOGGER: Logger
+                -authRegistry: Map<String, String>
+                --
+                +registerKeyAlias(keyAlias: String, allowedClients: Set<String>): void
+                +grantAccess(keyAlias: String, clientName: String): void
+                +revokeAccess(keyAlias: String, clientName: String): void
+                +isAccessAllowed(keyAlias: String, clientName: String): boolean
+            }
+
+            class AuthService {
+                -clientKeyRegistry: ClientKeyRegistry
+                -authRegistry: AuthRegistry
+                -jwtManagementService: JwtManagementService
+                -errorHandler: ErrorHandler
+                --
+                +authGenerateJwtRequest(clientName: String): void
+                +authEncryptRequest(encryptRequest: EncryptRequest, clientName: String): void
+                +authDecryptRequest(decryptRequest: DecryptRequest, clientName: String): void
+            }
+        }
+
+        class Controller {}
+    }
+
+    package businesslogic {}
+    package entity {}
+    package errorhandling {}
+
+    Controller --> AuthService
+
+    AuthService --> businesslogic : uses
+    AuthService --> AuthRegistry : uses
+    AuthService --> errorhandling : uses
+    AuthService --> entity : uses
+}
+
+@enduml

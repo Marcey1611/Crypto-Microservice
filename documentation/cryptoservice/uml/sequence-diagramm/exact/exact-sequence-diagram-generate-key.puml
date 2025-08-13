@@ -1,0 +1,147 @@
+@startuml
+
+title Exact Sequence Diagram Key Generation - CryptoService
+
+' Color scheme:
+' #CCE5FF → Boundary
+' #F9D5E5 → Business-Facade
+' #DFFFD6 → Business-Logic
+' #FFE5B4 → Entity (Factories, Models, ...)
+
+actor Client
+participant SecurityLayer #CCE5FF
+participant KeyManagementAPI #CCE5FF
+participant Controller #CCE5FF
+participant KeyManagementFacade #F9D5E5
+participant ModelsFactory #FFE5B4
+participant KeyManagementService #DFFFD6
+participant ClientKeyRegistry #DFFFD6
+participant KeyStoreHelper #DFFFD6
+participant KeyStoreLoader #DFFFD6
+participant MasterKeyService #DFFFD6
+participant ClientKeyEncryptor #DFFFD6
+participant ClientKeyDataFactory #FFE5B4
+participant ResultModelsFactory #FFE5B4
+participant ResponseFactory #FFE5B4
+
+Client -> SecurityLayer : send HTTPS request
+activate SecurityLayer
+
+SecurityLayer -> KeyManagementAPI : POST /generate-key
+activate KeyManagementAPI
+
+KeyManagementAPI -> Controller : generateKeyPost(principal)
+activate Controller
+
+
+
+group Validation
+
+Controller -> ValidationService : validateGenerateKeyRequest(clientName)
+activate ValidationService
+
+ValidationService -> ValidationService : validateClientName(clientName)
+
+ValidationService -> NullOrBlankValidator : validateNullOrBlank(clientName, FieldName.CLIENT_NAME)
+ValidationService -> LengthValidator : validateLength(clientName, CLIENT_NAME_MAX_LENGTH, FieldName.CLIENT_NAME)
+ValidationService -> AsciiValidator : validateAscii(clientName, FieldName.CLIENT_NAME)
+ValidationService -> CharsetValidator : validateCharset(clientName, FieldName.CLIENT_NAME)
+ValidationService -> ControlCharValidator : validateControlChars(clientName, FieldName.CLIENT_NAME)
+ValidationService -> WhitelistValidator : validateWhitelist(clientName, FieldName.CLIENT_NAME, false)
+
+ValidationService --> Controller : void
+deactivate ValidationService
+
+end
+
+
+
+Controller -> KeyManagementFacade : generateKey(clientName)
+activate KeyManagementFacade
+
+KeyManagementFacade -> ModelsFactory : buildGenerateKeyModel(clientName)
+activate ModelsFactory
+ModelsFactory --> KeyManagementFacade : GenerateKeyModel
+deactivate ModelsFactory
+
+
+
+group KeyGenerationProcess
+
+KeyManagementFacade -> KeyManagementService : generateKey(GenerateKeyModel)
+activate KeyManagementService
+
+KeyManagementService -> ClientKeyRegistry : hasClient(clientName)
+activate ClientKeyRegistry
+ClientKeyRegistry --> KeyManagementService : boolean
+deactivate ClientKeyRegistry
+
+KeyManagementService -> KeyManagementService : generateRandomKey()
+KeyManagementService -> KeyManagementService : generateRandomKeyAlias()
+
+KeyManagementService -> KeyStoreHelper : storeClientKey(keyAlias, key, clientKeystorePath, clientKeystorePassword)
+activate KeyStoreHelper
+
+KeyStoreHelper -> KeyStoreLoader : load()
+activate KeyStoreLoader
+KeyStoreLoader --> KeyStoreHelper : KeyStore
+deactivate KeyStoreLoader
+
+KeyStoreHelper -> MasterKeyService : retrieveMasterKey()
+activate MasterKeyService
+MasterKeyService --> KeyStoreHelper : SecretKey
+deactivate MasterKeyService
+
+KeyStoreHelper -> ClientKeyEncryptor : encrypt(clientKey, masterKey)
+activate ClientKeyEncryptor
+ClientKeyEncryptor --> KeyStoreHelper : byte[]
+deactivate ClientKeyEncryptor
+
+KeyStoreHelper -> KeyStoreHelper : setKeystoreEntry(keystore, keyAlias, encryptedKey, keystorePassword)
+
+KeyStoreHelper -> KeyStoreLoader : save(keystore)
+
+KeyStoreHelper --> KeyManagementService : void
+deactivate KeyStoreHelper
+
+KeyManagementService -> ClientKeyRegistry : registerClientKey(clientName, keyAlias)
+activate ClientKeyRegistry
+
+ClientKeyRegistry -> ClientKeyDataFactory : buildClientKeyData(keyAlias, null)
+activate ClientKeyDataFactory
+ClientKeyDataFactory --> ClientKeyRegistry : ClientKeyData
+deactivate ClientKeyDataFactory
+
+ClientKeyRegistry --> KeyManagementService : void
+deactivate ClientKeyRegistry
+
+KeyManagementService -> ResultModelsFactory : buildGenerateKeyResultModel(message)
+activate ResultModelsFactory
+ResultModelsFactory --> KeyManagementService : GenerateKeyResultModel
+deactivate ResultModelsFactory
+
+KeyManagementService --> KeyManagementFacade : GenerateKeyResultModel
+deactivate KeyManagementService
+
+end
+
+
+
+KeyManagementFacade -> ResponseFactory : buildGenerateKeyResponse(resultModel)
+activate ResponseFactory
+ResponseFactory --> KeyManagementFacade : ResponseEntity<GenerateKeyResponse>
+deactivate ResponseFactory
+
+KeyManagementFacade --> Controller : ResponseEntity<GenerateKeyResponse>
+deactivate KeyManagementFacade
+
+Controller --> KeyManagementAPI : ResponseEntity<GenerateKeyResponse>
+deactivate Controller
+
+KeyManagementAPI --> SecurityLayer : ResponseEntity<GenerateKeyResponse>
+deactivate KeyManagementAPI
+
+SecurityLayer --> Client : ResponseEntity<GenerateKeyResponse>
+deactivate SecurityLayer
+
+@enduml

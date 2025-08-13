@@ -1,0 +1,267 @@
+@startuml
+title Exact Sequence Diagram Decryption - CryptoService
+
+' Color scheme:
+' #CCE5FF → Boundary
+' #F9D5E5 → Business-Facade
+' #DFFFD6 → Business-Logic
+' #FFE5B4 → Entity (Factories, Models, ...)
+
+actor Client
+participant SecurityLayer #CCE5FF
+participant DecryptAPI #CCE5FF
+participant Controller #CCE5FF
+participant ValidationService #CCE5FF
+participant NullOrBlankValidator #CCE5FF
+participant LengthValidator #CCE5FF
+participant AsciiValidator #CCE5FF
+participant CharsetValidator #CCE5FF
+participant ControlCharValidator #CCE5FF
+participant WhitelistValidator #CCE5FF
+participant Base64Validator #CCE5FF
+participant JwtValidator #CCE5FF
+participant AuthService #CCE5FF
+participant AuthRegistry #CCE5FF
+participant DecryptFacade #F9D5E5
+participant ModelsFactory #FFE5B4
+participant DecryptService #DFFFD6
+participant JwtManagementService #DFFFD6
+participant ClientKeyRegistry #DFFFD6
+participant KeyStoreHelper #DFFFD6
+participant KeyStoreLoader #DFFFD6
+participant MasterKeyService #DFFFD6
+participant ClientKeyEncryptor #DFFFD6
+participant CryptoUtility #DFFFD6
+participant ResultModelsFactory #FFE5B4
+participant ResponseFactory #FFE5B4
+
+Client -> SecurityLayer : send HTTPS request
+activate SecurityLayer
+
+SecurityLayer -> DecryptAPI : POST /decrypt
+activate DecryptAPI
+
+DecryptAPI -> Controller : decryptPost(decryptRequest, principal)
+activate Controller
+
+
+
+group Validation
+
+Controller -> ValidationService : validateDecryptRequest(decryptRequest, masterKeystorePath, masterKeystorePassword);
+activate ValidationService
+
+ValidationService -> KeyStoreHelper : getKey("jwt-signing-key", keystorePath, keystorePassword)
+activate KeyStoreHelper
+
+KeyStoreHelper -> KeyStoreLoader : load(keyStorePath, keyStorePassword)
+activate KeyStoreLoader
+
+KeyStoreLoader --> KeyStoreHelper : KeyStore
+deactivate KeyStoreLoader
+
+KeyStoreHelper -> KeyStoreHelper : getKey(keyStore, alias, keyStorePassword)
+KeyStoreHelper --> ValidationService : SecretKey
+deactivate KeyStoreHelper
+
+ValidationService -> ValidationService : validateClientName(clientName)
+
+ValidationService -> NullOrBlankValidator : validateNullOrBlank(clientName, FieldName.CLIENT_NAME)
+ValidationService -> LengthValidator : validateLength(clientName, CLIENT_NAME_MAX_LENGTH, FieldName.CLIENT_NAME)
+ValidationService -> AsciiValidator : validateAscii(clientName, FieldName.CLIENT_NAME)
+ValidationService -> CharsetValidator : validateCharset(clientName, FieldName.CLIENT_NAME)
+ValidationService -> ControlCharValidator : validateControlChars(clientName, FieldName.CLIENT_NAME)
+ValidationService -> WhitelistValidator : validateWhitelist(clientName, FieldName.CLIENT_NAME, false)
+
+ValidationService -> NullOrBlankValidator : validateNullOrBlank(cipherText, FieldName.CIPHER_TEXT)
+ValidationService -> LengthValidator : validateLength(cipherText, CIPHER_TEXT_MAX_LENGTH, FieldName.CIPHER_TEXT)
+ValidationService -> AsciiValidator : validateAscii(cipherText, FieldName.CIPHER_TEXT)
+ValidationService -> CharsetValidator : validateCharset(cipherText, FieldName.CIPHER_TEXT)
+ValidationService -> ControlCharValidator : validateControlChars(cipherText, FieldName.CIPHER_TEXT)
+ValidationService -> Base64Validator : validateBase64(cipherText, FieldName.CIPHER_TEXT)
+
+ValidationService -> ValidationService : validateJwt(jwt, key)
+
+ValidationService -> NullOrBlankValidator : validateNullOrBlank(jwt, FieldName.JWT)
+ValidationService -> LengthValidator : validateLength(jwt, JWT_MAX_LENGTH, FieldName.JWT)
+ValidationService -> AsciiValidator : validateAscii(jwt, FieldName.JWT)
+ValidationService -> CharsetValidator : validateCharset(jwt, FieldName.JWT)
+ValidationService -> ControlCharValidator : validateControlChars(jwt, FieldName.JWT)
+ValidationService -> WhitelistValidator : validateWhitelist(jwt, FieldName.JWT, false)
+
+ValidationService -> JwtValidator : validateJwtPattern(jwt)
+activate JwtValidator
+ValidationService -> JwtValidator : validateJwtSignature(jwt, key)
+ValidationService -> JwtValidator : validateExpiration(expiration)
+ValidationService -> JwtValidator : validateIssuerAndAudience(claims)
+ValidationService -> ValidationService : validateJwtClaims(alias, FieldName.KEY_ALIAS, JWT_KEY_ALIAS_MAX_LENGTH)
+ValidationService -> ValidationService : validateJwtClaims(issuedTo, FieldName.ISSUED_TO, ISSUED_TO_MAX_LENGTH)
+ValidationService -> ValidationService : validateJwtClaims(algorithm, FieldName.ALGORITHM_HEADER, JWT_ALGORITHM_MAX_LENGTH)
+ValidationService -> JwtValidator : validateAlgorithmHeader(algorithm)
+ValidationService -> JwtValidator : validateAndConsumeJti(claims)
+deactivate JwtValidator
+
+ValidationService -> Controller : void
+deactivate ValidationService
+
+end
+
+
+
+group Authentification
+
+Controller -> AuthService : authDecryptRequest(decryptRequest, clientName)
+activate AuthService
+
+AuthService -> JwtManagementService : extractIssuedTo(jwt)
+activate JwtManagementService
+JwtManagementService -> KeyStoreHelper : getKey("jwt-signing-key", masterKeystorePath, masterKeystorePassword)
+activate KeyStoreHelper
+KeyStoreHelper -> KeyStoreLoader : load(keyStorePath, keyStorePassword)
+activate KeyStoreLoader
+KeyStoreLoader --> KeyStoreHelper : KeyStore
+deactivate KeyStoreLoader
+KeyStoreHelper -> KeyStoreHelper : getKey(keyStore, alias, keyStorePassword)
+KeyStoreHelper --> JwtManagementService : SecretKey
+deactivate KeyStoreHelper
+JwtManagementService -> AuthService : String
+deactivate JwtManagementService
+
+AuthService -> JwtManagementService : extractClientKeyAlias(jwt)
+activate JwtManagementService
+JwtManagementService -> KeyStoreHelper : getKey("jwt-signing-key", masterKeystorePath, masterKeystorePassword)
+activate KeyStoreHelper
+KeyStoreHelper -> KeyStoreLoader : load(keyStorePath, keyStorePassword)
+activate KeyStoreLoader
+KeyStoreLoader --> KeyStoreHelper : KeyStore
+deactivate KeyStoreLoader
+KeyStoreHelper -> KeyStoreHelper : getKey(keyStore, alias, keyStorePassword)
+KeyStoreHelper --> JwtManagementService : SecretKey
+deactivate KeyStoreHelper
+JwtManagementService -> AuthService : String
+deactivate JwtManagementService
+
+AuthService -> ClientKeyRegistry : hasKeyAlias(keyAlias)
+activate ClientKeyRegistry
+ClientKeyRegistry --> AuthService : boolean
+deactivate ClientKeyRegistry
+
+AuthService -> AuthRegistry : isAccessAllowed(keyAlias, clientName)
+activate AuthRegistry
+AuthRegistry -> AuthService : boolean
+AuthService -> AuthRegistry : revokeAccess(keyAlias, clientName)
+AuthRegistry -> AuthService : void
+deactivate AuthRegistry
+
+AuthService -> Controller : void
+deactivate AuthService
+
+end
+
+
+
+Controller -> DecryptFacade : processDecryption(decryptRequest, clientName)
+activate DecryptFacade
+
+DecryptFacade -> ModelsFactory : buildDecryptModel(decryptRequest, clientName)
+activate ModelsFactory
+ModelsFactory --> DecryptFacade : DecryptModel
+deactivate ModelsFactory
+
+
+
+group DecryptionProcess
+
+DecryptFacade -> DecryptService : decrypt(decryptModel)
+activate DecryptService
+
+DecryptService -> JwtManagementService : extractClientKeyAlias(jwt)
+activate JwtManagementService
+JwtManagementService -> KeyStoreHelper : getKey("jwt-signing-key", masterKeystorePath, masterKeystorePassword)
+activate KeyStoreHelper
+KeyStoreHelper -> KeyStoreLoader : load(keyStorePath, keyStorePassword)
+activate KeyStoreLoader
+KeyStoreLoader --> KeyStoreHelper : KeyStore
+deactivate KeyStoreLoader
+KeyStoreHelper -> KeyStoreHelper : getKey(keyStore, alias, keyStorePassword)
+KeyStoreHelper --> JwtManagementService : SecretKey
+deactivate KeyStoreHelper
+JwtManagementService -> DecryptService : String
+deactivate JwtManagementService
+
+DecryptService -> DecryptService : retrieveClientKey(keyAlias)
+
+DecryptService -> KeyStoreHelper : getClientKey(keyAlias, clientKeystorePath, clientKeystorePassword)
+activate KeyStoreHelper
+KeyStoreHelper -> KeyStoreLoader : load(keyStorePath, keyStorePassword)
+activate KeyStoreLoader
+KeyStoreLoader --> KeyStoreHelper : KeyStore
+deactivate KeyStoreLoader
+KeyStoreHelper -> MasterKeyService : retrieveMasterKey()
+activate MasterKeyService
+MasterKeyService -> KeyStoreLoader : load(masterKeystorePath, masterKeystorePassword)
+MasterKeyService -> KeyStoreHelper : SecretKey
+deactivate MasterKeyService
+KeyStoreHelper -> KeyStoreHelper : getKey(keyStore, alias, keyStorePassword)
+KeyStoreHelper -> ClientKeyEncryptor : decrypt(encoded, masterKey)
+activate ClientKeyEncryptor
+ClientKeyEncryptor -> KeyStoreHelper : SecretKey
+deactivate ClientKeyEncryptor
+KeyStoreHelper -> DecryptService : SecretKey
+deactivate KeyStoreHelper
+
+DecryptService -> DecryptService : mapKeyAliasToClientName(keyAlias)
+DecryptService -> ClientKeyRegistry : getClientNameByKeyAlias(keyAlias)
+activate ClientKeyRegistry
+ClientKeyRegistry --> DecryptService : String
+deactivate ClientKeyRegistry
+
+DecryptService -> DecryptService : retrieveIvForClient(clientNameFromKeyAlias)
+DecryptService -> ClientKeyRegistry : getIvForClient(clientNameFromKeyAlias)
+activate ClientKeyRegistry
+ClientKeyRegistry --> DecryptService : byte[]
+deactivate ClientKeyRegistry
+
+DecryptService -> DecryptService : processDecryption(iv, clientKey, cipherText, clientName)
+DecryptService -> CryptoUtility : createCipher()
+activate CryptoUtility
+CryptoUtility -> DecryptService : Cipher
+DecryptService -> CryptoUtility : createGCMParameterSpec(iv)
+CryptoUtility -> DecryptService : GCMParameterSpec
+DecryptService -> CryptoUtility : initCipher(cipher, clientKey, gcmParameterSpec, Cipher.DECRYPT_MODE)
+CryptoUtility -> DecryptService : void
+deactivate CryptoUtility
+
+DecryptService -> DecryptService : decodeCipherText(cipherText)
+DecryptService -> DecryptService : decryptCipherText(cipher, cypherTextBytes)
+
+DecryptService -> ResultModelsFactory : buildDecryptResultModel(cipherText)
+activate ResultModelsFactory
+ResultModelsFactory --> DecryptService : DecryptResultModel
+deactivate ResultModelsFactory
+
+DecryptService --> DecryptFacade : DecryptResultModel
+deactivate DecryptService
+
+end
+
+
+
+DecryptFacade -> ResponseFactory : buildDecryptResponse(resultModel)
+activate ResponseFactory
+ResponseFactory --> DecryptFacade : ResponseEntity<DecryptResponse>
+deactivate ResponseFactory
+
+DecryptFacade --> Controller : ResponseEntity<DecryptResponse>
+deactivate DecryptFacade
+
+Controller --> DecryptAPI : ResponseEntity<DecryptResponse>
+deactivate Controller
+
+DecryptAPI --> SecurityLayer : ResponseEntity<DecryptResponse>
+deactivate DecryptAPI
+
+SecurityLayer --> Client : ResponseEntity<DecryptResponse>
+deactivate SecurityLayer
+
+@enduml

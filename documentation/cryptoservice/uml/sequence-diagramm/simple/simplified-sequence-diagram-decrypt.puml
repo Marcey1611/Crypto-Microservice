@@ -1,0 +1,63 @@
+@startuml
+title Simplified Sequence Diagram Decryption - CryptoService
+
+actor Client
+participant SecurityLayer
+participant DecryptAPI
+participant Controller
+participant ValidationService
+participant AuthService
+participant DecryptFacade
+participant DecryptService
+participant KeyStoreHelper
+participant ClientKeyRegistry
+
+Client -> SecurityLayer : send HTTPS POST /decrypt
+activate SecurityLayer
+
+SecurityLayer -> DecryptAPI : forward request
+activate DecryptAPI
+
+DecryptAPI -> Controller : handle request
+activate Controller
+
+Controller -> ValidationService : validate request & JWT
+activate ValidationService
+ValidationService --> Controller : valid or reject
+deactivate ValidationService
+
+Controller -> AuthService : authorize decryption
+activate AuthService
+AuthService --> Controller : access granted or denied
+deactivate AuthService
+
+Controller -> DecryptFacade : process decryption
+activate DecryptFacade
+
+DecryptFacade -> DecryptService : perform decryption
+activate DecryptService
+
+DecryptService -> KeyStoreHelper : retrieve client key
+KeyStoreHelper --> DecryptService : SecretKey
+
+DecryptService -> ClientKeyRegistry : get IV for client
+ClientKeyRegistry --> DecryptService : IV
+
+DecryptService -> DecryptService : decrypt using AES-GCM
+
+DecryptService --> DecryptFacade : DecryptResultModel
+deactivate DecryptService
+
+DecryptFacade --> Controller : HTTP 200 with DecryptResponse
+deactivate DecryptFacade
+
+Controller --> DecryptAPI : HTTP 200 with DecryptResponse
+deactivate Controller
+
+DecryptAPI --> SecurityLayer : HTTP 200 with DecryptResponse
+deactivate DecryptAPI
+
+SecurityLayer --> Client : HTTP 200 with DecryptResponse
+deactivate SecurityLayer
+
+@enduml

@@ -1,0 +1,113 @@
+@startuml
+
+title Boundary Business Facade Class Diagram - CryptoService
+
+package cryptoservice {
+    package boundary {
+        package api {
+            interface DecryptAPI {
+                +decryptPost(decryptRequest: DecryptRequest, principal: Principal): ResponseEntity<DecryptResponse>
+            }
+
+            interface EncryptAPI {
+                +encryptPost(encryptRequest: EncryptRequest, principal: Principal): ResponseEntity<EncryptResponse>
+            }
+
+            interface JwtManagementAPI {
+                +generateJwtPost(generateJwtRequest: GenerateJwtRequest, principal: Principal): ResponseEntity<GenerateJwtResponse>
+            }
+
+            interface KeyManagementAPI {
+                +generateKeyPost(principal: Principal): ResponseEntity<GenerateKeyResponse>
+            }
+        }
+
+        package authorization {}
+        package validation {}
+
+
+        class Controller {
+            - static Logger LOGGER
+            - EncryptFacade encryptFacade
+            - DecryptFacade decryptFacade
+            - KeyManagementFacade keyManagementFacade
+            - JwtManagementFacade jwtManagementFacade
+            - validation validationService
+            - authorization authService
+            --
+            + ResponseEntity<GenerateKeyResponse> generateKeyPost(Principal)
+            + ResponseEntity<GenerateJwtResponse> generateJwtPost(GenerateJwtRequest, Principal)
+            + ResponseEntity<EncryptResponse> encryptPost(EncryptRequest, Principal)
+            + ResponseEntity<DecryptResponse> decryptPost(DecryptRequest, Principal)
+        }
+    }
+
+    package businessfacade {
+        class DecryptFacade {
+            -decryptService: businesslogic
+            -modelsFactory: ModelsFactory
+            -responseFactory: ResponseFactory
+            --
+            +processDecryption(decryptRequest: DecryptRequest, clientName: String): ResponseEntity<DecryptResponse>
+        }
+
+        class EncryptFacade {
+            -encryptService: EncryptService
+            -modelsFactory: ModelsFactory
+            -responseFactory: ResponseFactory
+            --
+            +processEncryption(encryptRequest: EncryptRequest, clientName: String): ResponseEntity<EncryptResponse>
+        }
+
+        class JwtManagementFacade {
+            -jwtManagementService: JwtManagementService
+            -modelsFactory: ModelsFactory
+            -responseFactory: ResponseFactory
+            --
+            +generateJwt(generateJwtRequest: GenerateJwtRequest, clientName: String): ResponseEntity<GenerateJwtResponse>
+        }
+
+        class KeyManagementFacade {
+            -keyManagementService: KeyManagementService
+            -modelsFactory: ModelsFactory
+            -responseFactory: ResponseFactory
+            --
+            +generateKey(clientName: String): ResponseEntity<GenerateKeyResponse>
+        }
+    }
+
+    package businesslogic {}
+    package entity {}
+
+    DecryptAPI --> entity : uses
+    EncryptAPI --> entity : uses
+    JwtManagementAPI --> entity : uses
+    KeyManagementAPI --> entity : uses
+
+    Controller ..|> EncryptAPI : implements
+    Controller ..|> DecryptAPI : implements
+    Controller ..|> KeyManagementAPI : implements
+    Controller ..|> JwtManagementAPI : implements
+    Controller --> validation : uses
+    Controller --> authorization : uses
+    Controller --> EncryptFacade : uses
+    Controller --> DecryptFacade : uses
+    Controller --> KeyManagementFacade : uses
+    Controller --> JwtManagementFacade : uses
+    Controller --> entity : uses
+
+
+    DecryptFacade --> businesslogic : uses
+    DecryptFacade --> entity : uses
+
+    EncryptFacade --> businesslogic : uses
+    EncryptFacade --> entity : builds
+
+    JwtManagementFacade --> businesslogic : uses
+    JwtManagementFacade --> entity : uses
+
+    KeyManagementFacade --> businesslogic : uses
+    KeyManagementFacade --> entity : uses
+}
+
+@enduml

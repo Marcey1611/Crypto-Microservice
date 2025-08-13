@@ -1,0 +1,23 @@
+@startuml
+
+title System Sequence Diagram
+
+actor CryptoClient1
+actor CryptoClient2
+participant CryptoService
+
+CryptoClient1 -> CryptoService : Client key generation
+CryptoService --> CryptoClient1 : status message
+
+CryptoClient1 -> CryptoService : JWT generation (issuedTo)
+CryptoService --> CryptoClient1 : JWT
+
+CryptoClient1 -> CryptoService : Encryption (plainText, jwt)
+CryptoService --> CryptoClient1 : cipherText
+
+CryptoClient1 -> CryptoClient2 : Sending encrypted data + jwt
+
+CryptoClient2 -> CryptoService : Decryption (cipherText, jwt)
+CryptoService --> CryptoClient2 : plainText
+
+@enduml

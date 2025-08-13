@@ -1,0 +1,211 @@
+@startuml
+
+title Key Management Class Diagram - CryptoService
+
+package cryptoservice {
+    package boundary {
+        package validation {}
+        package authorization {}
+    }
+
+    package businessfacade {}
+
+    package businesslogic {
+
+        package cryptography {}
+        package jwtmanagement {}
+
+        package keymanagement {
+            class ClientKeyEncryptor {
+                -LOGGER: Logger
+                -errorHandler: ErrorHandler
+                --
+                +encrypt(clientKey: SecretKey, masterKey: SecretKey): byte[]
+                +decrypt(encryptedKey: byte[], masterKey: SecretKey): SecretKey
+            }
+
+            class ClientKeyRegistry {
+                -LOGGER: Logger
+                -clientKeyDataFactory: ClientKeyDataFactory
+                -clientKeyDataMap: Map<String, ClientKeyData>
+                -errorHandler: ErrorHandler
+                --
+                +hasClient(clientName: String): boolean
+                +registerClientKey(clientName: String, keyAlias: String): void
+                +removeClientByKeyAlias(keyAlias: String): void
+                +getKeyAliasForClient(clientName: String): String
+                +getClientNameByKeyAlias(keyAlias: String): String
+                +getIvForClient(clientName: String): byte[]
+                +updateIvForClient(clientName: String, iv: byte[]): void
+                +hasKeyAlias(keyAlias: String): boolean
+            }
+
+            class KeyCleanupTask {
+                -LOGGER: Logger
+                -clientKeyRegistry: ClientKeyRegistry
+                -expirationChecker: KeyExpirationChecker
+                -keyStoreLoader: KeyStoreLoader
+                -errorHandler: ErrorHandler
+                - String clientKeystorePath
+                - String clientKeystorePassword
+                --
+                +cleanupKeysPeriodically(): void
+                +cleanupExpiredKeys(): void
+                -findExpiredAliases(keystore: KeyStore): List<String>
+                -getAliases(keystore: KeyStore): Enumeration<String>
+                -deleteExpiredKeys(keystore: KeyStore, aliasesToDelete: List<String>): void
+            }
+
+            class KeyExpirationChecker {
+                -LOGGER: Logger
+                -EXPIRATION_TIME_MILLIS: long
+                -errorHandler: ErrorHandler
+                --
+                +isExpired(keystore: KeyStore, alias: String): boolean
+                -getEntry(keystore: KeyStore, alias: String): KeyStore.Entry
+                -getCreationDate(keystore: KeyStore, alias: String): Date
+                -destroyProtection(protection: PasswordProtection, alias: String): void
+            }
+
+            class KeyManagementService {
+                -LOGGER: Logger
+                -KEY_SIZE: int
+                -keyStoreHelper: KeyStoreHelper
+                -resultModelsFactory: ResultModelsFactory
+                -clientKeyRegistry: ClientKeyRegistry
+                -errorHandler: ErrorHandler
+                - String clientKeystorePath
+                - String clientKeystorePassword
+                --
+                +generateKey(model: GenerateKeyModel): GenerateKeyResultModel
+                -generateRandomKey(): SecretKey
+                -generateRandomKeyAlias(): String
+            }
+
+            class KeyStoreHelper {
+                - Logger LOGGER
+                - KeyStoreLoader loader
+                - MasterKeyService masterKeyService
+                - ClientKeyEncryptor encryptor
+                - ErrorHandler errorHandler
+                --
+                + void storeKey(String keyAlias, byte[] key, String keystorePath, String keystorePassword)
+                + void storeClientKey(String keyAlias, SecretKey clientKey, String keystorePath, String keystorePassword)
+                + SecretKey getClientKey(String alias, String keystorePath, String keystorePassword)
+                + SecretKey getKey(String alias, String keystorePath, String keystorePassword)
+                - void setKeystoreEntry(KeyStore ks, String alias, byte[] key, String keystorePassword)
+                - SecretKey getKey(KeyStore ks, String alias, String keystorePassword)
+            }
+
+            class KeyStoreInitializer {
+                - static int KEY_SIZE
+                - static Logger LOGGER
+                - KeyStoreHelper keyStoreHelper
+                - KeyStoreLoader keyStoreLoader
+                - ErrorHandler errorHandler
+                - String masterKeystorePath
+                - String masterKeystorePassword
+                - String clientKeystorePath
+                - String clientKeystorePassword
+                --
+                + void initKeyStore()
+                - boolean checkContainsAlias(String alias)
+                - void initJwtSigningKey()
+                - void initMasterKey()
+                - void validateFileExists(String path)
+                - KeyStore validateAccessToKeyStore(String path, String password)
+                - void validateMasterKeyStoreNotEmpty(KeyStore keystore, String path)
+            }
+
+            class KeyStoreLoader {
+                -Logger LOGGER
+                -errorHandler: ErrorHandler
+                --
+                +load(path: String, password: String): KeyStore
+                +save(keystore: KeyStore, path: String, password: String): void
+            }
+
+            class MasterKeyRotationTask {
+                -LOGGER: Logger
+                -KEY_SIZE: int
+                -keyStoreLoader: KeyStoreLoader
+                -masterKeyService: MasterKeyService
+                -errorHandler: ErrorHandler
+                - String masterKeystorePath
+                - String masterKeystorePassword
+                - String clientKeystorePath
+                - String clientKeystorePassword
+                --
+                +rotateMasterKey(): void
+                -generateNewMasterKey(): SecretKey
+                -getClientKeyAliases(keystore: KeyStore): List<String>
+                -rewrapClientKeys(keystore, oldMasterKey, newMasterKey, aliases, passwordChars)
+                -unwrapClientKey(keystore, oldKey, alias, passwordChars): SecretKey
+                -wrapClientKey(newKey, clientKey): byte[]
+                -storeClientKey(keystore, alias, encryptedKey, passwordChars): void
+                -storeNewMasterKey(keystore, newKey, passwordChars): void
+            }
+
+            class MasterKeyService {
+                -LOGGER: Logger
+                -errorHandler: ErrorHandler
+                -loader: KeyStoreLoader
+                -masterKeystorePath: String
+                -masterKeystorePassword: String
+                --
+                +retrieveMasterKey(): SecretKey
+            }
+        }
+    }
+
+    package entity {}
+
+    package errorhandling {}
+
+    authorization --> ClientKeyRegistry : uses
+    validation --> KeyStoreHelper : uses
+
+    businessfacade --> KeyManagementService
+
+    cryptography --> KeyStoreHelper : uses
+    cryptography --> ClientKeyRegistry : uses
+
+    jwtmanagement --> KeyStoreHelper : uses
+
+    ClientKeyEncryptor --> errorhandling : uses
+
+    ClientKeyRegistry --> entity : uses
+    ClientKeyRegistry --> errorhandling : uses
+
+    KeyCleanupTask --> ClientKeyRegistry : uses
+    KeyCleanupTask --> KeyExpirationChecker : uses
+    KeyCleanupTask --> KeyStoreLoader : uses
+    KeyCleanupTask --> errorhandling : uses
+
+    KeyExpirationChecker --> errorhandling : uses
+
+    KeyManagementService --> KeyStoreHelper : uses
+    KeyManagementService --> ClientKeyRegistry : uses
+    KeyManagementService --> entity : uses
+    KeyManagementService --> errorhandling : uses
+
+    KeyStoreHelper --> KeyStoreLoader : uses
+    KeyStoreHelper --> MasterKeyService : uses
+    KeyStoreHelper --> ClientKeyEncryptor : uses
+    KeyStoreHelper --> errorhandling : uses
+
+    KeyStoreInitializer --> KeyStoreHelper : uses
+    KeyStoreInitializer --> KeyStoreLoader : uses
+    KeyStoreInitializer --> errorhandling : uses
+
+    KeyStoreLoader --> errorhandling : uses
+
+    MasterKeyRotationTask --> KeyStoreLoader : uses
+    MasterKeyRotationTask --> MasterKeyService : uses
+    MasterKeyRotationTask --> errorhandling : uses
+
+    MasterKeyService --> errorhandling : uses
+    MasterKeyService --> KeyStoreLoader : uses
+}
+
+@enduml
