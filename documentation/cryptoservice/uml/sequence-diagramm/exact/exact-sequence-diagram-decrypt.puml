@@ -93,9 +93,12 @@ ValidationService -> JwtValidator : validateJwtPattern(jwt)
 activate JwtValidator
 ValidationService -> JwtValidator : validateJwtSignature(jwt, key)
 ValidationService -> JwtValidator : validateExpiration(expiration)
-ValidationService -> JwtValidator : validateKeyAlias(keyAlias, JWT_KEY_ALIAS_MAX_LENGTH)
-ValidationService -> JwtValidator : validateIssuedTo(issuedTo, ISSUED_TO_MAX_LENGTH)
-ValidationService -> JwtValidator : validateAlgorithmHeader(algorithm, JWT_ALGORITHM_MAX_LENGTH)
+ValidationService -> JwtValidator : validateIssuerAndAudience(claims)
+ValidationService -> ValidationService : validateJwtClaims(alias, FieldName.KEY_ALIAS, JWT_KEY_ALIAS_MAX_LENGTH)
+ValidationService -> ValidationService : validateJwtClaims(issuedTo, FieldName.ISSUED_TO, ISSUED_TO_MAX_LENGTH)
+ValidationService -> ValidationService : validateJwtClaims(algorithm, FieldName.ALGORITHM_HEADER, JWT_ALGORITHM_MAX_LENGTH)
+ValidationService -> JwtValidator : validateAlgorithmHeader(algorithm)
+ValidationService -> JwtValidator : validateAndConsumeJti(claims)
 deactivate JwtValidator
 
 ValidationService -> Controller : void

@@ -30,12 +30,6 @@ public class JwtValidator {
     private static final Pattern JWT_PATTERN = Pattern.compile("^[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+$");
 
     private final ErrorHandler errorHandler;
-    private final AsciiValidator asciiValidator;
-    private final CharsetValidator charsetValidator;
-    private final ControlCharValidator controlCharValidator;
-    private final LengthValidator lengthValidator;
-    private final NullOrBlankValidator nullOrBlankValidator;
-    private final WhitelistValidator whitelistValidator;
     private final ReplayCache replayCache;
 
 
@@ -85,6 +79,11 @@ public class JwtValidator {
         }
     }
 
+    /**
+     * Validates the issuer and audience of a JWT.
+     *
+     * @param claims the claims extracted from the JWT
+     */
     public final void validateIssuerAndAudience(final Claims claims) {
         final String iss = claims.getIssuer();
         final String aud = claims.getAudience();
@@ -93,6 +92,11 @@ public class JwtValidator {
         }
     }
 
+    /**
+     * Validates and consumes the JWT ID (jti) to prevent replay attacks.
+     *
+     * @param claims the claims extracted from the JWT
+     */
     public final void validateAndConsumeJti(final Claims claims) {
         final String jti = claims.getId();
         if (jti == null || jti.isBlank()) {
@@ -111,49 +115,11 @@ public class JwtValidator {
      * Validates the algorithm specified in the JWT header.
      *
      * @param algorithm The algorithm string to validate.
-     * @param maxLength The maximum allowed length for the algorithm string.
      * @throws BadRequestException if the algorithm is invalid or insecure.
      */
-    public final void validateAlgorithmFromHeader(final String algorithm, final int maxLength) {
-        this.nullOrBlankValidator.validateNullOrBlank(algorithm, FieldName.ALGORITHM_HEADER);
-        this.lengthValidator.validateLength(algorithm, maxLength, FieldName.ALGORITHM_HEADER);
-        this.asciiValidator.validateAscii(algorithm, FieldName.ALGORITHM_HEADER);
-        this.charsetValidator.validateCharset(algorithm, FieldName.ALGORITHM_HEADER);
-        this.controlCharValidator.validateControlChars(algorithm, FieldName.ALGORITHM_HEADER);
-        this.whitelistValidator.validateWhitelist(algorithm, FieldName.ALGORITHM_HEADER, false);
-
+    public final void validateAlgorithmFromHeader(final String algorithm) {
         if ("none".equalsIgnoreCase(algorithm)) {
             throw this.errorHandler.handleClientError(ErrorCode.INSECURE_JWT_ALGO, "While validating JWT algorithm from header.");
         }
-    }
-
-    /**
-     * Validates the key alias used in JWT operations.
-     *
-     * @param alias The key alias to validate.
-     * @param maxLength The maximum allowed length for the key alias.
-     */
-    public final void validateKeyAlias(final String alias, final int maxLength) {
-        this.nullOrBlankValidator.validateNullOrBlank(alias, FieldName.KEY_ALIAS);
-        this.lengthValidator.validateLength(alias, maxLength, FieldName.KEY_ALIAS);
-        this.asciiValidator.validateAscii(alias, FieldName.KEY_ALIAS);
-        this.charsetValidator.validateCharset(alias, FieldName.KEY_ALIAS);
-        this.controlCharValidator.validateControlChars(alias, FieldName.KEY_ALIAS);
-        this.whitelistValidator.validateWhitelist(alias, FieldName.KEY_ALIAS, false);
-    }
-
-    /**
-     * Validates the key issuedTo used in JWT operations.
-     *
-     * @param issuedTo The key issuedTo to validate.
-     * @param maxLength The maximum allowed length for the issuedTo string.
-     */
-    public final void validateIssuedTo(final String issuedTo, final int maxLength) {
-        this.nullOrBlankValidator.validateNullOrBlank(issuedTo, FieldName.ISSUED_TO);
-        this.lengthValidator.validateLength(issuedTo, maxLength, FieldName.ISSUED_TO);
-        this.asciiValidator.validateAscii(issuedTo, FieldName.ISSUED_TO);
-        this.charsetValidator.validateCharset(issuedTo, FieldName.ISSUED_TO);
-        this.controlCharValidator.validateControlChars(issuedTo, FieldName.ISSUED_TO);
-        this.whitelistValidator.validateWhitelist(issuedTo, FieldName.ISSUED_TO, false);
     }
 }

@@ -5,6 +5,9 @@ title JWT Management Class Diagram - CryptoService
 package cryptoservice {
     package boundary {
         package authorization {}
+        package validation {
+            class ReplayCache
+        }
     }
 
     package businessfacade {}
@@ -43,6 +46,7 @@ package cryptoservice {
     JwtManagementService --> entity : uses
     JwtManagementService --> keymanagement : uses
     JwtManagementService --> errorhandling : uses
+    JwtManagementService --> ReplayCache : uses
 }
 
 @enduml

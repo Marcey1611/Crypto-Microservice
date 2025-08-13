@@ -134,8 +134,6 @@ public class ValidationService {
      *
      * @param jwt the JWT string to validate
      * @param key the SecretKey used for signature validation
-     *
-     *            TODO vllt schuaen das der jwt validator nicht von den anderen validatoren abhängt, sondern DIE ANDEREN VALIDATOREN FÜR DEN ALGO HEADER KEYALIAS UND ISSUEDTO HIER DRIN AUFGERUFEN WERDEN:::
      */
     private void validateJwt(final String jwt, final SecretKey key, final boolean consumeJti) {
         this.nullOrBlankValidator.validateNullOrBlank(jwt, FieldName.JWT);
@@ -154,17 +152,35 @@ public class ValidationService {
         this.jwtValidator.validateExpiration(claims);
         this.jwtValidator.validateIssuerAndAudience(claims);
 
-        final String keyAlias = claims.get("keyAlias", String.class);
-        this.jwtValidator.validateKeyAlias(keyAlias, JWT_KEY_ALIAS_MAX_LENGTH);
+        final String alias = claims.get("keyAlias", String.class);
+        this.validateJwtClaims(alias, FieldName.KEY_ALIAS, JWT_KEY_ALIAS_MAX_LENGTH);
+
         final String issuedTo = claims.get("issuedTo", String.class);
-        this.jwtValidator.validateIssuedTo(issuedTo, ISSUED_TO_MAX_LENGTH);
+        this.validateJwtClaims(issuedTo, FieldName.ISSUED_TO, ISSUED_TO_MAX_LENGTH);
 
         final String algorithm = header.getAlgorithm();
-        this.jwtValidator.validateAlgorithmFromHeader(algorithm, JWT_ALGORITHM_MAX_LENGTH);
+        this.validateJwtClaims(algorithm, FieldName.ALGORITHM_HEADER, JWT_ALGORITHM_MAX_LENGTH);
+        this.jwtValidator.validateAlgorithmFromHeader(algorithm);
 
         if (consumeJti) {
             this.jwtValidator.validateAndConsumeJti(claims);
         }
+    }
+
+    /**
+     * Validates the JWT claims for various constraints.
+     *
+     * @param claim      the JWT claim to validate
+     * @param fieldName  the field name for error reporting
+     * @param maxLength  the maximum length of the claim
+     */
+    private void validateJwtClaims(final String claim, final FieldName fieldName, final int maxLength) {
+        this.nullOrBlankValidator.validateNullOrBlank(claim, fieldName);
+        this.lengthValidator.validateLength(claim, maxLength, fieldName);
+        this.asciiValidator.validateAscii(claim, fieldName);
+        this.charsetValidator.validateCharset(claim, fieldName);
+        this.controlCharValidator.validateControlChars(claim, fieldName);
+        this.whitelistValidator.validateWhitelist(claim, fieldName, false);
     }
 
     /**

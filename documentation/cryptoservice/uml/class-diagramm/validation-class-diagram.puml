@@ -5,6 +5,16 @@ title Validation Class Diagram - CryptoService
 package cryptoservice {
     package boundary {
         package validation {
+            package cache {
+                class ReplayCache {
+                    - map : ConcurrentHashMap<String, Long>
+                    --
+                    + register(jti: String, expEpochSeconds: long) : void
+                    + consumeOnce(jti: String) : boolean
+                    + cleanup() : void
+                }
+            }
+
             package rule {
                 class AsciiValidator {
                     - errorHandler: ErrorHandler
@@ -31,20 +41,16 @@ package cryptoservice {
                 }
 
                 class JwtValidator {
-                    - errorHandler: ErrorHandler
-                    - asciiValidator: AsciiValidator
-                    - charsetValidator: CharsetValidator
-                    - controlCharValidator: ControlCharValidator
-                    - lengthValidator: LengthValidator
-                    - nullOrBlankValidator: NullOrBlankValidator
-                    - whitelistValidator: WhitelistValidator
+                    - JWT_PATTERN : Pattern
+                    - errorHandler : ErrorHandler
+                    - replayCache : ReplayCache
                     --
-                    + validateJwtPattern(jwt: String): void
-                    + validateSignature(jwt: String, key: SecretKey): Jws<Claims>
-                    + validateExpiration(expiration: Date): void
-                    + validateAlgorithmFromHeader(algorithm: String, maxLength: int): void
-                    + validateKeyAlias(alias: String, maxLength: int): void
-                    + validateIssuedTo(issuedTo: String, maxLength: int): void
+                    + validateJwtPattern(jwt: String) : void
+                    + validateSignature(jwt: String, key: SecretKey) : Jws<Claims>
+                    + validateExpiration(claims: Claims) : void
+                    + validateIssuerAndAudience(claims: Claims) : void
+                    + validateAndConsumeJti(claims: Claims) : void
+                    + validateAlgorithmFromHeader(algorithm: String) : void
                 }
 
                 class LengthValidator {
@@ -108,6 +114,7 @@ package cryptoservice {
                 + void validateDecryptRequest(DecryptRequest req, String clientName)
 
                 - void validateJwt(String jwt, SecretKey key)
+                - void validateJwtClaim(String claim, FieldName fieldName, int maxLength)
                 - void validateClientName(String clientName)
             }
         }
@@ -133,14 +140,9 @@ package cryptoservice {
     ControlCharValidator --> errorhandling : uses
     ControlCharValidator --> FieldName : uses
 
-    JwtValidator --> AsciiValidator : uses
-    JwtValidator --> CharsetValidator : uses
-    JwtValidator --> ControlCharValidator : uses
-    JwtValidator --> LengthValidator : uses
-    JwtValidator --> NullOrBlankValidator : uses
-    JwtValidator --> WhitelistValidator : uses
     JwtValidator --> errorhandling : uses
     JwtValidator --> FieldName : uses
+    JwtValidator --> ReplayCache : uses
 
     LengthValidator --> errorhandling : uses
     LengthValidator --> FieldName : uses
@@ -161,6 +163,8 @@ package cryptoservice {
     ValidationService --> JwtValidator : uses
     ValidationService --> Base64Validator : uses
     ValidationService --> entity : uses
+
+    businesslogic --> ReplayCache : uses
 }
 
 @enduml

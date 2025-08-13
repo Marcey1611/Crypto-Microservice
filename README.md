@@ -1,4 +1,4 @@
-# 🔐 CryptoService Project
+# CryptoService Project
 
 This repository contains a secure cryptographic microservice (`CryptoService`) and a CLI-based client (`CryptoClient`) 
 that communicate via HTTPS using TLS/mTLS. The project demonstrates secure key management, symmetric encryption using 
@@ -6,7 +6,7 @@ AES-GCM, JWT-based authorization, and OWASP-compliant Secure Coding Practices (S
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```bash
 ├── cryptoclient/            # CLI client for interacting with the service
@@ -16,7 +16,7 @@ AES-GCM, JWT-based authorization, and OWASP-compliant Secure Coding Practices (S
 └── README.md                # Main entry point (you are here)
 ```
 
-## 🚀 Getting Started
+## Getting Started
 
 To run this project locally, follow these steps:
 
