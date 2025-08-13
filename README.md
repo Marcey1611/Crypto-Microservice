@@ -33,15 +33,14 @@ to create the root CA.
 
 ### 3. Build and Run the Service
 
-With the following command, you can run the service with the necessary parameters:
+With the following command, you can run the service with the necessary parameters (Linux):
 ```bash
 mvn spring-boot:run -Dspring-boot.run.arguments="--MASTER_KEYSTORE_PASSWORD=PzDXe4in3qG7LWvSgwLp0JG3Snm7UxT5kFVuG1ey3h7hyp9IVL --MASTER_KEYSTORE_PATH=src/main/resources/keystore/master-keystore.p12 --CLIENT_KEYSTORE_PASSWORD=P095NxN4cROz0IaWF8105KB6oVYNXKg2q4JqhSKf6zMawsT2Lr --CLIENT_KEYSTORE_PATH=src/main/resources/keystore/client-keystore.p12"
 ```
-The command should work on Linux and Windows.
 
 ### 4. Build and Run the Clients
 
-The tls files are already added for a client1 and a client2. You can run the clients with the following commands:
+The tls files are already added for a client1 and a client2. You can run the clients with the following commands on (Linux):
 ```bash
 mvn spring-boot:run -Dspring-boot.run.arguments="--client.name=client1 --client.port=8081 --client.password=changeit --client.crypto-service-url=https://localhost:8443/crypto"
 
