@@ -1,0 +1,146 @@
+@startuml
+
+title Error Handling Class Diagram - CryptoService
+
+package cryptoservice {
+    package boundary {
+        package authorization {}
+        package validation {}
+    }
+
+    package businesslogic {
+        package cryptography {}
+        package jwtmanagement {}
+        package keymanagement {}
+    }
+
+    package errorhandling {
+        package exceptions {
+            abstract class ApiException {
+                - error: ErrorDetail
+                + getError(): ErrorDetail
+                + getMessage(): String
+                + geHttpStatus(): HttpStatus
+            }
+
+            class BadRequestException {
+                + geHttpStatus(): HttpStatus
+            }
+
+            class ForbiddenException {
+                + geHttpStatus(): HttpStatus
+            }
+
+            class InternalServerErrorException {
+                + geHttpStatus(): HttpStatus
+            }
+
+            class UnauthorizedException {
+                + geHttpStatus(): HttpStatus
+            }
+        }
+
+        package util {
+            enum ErrorCode {
+                +code: String
+                +userMsg: String
+                +logHeadline: String
+                +logLevel: Level
+                +builder(): ErrorDetailBuilder
+            }
+
+            class ErrorDetail {
+                - LOGGER
+                +code: String
+                +userMsg: String
+                +logHeadline: String
+                +context: String
+                +exception: Throwable
+                +logLevel: Level
+                +logError()
+                +logErrorWithException()
+            }
+
+            class ErrorDetailBuilder {
+                -code: String
+                -userMsg: String
+                -logHeadline: String
+                -context: String
+                -exception: Throwable
+                -logLevel: Level
+                +withUserMsgFormatted(Object...): void
+                +withLogMsgFormatted(Object...): void
+                +withContext(String): ErrorDetailBuilder
+                +withException(Throwable): ErrorDetailBuilder
+                +build(): ErrorDetail
+            }
+
+            class ErrorHandler {
+                - static final Logger LOGGER
+                --
+                + RuntimeException handleBusinessError(errorCode: ErrorCode, logMsgExtension: String, context: String, exception: Throwable)
+                + RuntimeException handleBusinessError(errorCode: ErrorCode, context: String, exception: Throwable)
+                + RuntimeException handleBusinessError(context: String, errorCode: ErrorCode)
+                + RuntimeException handleClientError(errorCode: ErrorCode, exception: Throwable, context: String)
+                + RuntimeException handleClientError(errorCode: ErrorCode, userMsgExtension: String, context: String)
+                + RuntimeException handleClientError(logMsgExtension: String, errorCode: ErrorCode, context: String)
+                + RuntimeException handleClientError(errorCode: ErrorCode, context: String)
+                + RuntimeException handleClientError(context: String, userAndLogMsgExtension: String, errorCode: ErrorCode)
+                + RuntimeException handleAuthError(errorCode: ErrorCode, context: String)
+                + RuntimeException handleForbiddenError(errorCode: ErrorCode, context: String)
+                - void logError(errorDetail: ErrorDetail)
+            }
+
+            class ErrorResponse {
+                +code: String
+                +message: String
+            }
+        }
+
+        class GlobalExceptionHandler {
+            +handleApiException(ApiException): ResponseEntity
+            +handleUnhandled(Exception): ResponseEntity
+        }
+    }
+
+
+    authorization --> ErrorHandler : uses
+    authorization --> ErrorCode : uses
+
+    validation --> ErrorHandler : uses
+    validation --> ErrorCode : uses
+
+    cryptography --> ErrorHandler : uses
+    cryptography --> ErrorCode : uses
+
+    jwtmanagement --> ErrorHandler : uses
+    jwtmanagement --> ErrorCode : uses
+
+    keymanagement --> ErrorHandler : uses
+    keymanagement --> ErrorCode : uses
+
+    ApiException <|-- BadRequestException : extends
+    ApiException <|-- InternalServerErrorException : extends
+    ApiException <|-- UnauthorizedException : extends
+    ApiException <|-- ForbiddenException : extends
+    ApiException --> ErrorDetail : holds
+
+    ErrorCode --> ErrorDetailBuilder : builds
+
+    ErrorDetailBuilder --> ErrorDetail : builds
+
+    ErrorHandler --> ErrorCode : uses
+    ErrorHandler --> ErrorDetailBuilder : creates
+    ErrorHandler --> ErrorDetail : builds
+    ErrorHandler --> BadRequestException : throws
+    ErrorHandler --> UnauthorizedException : throws
+    ErrorHandler --> ForbiddenException : throws
+    ErrorHandler --> InternalServerErrorException : throws
+
+    GlobalExceptionHandler --> ApiException : handles
+    GlobalExceptionHandler --> ErrorResponse : returns
+    GlobalExceptionHandler --> ErrorDetailBuilder : uses
+    GlobalExceptionHandler --> ErrorDetail : builds
+}
+
+@enduml

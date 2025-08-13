@@ -75,6 +75,16 @@ package cryptoservice {
         }
 
         package validation {
+            package cache {
+                class ReplayCache {
+                    - map : ConcurrentHashMap<String, Long>
+                    --
+                    + register(jti: String, expEpochSeconds: long) : void
+                    + consumeOnce(jti: String) : boolean
+                    + cleanup() : void
+                }
+            }
+
             package rule {
                 class AsciiValidator {
                     - errorHandler: ErrorHandler
@@ -101,20 +111,16 @@ package cryptoservice {
                 }
 
                 class JwtValidator {
-                    - errorHandler: ErrorHandler
-                    - asciiValidator: AsciiValidator
-                    - charsetValidator: CharsetValidator
-                    - controlCharValidator: ControlCharValidator
-                    - lengthValidator: LengthValidator
-                    - nullOrBlankValidator: NullOrBlankValidator
-                    - whitelistValidator: WhitelistValidator
+                    - JWT_PATTERN : Pattern
+                    - errorHandler : ErrorHandler
+                    - replayCache : ReplayCache
                     --
-                    + validateJwtPattern(jwt: String): void
-                    + validateSignature(jwt: String, key: SecretKey): Jws<Claims>
-                    + validateExpiration(expiration: Date): void
-                    + validateAlgorithmFromHeader(algorithm: String, maxLength: int): void
-                    + validateKeyAlias(alias: String, maxLength: int): void
-                    + validateIssuedTo(issuedTo: String, maxLength: int): void
+                    + validateJwtPattern(jwt: String) : void
+                    + validateSignature(jwt: String, key: SecretKey) : Jws<Claims>
+                    + validateExpiration(claims: Claims) : void
+                    + validateIssuerAndAudience(claims: Claims) : void
+                    + validateAndConsumeJti(claims: Claims) : void
+                    + validateAlgorithmFromHeader(algorithm: String) : void
                 }
 
                 class LengthValidator {
@@ -138,7 +144,7 @@ package cryptoservice {
                 }
             }
 
-            class FieldName {
+            enum FieldName {
                 + getValue(): String
                 --
                 + CIPHER_TEXT
@@ -178,6 +184,7 @@ package cryptoservice {
                 + void validateDecryptRequest(DecryptRequest req, String clientName)
 
                 - void validateJwt(String jwt, SecretKey key)
+                - void validateJwtClaim(String claim, FieldName fieldName, int maxLength)
                 - void validateClientName(String clientName)
             }
         }
@@ -680,14 +687,9 @@ package cryptoservice {
     ControlCharValidator --> ErrorHandler : uses
     ControlCharValidator --> FieldName : uses
 
-    JwtValidator --> AsciiValidator : uses
-    JwtValidator --> CharsetValidator : uses
-    JwtValidator --> ControlCharValidator : uses
-    JwtValidator --> LengthValidator : uses
-    JwtValidator --> NullOrBlankValidator : uses
-    JwtValidator --> WhitelistValidator : uses
     JwtValidator --> ErrorHandler : uses
     JwtValidator --> FieldName : uses
+    JwtValidator --> ReplayCache : uses
 
     LengthValidator --> ErrorHandler : uses
     LengthValidator --> FieldName : uses
@@ -790,6 +792,7 @@ package cryptoservice {
     JwtManagementService --> ErrorCode : uses
     JwtManagementService --> GenerateJwtModel : input
     JwtManagementService --> GenerateJwtResultModel : returns
+    JwtManagementService --> ReplayCache : uses
 
     ClientKeyEncryptor --> ErrorHandler : uses
     ClientKeyEncryptor --> ErrorCode : uses

@@ -1,0 +1,52 @@
+@startuml
+
+title JWT Management Class Diagram - CryptoService
+
+package cryptoservice {
+    package boundary {
+        package authorization {}
+        package validation {
+            class ReplayCache
+        }
+    }
+
+    package businessfacade {}
+
+    package businesslogic {
+        package cryptography {}
+
+        package jwtmanagement {
+            class JwtManagementService {
+                -resultModelsFactory: ResultModelsFactory
+                -keyStoreHelper: KeyStoreHelper
+                -clientKeyRegistry: ClientKeyRegistry
+                -errorHandler: ErrorHandler
+                - String masterKeystorePath
+                - String masterKeystorePassword
+                --
+                +generateJwt(generateJwtModel: GenerateJwtModel): GenerateJwtResultModel
+                +extractClientKeyAlias(jwtToken: String): String
+                +extractIssuedTo(jwtToken: String): String
+            }
+        }
+
+        package keymanagement {}
+    }
+
+    package entity {}
+
+    package errorhandling {}
+
+    authorization --> JwtManagementService : uses
+
+    businessfacade --> JwtManagementService : uses
+
+    cryptography --> JwtManagementService : uses
+
+    JwtManagementService --> entity : uses
+    JwtManagementService --> keymanagement : uses
+    JwtManagementService --> errorhandling : uses
+    JwtManagementService --> ReplayCache : uses
+}
+
+@enduml

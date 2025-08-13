@@ -1,6 +1,8 @@
 package com.projectwork.cryptoservice.boundary.validation.rule;
 
 import com.projectwork.cryptoservice.boundary.validation.FieldName;
+import com.projectwork.cryptoservice.boundary.validation.cache.ReplayCache;
+import com.projectwork.cryptoservice.businesslogic.jwtmanagement.JwtConsts;
 import com.projectwork.cryptoservice.errorhandling.exceptions.BadRequestException;
 import com.projectwork.cryptoservice.errorhandling.util.ErrorCode;
 import com.projectwork.cryptoservice.errorhandling.util.ErrorHandler;
@@ -28,12 +30,8 @@ public class JwtValidator {
     private static final Pattern JWT_PATTERN = Pattern.compile("^[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+$");
 
     private final ErrorHandler errorHandler;
-    private final AsciiValidator asciiValidator;
-    private final CharsetValidator charsetValidator;
-    private final ControlCharValidator controlCharValidator;
-    private final LengthValidator lengthValidator;
-    private final NullOrBlankValidator nullOrBlankValidator;
-    private final WhitelistValidator whitelistValidator;
+    private final ReplayCache replayCache;
+
 
     /**
      * Validates the format of a JWT.
@@ -58,8 +56,11 @@ public class JwtValidator {
      */
     public final Jws<Claims> validateSignature(final String jwt, final SecretKey key) {
         try {
-            final JwtParser build = Jwts.parserBuilder().setSigningKey(key).build();
-            return build.parseClaimsJws(jwt);
+            return Jwts.parserBuilder()
+                    .setSigningKey(key)
+                    .setAllowedClockSkewSeconds(JwtConsts.CLOCK_SKEW_SECONDS)
+                    .build()
+                    .parseClaimsJws(jwt);
         } catch (final JwtException exception) {
             throw this.errorHandler.handleAuthError(ErrorCode.INVALID_JWT, "While validating JWT signature.");
 
@@ -69,12 +70,44 @@ public class JwtValidator {
     /**
      * Validates the expiration date of a JWT.
      *
-     * @param expiration the expiration date to validate
+     * @param claims the claims extracted from the JWT
      * @throws BadRequestException if the expiration date is null or in the past
      */
-    public final void validateExpiration(final Date expiration) {
-        if (null == expiration || expiration.before(new Date())) {
+    public final void validateExpiration(final Claims claims) {
+        if (null == claims.getExpiration() || claims.getExpiration().before(new Date())) {
             throw this.errorHandler.handleAuthError(ErrorCode.EXPIRED_JWT, "While validating JWT expiration date.");
+        }
+    }
+
+    /**
+     * Validates the issuer and audience of a JWT.
+     *
+     * @param claims the claims extracted from the JWT
+     */
+    public final void validateIssuerAndAudience(final Claims claims) {
+        final String iss = claims.getIssuer();
+        final String aud = claims.getAudience();
+        if (!JwtConsts.ISSUER.equals(iss) || !JwtConsts.AUDIENCE.equals(aud)) {
+            throw this.errorHandler.handleAuthError(ErrorCode.INVALID_JWT, "Invalid iss/aud in JWT.");
+        }
+    }
+
+    /**
+     * Validates and consumes the JWT ID (jti) to prevent replay attacks.
+     *
+     * @param claims the claims extracted from the JWT
+     */
+    public final void validateAndConsumeJti(final Claims claims) {
+        final String jti = claims.getId();
+        if (jti == null || jti.isBlank()) {
+            throw this.errorHandler.handleAuthError(ErrorCode.INVALID_JWT, "Missing jti in JWT.");
+        }
+        final Date exp = claims.getExpiration();
+        if (exp != null) {
+            replayCache.register(jti, exp.toInstant().getEpochSecond());
+        }
+        if (!replayCache.consumeOnce(jti)) {
+            throw this.errorHandler.handleForbiddenError(ErrorCode.INVALID_JWT, "JWT replay detected.");
         }
     }
 
@@ -82,49 +115,11 @@ public class JwtValidator {
      * Validates the algorithm specified in the JWT header.
      *
      * @param algorithm The algorithm string to validate.
-     * @param maxLength The maximum allowed length for the algorithm string.
      * @throws BadRequestException if the algorithm is invalid or insecure.
      */
-    public final void validateAlgorithmFromHeader(final String algorithm, final int maxLength) {
-        this.nullOrBlankValidator.validateNullOrBlank(algorithm, FieldName.ALGORITHM_HEADER);
-        this.lengthValidator.validateLength(algorithm, maxLength, FieldName.ALGORITHM_HEADER);
-        this.asciiValidator.validateAscii(algorithm, FieldName.ALGORITHM_HEADER);
-        this.charsetValidator.validateCharset(algorithm, FieldName.ALGORITHM_HEADER);
-        this.controlCharValidator.validateControlChars(algorithm, FieldName.ALGORITHM_HEADER);
-        this.whitelistValidator.validateWhitelist(algorithm, FieldName.ALGORITHM_HEADER, false);
-
+    public final void validateAlgorithmFromHeader(final String algorithm) {
         if ("none".equalsIgnoreCase(algorithm)) {
             throw this.errorHandler.handleClientError(ErrorCode.INSECURE_JWT_ALGO, "While validating JWT algorithm from header.");
         }
-    }
-
-    /**
-     * Validates the key alias used in JWT operations.
-     *
-     * @param alias The key alias to validate.
-     * @param maxLength The maximum allowed length for the key alias.
-     */
-    public final void validateKeyAlias(final String alias, final int maxLength) {
-        this.nullOrBlankValidator.validateNullOrBlank(alias, FieldName.KEY_ALIAS);
-        this.lengthValidator.validateLength(alias, maxLength, FieldName.KEY_ALIAS);
-        this.asciiValidator.validateAscii(alias, FieldName.KEY_ALIAS);
-        this.charsetValidator.validateCharset(alias, FieldName.KEY_ALIAS);
-        this.controlCharValidator.validateControlChars(alias, FieldName.KEY_ALIAS);
-        this.whitelistValidator.validateWhitelist(alias, FieldName.KEY_ALIAS, false);
-    }
-
-    /**
-     * Validates the key issuedTo used in JWT operations.
-     *
-     * @param issuedTo The key issuedTo to validate.
-     * @param maxLength The maximum allowed length for the issuedTo string.
-     */
-    public final void validateIssuedTo(final String issuedTo, final int maxLength) {
-        this.nullOrBlankValidator.validateNullOrBlank(issuedTo, FieldName.ISSUED_TO);
-        this.lengthValidator.validateLength(issuedTo, maxLength, FieldName.ISSUED_TO);
-        this.asciiValidator.validateAscii(issuedTo, FieldName.ISSUED_TO);
-        this.charsetValidator.validateCharset(issuedTo, FieldName.ISSUED_TO);
-        this.controlCharValidator.validateControlChars(issuedTo, FieldName.ISSUED_TO);
-        this.whitelistValidator.validateWhitelist(issuedTo, FieldName.ISSUED_TO, false);
     }
 }

@@ -1,0 +1,170 @@
+@startuml
+
+title Validation Class Diagram - CryptoService
+
+package cryptoservice {
+    package boundary {
+        package validation {
+            package cache {
+                class ReplayCache {
+                    - map : ConcurrentHashMap<String, Long>
+                    --
+                    + register(jti: String, expEpochSeconds: long) : void
+                    + consumeOnce(jti: String) : boolean
+                    + cleanup() : void
+                }
+            }
+
+            package rule {
+                class AsciiValidator {
+                    - errorHandler: ErrorHandler
+                    --
+                    + validateAscii(field: String, name: FieldName): void
+                }
+
+                class Base64Validator {
+                    - errorHandler: ErrorHandler
+                    --
+                    + validateBase64(input: String, name: FieldName): void
+                }
+
+                class CharsetValidator {
+                    - errorHandler: ErrorHandler
+                    --
+                    + validateCharset(input: String, name: FieldName): void
+                }
+
+                class ControlCharValidator {
+                    - errorHandler: ErrorHandler
+                    --
+                    + validateControlChars(input: String, name: FieldName): void
+                }
+
+                class JwtValidator {
+                    - JWT_PATTERN : Pattern
+                    - errorHandler : ErrorHandler
+                    - replayCache : ReplayCache
+                    --
+                    + validateJwtPattern(jwt: String) : void
+                    + validateSignature(jwt: String, key: SecretKey) : Jws<Claims>
+                    + validateExpiration(claims: Claims) : void
+                    + validateIssuerAndAudience(claims: Claims) : void
+                    + validateAndConsumeJti(claims: Claims) : void
+                    + validateAlgorithmFromHeader(algorithm: String) : void
+                }
+
+                class LengthValidator {
+                    - errorHandler: ErrorHandler
+                    --
+                    + validateLength(input: String, maxLength: int, name: FieldName): void
+                }
+
+                class NullOrBlankValidator {
+                    - errorHandler: ErrorHandler
+                    --
+                    + validateNullOrBlank(field: String, name: FieldName): void
+                }
+
+                class WhitelistValidator {
+                    - errorHandler: ErrorHandler
+                    - WHITELIST: Pattern
+                    - EXTENDED_WHITELIST: Pattern
+                    --
+                    + validateWhitelist(field: String, name: FieldName, extended: boolean): void
+                }
+            }
+
+            enum FieldName {
+                + getValue(): String
+                --
+                + CIPHER_TEXT
+                + JWT
+                + PLAIN_TEXT
+                + ISSUED_TO
+                + ALGORITHM_HEADER
+                + KEY_ALIAS
+                + CLIENT_NAME
+            }
+
+            class ValidationService {
+                - int ISSUED_TO_MAX_LENGTH = 64
+                - int CLIENT_NAME_MAX_LENGTH = 64
+                - int PLAIN_TEXT_MAX_LENGTH = 2048
+                - int CIPHER_TEXT_MAX_LENGTH = 2048
+                - int JWT_MAX_LENGTH = 4096
+                - int JWT_ALGORITHM_MAX_LENGTH = 64
+                - int JWT_KEY_ALIAS_MAX_LENGTH = 64
+
+                - KeyStoreHelper keyStoreHelper
+                - AsciiValidator asciiValidator
+                - CharsetValidator charsetValidator
+                - ControlCharValidator controlCharValidator
+                - LengthValidator lengthValidator
+                - NullOrBlankValidator nullOrBlankValidator
+                - WhitelistValidator whitelistValidator
+                - JwtValidator jwtValidator
+                - Base64Validator base64Validator
+
+                - String masterKeystorePath
+                - String masterKeystorePassword
+                --
+                + void validateGenerateKeyRequest(String clientName)
+                + void validateGenerateJwtRequest(GenerateJwtRequest req, String clientName)
+                + void validateEncryptRequest(EncryptRequest req, String clientName)
+                + void validateDecryptRequest(DecryptRequest req, String clientName)
+
+                - void validateJwt(String jwt, SecretKey key)
+                - void validateJwtClaim(String claim, FieldName fieldName, int maxLength)
+                - void validateClientName(String clientName)
+            }
+        }
+
+        class Controller {}
+    }
+
+    package businesslogic {}
+    package entity {}
+    package errorhandling {}
+
+    Controller --> ValidationService : uses
+
+    AsciiValidator --> errorhandling : uses
+    AsciiValidator --> FieldName : uses
+
+    Base64Validator --> errorhandling : uses
+    Base64Validator --> FieldName : uses
+
+    CharsetValidator --> errorhandling : uses
+    CharsetValidator --> FieldName : uses
+
+    ControlCharValidator --> errorhandling : uses
+    ControlCharValidator --> FieldName : uses
+
+    JwtValidator --> errorhandling : uses
+    JwtValidator --> FieldName : uses
+    JwtValidator --> ReplayCache : uses
+
+    LengthValidator --> errorhandling : uses
+    LengthValidator --> FieldName : uses
+
+    NullOrBlankValidator --> errorhandling : uses
+    NullOrBlankValidator --> FieldName : uses
+
+    WhitelistValidator --> errorhandling : uses
+    WhitelistValidator --> FieldName : uses
+
+    ValidationService --> businesslogic : uses
+    ValidationService --> AsciiValidator : uses
+    ValidationService --> CharsetValidator : uses
+    ValidationService --> ControlCharValidator : uses
+    ValidationService --> LengthValidator : uses
+    ValidationService --> NullOrBlankValidator : uses
+    ValidationService --> WhitelistValidator : uses
+    ValidationService --> JwtValidator : uses
+    ValidationService --> Base64Validator : uses
+    ValidationService --> entity : uses
+
+    businesslogic --> ReplayCache : uses
+}
+
+@enduml

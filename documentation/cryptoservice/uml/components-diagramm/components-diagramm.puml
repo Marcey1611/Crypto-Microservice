@@ -4,17 +4,24 @@ title Components Diagram - CryptoService
 
 package "CryptoService" {
     [Application Entry] as Entry
-    [Security Layer] as Security
-    [API Layer] as API
-    [Controller] as Controller
-    [Validation Layer] as Validation
-    [Authorization Layer] as Authorization
-    [Business Facade] as BusinessFacade
-    [KeyManagement] as KeyMgmt
-    [JWT Management] as JwtMgmt
-    [CryptoLogic] as Crypto
-    [Error Handling] as Error
-
+    package boundary {
+        [Security Layer] as Security
+        [API Layer] as API
+        [Controller] as Controller
+        [Validation Layer] as Validation
+        [Authorization Layer] as Authorization
+    }
+    package businessfacade {
+        [Business Facade] as BusinessFacade
+    }
+    package businesslogic {
+        [Key Management] as KeyMgmt
+        [JWT Management] as JwtMgmt
+        [Crypto Logic] as Crypto
+    }
+    package errorhandling {
+        [Error Handling] as Error
+    }
     Entry --> Security
     Security --> API
     API --> Controller
